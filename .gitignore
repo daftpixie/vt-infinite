@@ -1,0 +1,14 @@
+node_modules/
+.next/
+out/
+.vercel/
+.cache/
+.turbo/
+.npm-cache/
+.runtime-home/
+.env
+.env.*
+*.log
+*.tsbuildinfo
+*:Zone.Identifier
+.DS_Store
