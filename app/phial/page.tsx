@@ -15,17 +15,21 @@ export default function PhialPage() {
       </section>
       <section className="page-grid shell">
         <aside>
-          <p>Product status<br />MVP specification</p>
+          <p>Product status<br />Active development</p>
           <img className="inline-mark" src="/phial-mark.jpg" alt="Phial mark: a bounded geometric vessel containing a lattice of connected paths" width={1024} height={1024} />
         </aside>
         <article className="prose">
+          <p>Phial is in active development. The governance foundation — human gates, append-only records, independently tested transaction guarantees — is complete. The application is now being built on top of it, in public. The running record lives in <Link className="inline-link" href="/the-record">The Record</Link>.</p>
+
           <h2>The problem</h2>
           <p>Health-economic research is fragmented across literature tools, spreadsheets, statistical software, modeling engines, repositories, and manual review. The most consequential decisions often disappear between them: why one source was chosen, whether a comparator is current, where a parameter came from, or whether a conclusion still matches the latest run.</p>
           <p>Reproducibility is necessary. It is not sufficient. A model can perform the same operation perfectly every time and still be built on the wrong specification.</p>
           <blockquote>Reproducibility tells you the machine did the same thing twice. Validation asks whether it should have done that thing at all.</blockquote>
 
-          <h2>The product</h2>
-          <p>Phial connects the full path from decision question to review-ready analysis. Bounded agents assist with evidence and implementation. Deterministic tools perform calculations. Immutable artifacts preserve the record. Human experts approve every consequential scientific choice.</p>
+          <h2>The vision</h2>
+          <p>Phial is the operating system a health economist opens on the first day of a question and closes when the work can defend itself.</p>
+          <p>Evidence goes in. An audit-ready model comes out. Between them sits a governed path — specification, execution, validation, review — where every assumption is visible, every transformation is traceable, and every consequential decision belongs to a human willing to put their name beside it.</p>
+          <p>Agents assist. Deterministic tools calculate. Humans decide.</p>
           <div className="facts">
             <article><span>Evidence compiler</span><strong>Scope → sources → parameter registry</strong></article>
             <article><span>Model compiler</span><strong>Specification → executable analysis</strong></article>
@@ -33,9 +37,9 @@ export default function PhialPage() {
             <article><span>Review package</span><strong>Claims → provenance → publication artifacts</strong></article>
           </div>
 
-          <h2>The first wedge</h2>
-          <p>Phial begins where trust is easiest to test and most valuable: independent model validation and model refresh under new evidence, prices, or comparators. The initial market is United States Medicare-perspective health-economic research using aggregate and public data.</p>
-          <p>The CHAMPION-AF workflow is the first benchmark. It has already exercised the loop Phial must productize: scope, evidence, modeling, adversarial review, material correction, numeric quality control, and publication packaging.</p>
+          <h2>The first mission</h2>
+          <p>The first mission is independent validation. Economic models steer decisions worth billions in care — and many were built for a pricing world that no longer exists. Phial exists to test them, refresh them against current evidence, and publish work that survives the asking.</p>
+          <p>Open source. Model-optional. No single provider becomes the architecture. No agent becomes the authority.</p>
 
           <h2>Why the name</h2>
           <p>A phial is a vessel. Evidence enters fragmented; governed structure makes it legible. The boundary is human control. The lattice within it is the interdependent record of sources, parameters, assumptions, calculations, approvals, and claims.</p>

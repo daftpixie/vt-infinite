@@ -9,6 +9,7 @@ export function Header() {
         <Link href="/origin">Origin</Link>
         <Link href="/phial">Phial</Link>
         <Link href="/partners">Partners</Link>
+        <Link href="/the-record">The Record</Link>
         <a href={SOLVE_EVERYTHING_LAB} target="_blank" rel="noreferrer">Lab</a>
       </nav>
     </header>
@@ -36,6 +37,7 @@ export function Footer() {
         <Link href="/origin">Origin</Link>
         <Link href="/phial">Phial</Link>
         <Link href="/partners">Partners</Link>
+        <Link href="/the-record">The Record</Link>
         <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
         <a href={SOLVE_EVERYTHING_LAB} target="_blank" rel="noreferrer">Solve Everything Lab</a>
       </div>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ContactActions, Header } from "../components";
 
 export const metadata: Metadata = { title: "Partners", description: "The funding and partnership case for VT Infinite and Phial." };
@@ -26,18 +27,10 @@ export default function PartnersPage() {
             <article><span>Business model</span><strong>Open core + managed orchestration and reliability</strong></article>
           </div>
 
-          <h2>What exists now</h2>
-          <ul>
-            <li>A complete MVP product and architectural specification.</li>
-            <li>A benchmark case that exposed both the power and failure modes of AI-assisted research.</li>
-            <li>A governed workflow built around human gates, immutable artifacts, and independent validation.</li>
-            <li>A defined initial market, commercial wedge, launch criteria, and 24-month extension path.</li>
-            <li>A founder whose domain understanding was paid for in consequences—not borrowed for a pitch.</li>
-          </ul>
-
-          <h2>What comes next</h2>
-          <p>The immediate work is the first executable vertical slice: create a project, approve scope, map evidence requirements, register parameters, specify a model, execute analysis, challenge it independently, and export an audit-ready record.</p>
-          <p>The CHAMPION-AF paper will be released through GitHub and Zenodo, then distributed directly to expert reviewers. That review is not separate from product development. It is the first live evaluation of the discipline Phial must enforce.</p>
+          <h2>Where the work stands</h2>
+          <p>The governance foundation is complete and independently audited — the rules under which Phial is built, challenged, corrected, and reproduced were tested before the first feature was written. Application development is now active.</p>
+          <p>The CHAMPION-AF benchmark paper is being prepared for release through GitHub and Zenodo, then direct distribution to expert reviewers. That review is the first live evaluation of the discipline Phial enforces.</p>
+          <p>Day-to-day progress is published in <Link className="inline-link" href="/the-record">The Record</Link>. We built the habit of showing our work before we built the product.</p>
 
           <h2>Who belongs in the room</h2>
           <p>We are interested in partners who understand health economics, scientific infrastructure, AI governance, open-source commercialization, or the patient consequences of decisions made inside complex systems.</p>
