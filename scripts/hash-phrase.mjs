@@ -1,12 +1,14 @@
 #!/usr/bin/env node
-// Prints a hashed-phrases.json entry for a phrase read from stdin, so the
-// phrase itself never needs to be committed.
-// Usage: printf '%s' 'the phrase' | node scripts/hash-phrase.mjs private|retired
+// Prints a hashed-phrases.json entry for a retired legacy phrase read from
+// stdin. Only for copy that was already public: a short unsalted hash of a
+// guessable private value can be confirmed by guessing, so private
+// identifiers go in the PRIVATE_IDENTIFIERS secret instead, never here.
+// Usage: printf '%s' 'the phrase' | node scripts/hash-phrase.mjs retired
 import { phraseEntry } from "../guards/normalise.mjs";
 
 const category = process.argv[2];
-if (category !== "private" && category !== "retired") {
-  console.error("usage: node scripts/hash-phrase.mjs private|retired < phrase");
+if (category !== "retired") {
+  console.error("usage: node scripts/hash-phrase.mjs retired < phrase");
   process.exit(2);
 }
 let input = "";

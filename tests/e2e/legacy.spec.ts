@@ -18,7 +18,9 @@ test.describe("old URL table (PRD DN-6)", () => {
     const html = await res.text();
     expect(html).not.toMatch(/phial/i);
     await page.goto("/phial");
-    await expect(page.locator("h1")).toHaveText("This page has been retired");
+    await expect(page.locator("h1")).toHaveText("This page is not available");
+    // A 410 here may be temporary (PRD DN-6): no claim that nothing replaces it.
+    await expect(page.locator("main")).not.toContainText(/nothing replaces|permanently|never return/i);
     await expect(page.getByRole("link", { name: "Words" }).first()).toBeVisible();
   });
 

@@ -42,10 +42,16 @@ jobs:
       - name: Unit tests (flags, access rules, guards, fresh tree)
         run: npm test
 
+      - name: Require the private-identifier secret
+        run: node scripts/check-private-config.mjs
+        env:
+          PRIVATE_IDENTIFIERS: ${{ secrets.PRIVATE_IDENTIFIERS }}
+          PR_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+
       - name: Copy, claim and secret guards
         run: npm run guard
         env:
-          # Optional repository secret: comma-separated private identifiers to keep out.
+          # Repository secret: comma-separated private identifiers to keep out.
           PRIVATE_IDENTIFIERS: ${{ secrets.PRIVATE_IDENTIFIERS }}
 
       - name: Secret scan

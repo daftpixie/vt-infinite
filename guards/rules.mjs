@@ -96,6 +96,28 @@ const WRONG_NAMES = [
 const INITIATIVES = /\b(?:OneRhythm|MIRmade|abl8)\b/i;
 const CLINICAL = /\b(?:diagnos(?:e|es|ed|ing|is)|detect(?:s|ed|ing)?|treat(?:s|ed|ing|ment)?|prevent(?:s|ed|ing)?)\b/i;
 
+/**
+ * PRIVATE_IDENTIFIERS: comma-separated values, each normalised the same way
+ * as text (case, punctuation, hyphens and underscores ignored). Values
+ * shorter than 4 characters once normalised are ignored as too broad.
+ */
+export function privateIdentifiers(env = process.env) {
+  return (env.PRIVATE_IDENTIFIERS ?? "")
+    .split(",")
+    .map((v) => normaliseWords(v))
+    .filter((w) => w.join("").length >= 4);
+}
+
+/** True when `needle` occurs in `words` as a contiguous run of whole words. */
+export function containsSequence(words, needle) {
+  const n = needle.length;
+  outer: for (let i = 0; i + n <= words.length; i++) {
+    for (let j = 0; j < n; j++) if (words[i + j] !== needle[j]) continue outer;
+    return true;
+  }
+  return false;
+}
+
 /** Find phrases whose normalised SHA-256 is in `entries` (see scripts/hash-phrase.mjs). */
 export function matchHashed(text, entries) {
   const words = normaliseWords(text);
@@ -107,7 +129,7 @@ export function matchHashed(text, entries) {
       if (category) {
         out.push({
           match: `${category} phrase (${n} words) at word ${i}`,
-          message: category === "private" ? "A private identifier must not enter the public repository." : "Retired legacy copy must not return.",
+          message: "Retired legacy copy must not return.",
         });
       }
     }
@@ -165,20 +187,22 @@ export const RULES = [
   {
     id: "hashed-phrases",
     scope: "repo",
-    description: "No private identifiers (PRD Q-6) and no retired legacy copy (PRD DN-1, DN-8).",
+    description: "No retired legacy copy (PRD DN-1, DN-8). Private identifiers are never hashed into this public repository; they come from PRIVATE_IDENTIFIERS.",
     check: (t) => matchHashed(t, HASHED),
   },
   {
     id: "private-env-identifiers",
     scope: "repo",
     description: "Identifiers listed in the PRIVATE_IDENTIFIERS environment variable never appear (PRD A-1, Q-6).",
-    check: (t, env = process.env) =>
-      (env.PRIVATE_IDENTIFIERS ?? "")
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s.length >= 4)
-        .filter((s) => t.toLowerCase().includes(s.toLowerCase()))
-        .map(() => ({ match: "[value from PRIVATE_IDENTIFIERS]", message: "A private identifier must not enter the public repository." })),
+    check: (t, env = process.env) => {
+      const values = privateIdentifiers(env);
+      if (values.length === 0) return [];
+      const words = normaliseWords(t);
+      // Never echo a value: the finding says only that one matched.
+      return values
+        .filter((v) => containsSequence(words, v))
+        .map(() => ({ match: "[value from PRIVATE_IDENTIFIERS]", message: "A private identifier must not enter the public repository." }));
+    },
   },
   {
     id: "long-numeric-id",

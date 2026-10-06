@@ -1,9 +1,11 @@
 import { PRIMARY_NAV } from "./site";
 
 /**
- * Self-contained HTML for an explanatory 410 (PRD DN-6). It does not echo
- * the requested path: retired names may be under review, and reflecting
- * input would be an injection risk.
+ * Self-contained HTML for an explanatory 410 (PRD DN-6). Some of these
+ * addresses are unavailable only until a review clears, so the wording
+ * makes no claim about whether anything returns. It does not echo the
+ * requested path: names may be under review, and reflecting input would be
+ * an injection risk.
  */
 export function gonePageHtml(): string {
   const nav = PRIMARY_NAV.map((l) => `<li><a href="${l.href}">${l.label}</a></li>`).join("");
@@ -13,7 +15,7 @@ export function gonePageHtml(): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Page retired · VT ∞</title>
+<title>Not available · VT ∞</title>
 <style>
 @font-face{font-family:"JetBrains Mono";src:url("/fonts/JetBrainsMono-wght.woff2") format("woff2");font-weight:100 800;font-display:swap}
 :root{--ground:#000;--figure:#fff;--text:#dadada;--muted:#909090;color-scheme:dark}
@@ -34,8 +36,8 @@ li a{display:inline-flex;min-height:2.75rem;align-items:center}
 <a class="skip" href="#main">Skip to content</a>
 <header class="wrap"><nav aria-label="Primary"><ul>${nav}</ul></nav></header>
 <main id="main" class="wrap" tabindex="-1">
-<h1>This page has been retired</h1>
-<p>vt-infinite.com was rebuilt from an empty repository. The page at this address was not carried into the new site, and nothing replaces it.</p>
+<h1>This page is not available</h1>
+<p>vt-infinite.com was rebuilt from an empty repository. The page at this address is not part of the new site at present.</p>
 <p>Current work is on <a href="/words">Words</a> and <a href="/code">Code</a>. To ask about something that used to be here, see <a href="/contact">Contact</a>.</p>
 </main>
 </body>

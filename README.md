@@ -60,7 +60,7 @@ Server-side only. A flag is on only when its variable is exactly `true`; unset m
 
 `/admin` and `/api/admin` return 404 for every request until authentication and storage exist.
 
-Other environment variables: `SITE_URL` (defaults to `https://vt-infinite.com`), and in CI the optional `PRIVATE_IDENTIFIERS` secret (comma-separated values the guard must never find). Configuration values that are private live only in the host's environment, never in this repository.
+Other environment variables: `SITE_URL` (defaults to `https://vt-infinite.com`), and in CI the `PRIVATE_IDENTIFIERS` Actions secret: comma-separated values the guard must never find, matched regardless of case, punctuation, hyphens and underscores. CI fails if the secret is empty, except on pull requests from forks, which cannot read secrets and get a warning instead. Configuration values that are private live only in the host's environment, never in this repository.
 
 ## Licenses
 

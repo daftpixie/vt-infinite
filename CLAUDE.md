@@ -22,5 +22,5 @@ Stage 1 (fresh foundation) is in review. Do not start stage 2 until Matthew has 
 - New routes go in `lib/routes.ts` first; tests read that table.
 - Gated features are added to `GATED_PREFIXES` in `lib/access.ts`, and the page repeats the flag check.
 - Missing copy is a placeholder registered in `lib/placeholders.ts`, never an invented sentence.
-- Private identifiers and retired phrases are kept out by hash (`guards/hashed-phrases.json`). Add one with `printf '%s' 'phrase' | node scripts/hash-phrase.mjs private`; never write the phrase into the repository.
+- Retired legacy copy, which was already public, is kept out by hash (`guards/hashed-phrases.json`; add one with `printf '%s' 'phrase' | node scripts/hash-phrase.mjs retired`). Private identifiers are never hashed into this repository: they live only in the `PRIVATE_IDENTIFIERS` Actions secret, which the guard reads in CI.
 - Design tokens in `app/globals.css` implement the brand reference §08–§13. Change them only with the reference.
