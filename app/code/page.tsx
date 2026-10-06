@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { after, connection } from "next/server";
+import { connection } from "next/server";
 import { ExternalLink } from "@/components/ExternalLink";
 import { PageShell } from "@/components/PageShell";
 import { Placeholder } from "@/components/Placeholder";
-import { readRepos, refreshRepos } from "@/lib/code/repos";
+import { readRepos } from "@/lib/code/repos";
 import { formatDate } from "@/lib/content/dates";
 
 export const metadata: Metadata = { title: "Code" };
@@ -15,7 +15,6 @@ export const metadata: Metadata = { title: "Code" };
  */
 export default async function CodePage() {
   await connection();
-  after(() => refreshRepos());
   const repos = await readRepos();
   return (
     <PageShell title="Code">

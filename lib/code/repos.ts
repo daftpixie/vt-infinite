@@ -58,13 +58,15 @@ export type RepoMetadata = {
   pushedAt: string | null;
 };
 
-type SnapshotData = { repos: RepoMetadata[] };
+type SnapshotData = { repos: RepoMetadata[]; etags?: Record<string, string> };
 const KEY = "code-repos";
 export const CODE_REFRESH_FLOOR_MS = 60 * 60 * 1000;
 export const CODE_STALE_AFTER_MS = 24 * 60 * 60 * 1000;
 
 export type VisibilityResult =
-  | { kind: "public"; meta: Omit<RepoMetadata, "confirmedPublicAt"> }
+  | { kind: "public"; meta: Omit<RepoMetadata, "confirmedPublicAt">; etag: string | null }
+  | { kind: "not-modified" }
+  | { kind: "moved" }
   | { kind: "not-public" }
   | { kind: "unavailable" };
 
@@ -72,19 +74,38 @@ type FetchImpl = (input: string, init: RequestInit) => Promise<Response>;
 
 const API = "https://api.github.com/repos/";
 
-/** G-2 and G-4: one read-only request; anything but a confirmed public repository is not public. */
-export async function checkVisibility(entry: Pick<RepoEntry, "owner" | "repo">, fetchImpl: FetchImpl = fetch): Promise<VisibilityResult> {
+/**
+ * G-2 and G-4: one read-only, unauthenticated request. A conditional request
+ * (ETag) lets an unchanged repository answer 304, which GitHub does not
+ * count against the unauthenticated rate limit. Redirects are not followed:
+ * a 301 means the repository was renamed or transferred, so the approved
+ * entry no longer names it. Anything but a confirmed public repository is
+ * not public.
+ */
+export async function checkVisibility(
+  entry: Pick<RepoEntry, "owner" | "repo">,
+  fetchImpl: FetchImpl = fetch,
+  etag: string | null = null,
+): Promise<VisibilityResult> {
   let res: Response;
+  const headers: Record<string, string> = {
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+    "User-Agent": "vt-infinite.com repository check",
+  };
+  if (etag) headers["If-None-Match"] = etag;
   try {
     res = await fetchImpl(`${API}${encodeURIComponent(entry.owner)}/${encodeURIComponent(entry.repo)}`, {
-      headers: { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "vt-infinite.com repository check" },
-      redirect: "error",
+      headers,
+      redirect: "manual",
       signal: AbortSignal.timeout(10_000),
       cache: "no-store",
     });
   } catch {
     return { kind: "unavailable" };
   }
+  if (res.status === 304) return { kind: "not-modified" };
+  if (res.status === 301 || res.status === 302 || res.status === 307 || res.status === 308) return { kind: "moved" };
   if (res.status === 404) return { kind: "not-public" };
   if (!res.ok) return { kind: "unavailable" };
   let body: Record<string, unknown>;
@@ -94,12 +115,14 @@ export async function checkVisibility(entry: Pick<RepoEntry, "owner" | "repo">, 
     return { kind: "unavailable" };
   }
   const fullName = `${entry.owner}/${entry.repo}`.toLowerCase();
-  if (body.private !== false || body.visibility !== "public" || String(body.full_name).toLowerCase() !== fullName) return { kind: "not-public" };
+  if (String(body.full_name).toLowerCase() !== fullName) return { kind: "moved" };
+  if (body.private !== false || body.visibility !== "public") return { kind: "not-public" };
   const license = (body.license as { spdx_id?: unknown } | null)?.spdx_id;
   const str = (v: unknown, max: number) => (typeof v === "string" && v.length > 0 && v.length <= max ? v : null);
   const pushed = str(body.pushed_at, 40);
   return {
     kind: "public",
+    etag: str(res.headers.get("etag"), 200),
     meta: {
       owner: entry.owner,
       repo: entry.repo,
@@ -110,42 +133,69 @@ export async function checkVisibility(entry: Pick<RepoEntry, "owner" | "repo">, 
   };
 }
 
+export type RepoRefreshReport = { skipped: boolean; moved: string[]; notPublic: string[]; unavailable: string[] };
+
 /**
- * Refresh the snapshot. A confirmed private or missing repository is
- * removed at once. A transient failure keeps an earlier confirmation with
- * its date, but never promotes an entry that was not confirmed before.
+ * Refresh the snapshot, at most hourly, from the scheduled job only.
+ * - Confirmed public (200, or 304 against a stored ETag): listed, dated now.
+ * - Confirmed private or missing (404): removed at once.
+ * - Moved (301 or a different name): removed and reported for review.
+ * - Provider failure: an earlier confirmation is kept with its own date
+ *   (Matthew's call, 6 Oct 2026); an entry never confirmed stays hidden.
  */
 export async function refreshRepos(
-  deps: { store?: SnapshotStore; fetchImpl?: FetchImpl; now?: () => Date; cfg?: ReposConfig; env?: Readonly<Record<string, string | undefined>> } = {},
-): Promise<void> {
-  if ((deps.env ?? process.env).UPSTREAM_REFRESH === "off") return;
-  const store = deps.store ?? getSnapshotStore();
+  deps: { store?: SnapshotStore; fetchImpl?: FetchImpl; now?: () => Date; cfg?: ReposConfig; env?: Readonly<Record<string, string | undefined>>; log?: (m: string) => void } = {},
+): Promise<RepoRefreshReport> {
+  const report: RepoRefreshReport = { skipped: true, moved: [], notPublic: [], unavailable: [] };
+  if ((deps.env ?? process.env).UPSTREAM_REFRESH === "off") return report;
+  const store = deps.store ?? getSnapshotStore("refresh");
+  const log = deps.log ?? ((m: string) => console.warn(m));
   const now = (deps.now ?? (() => new Date()))();
   const cfg = deps.cfg ?? REPOS;
   const prior = await store.get<SnapshotData>(KEY);
-  if (prior && now.getTime() - Date.parse(prior.fetchedAt) < CODE_REFRESH_FLOOR_MS) return;
+  if (prior && now.getTime() - Date.parse(prior.fetchedAt) < CODE_REFRESH_FLOOR_MS) return report;
+  report.skipped = false;
   const before = new Map((prior?.data.repos ?? []).map((m) => [`${m.owner}/${m.repo}`.toLowerCase(), m]));
+  const etags = prior?.data.etags ?? {};
   const next: RepoMetadata[] = [];
+  const nextEtags: Record<string, string> = {};
   for (const entry of cfg.repos) {
     const k = `${entry.owner}/${entry.repo}`.toLowerCase();
-    const result = await checkVisibility(entry, deps.fetchImpl);
-    if (result.kind === "public") next.push({ ...result.meta, confirmedPublicAt: now.toISOString() });
-    else if (result.kind === "unavailable" && before.has(k)) next.push(before.get(k) as RepoMetadata);
+    const known = before.get(k);
+    const result = await checkVisibility(entry, deps.fetchImpl, known ? (etags[k] ?? null) : null);
+    if (result.kind === "public") {
+      next.push({ ...result.meta, confirmedPublicAt: now.toISOString() });
+      if (result.etag) nextEtags[k] = result.etag;
+    } else if (result.kind === "not-modified" && known) {
+      next.push({ ...known, confirmedPublicAt: now.toISOString() });
+      if (etags[k]) nextEtags[k] = etags[k] as string;
+    } else if (result.kind === "moved") {
+      report.moved.push(k);
+      log(`code: ${k} moved or renamed on GitHub; hidden until its allowlist entry is reviewed`);
+    } else if (result.kind === "not-public") {
+      report.notPublic.push(k);
+    } else {
+      report.unavailable.push(k);
+      if (known) next.push(known);
+    }
   }
-  await store.put<SnapshotData>(KEY, { schemaVersion: 1, fetchedAt: now.toISOString(), data: { repos: next } });
+  await store.put<SnapshotData>(KEY, { schemaVersion: 1, fetchedAt: now.toISOString(), data: { repos: next, etags: nextEtags } });
+  return report;
 }
 
 export type RepoView = RepoEntry & { meta: RepoMetadata; stale: boolean };
 
 /** Approved entries that have been confirmed public, in Matthew's order. */
 export async function readRepos(deps: { store?: SnapshotStore; now?: () => Date; cfg?: ReposConfig } = {}): Promise<RepoView[]> {
-  const store = deps.store ?? getSnapshotStore();
+  const store = deps.store ?? getSnapshotStore("read");
   const now = (deps.now ?? (() => new Date()))();
   const cfg = deps.cfg ?? REPOS;
   let snap;
   try {
     snap = await store.get<SnapshotData>(KEY);
-  } catch {
+  } catch (err) {
+    const e = err as { name?: string; code?: string };
+    console.error(`snapshots: read failed key=${KEY} error=${[e?.name ?? "Error", e?.code].filter(Boolean).join(":")}`);
     snap = null;
   }
   const byKey = new Map((snap?.data.repos ?? []).map((m) => [`${m.owner}/${m.repo}`.toLowerCase(), m]));

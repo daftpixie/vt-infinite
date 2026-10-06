@@ -31,10 +31,16 @@ export class FileSnapshotStore implements SnapshotStore {
 
   async put<T>(key: string, snapshot: Snapshot<T>): Promise<void> {
     const target = this.path(key);
-    await mkdir(this.dir, { recursive: true });
-    const tmp = `${target}.${randomUUID()}.tmp`;
-    await writeFile(tmp, JSON.stringify(snapshot), "utf8");
-    await rename(tmp, target);
+    try {
+      await mkdir(this.dir, { recursive: true });
+      const tmp = `${target}.${randomUUID()}.tmp`;
+      await writeFile(tmp, JSON.stringify(snapshot), "utf8");
+      await rename(tmp, target);
+    } catch (err) {
+      const e = err as { name?: string; code?: string };
+      console.error(`snapshots: write failed key=${key} error=${[e?.name ?? "Error", e?.code].filter(Boolean).join(":")}`);
+      throw err;
+    }
   }
 
   async delete(key: string): Promise<void> {
