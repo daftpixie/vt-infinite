@@ -113,6 +113,9 @@ describe("fetching (SS-2)", () => {
     expect(await fetchFeed(PUB.feed, { fetchImpl: async () => Promise.reject(timeout) })).toEqual({ kind: "error", reason: "timeout" });
     expect(await fetchFeed(PUB.feed, { fetchImpl: async () => new Response("x", { status: 503 }) })).toEqual({ kind: "error", reason: "status" });
     expect(await fetchFeed(PUB.feed, { fetchImpl: async () => new Response("x", { headers: { "content-type": "text/html" } }) })).toEqual({ kind: "error", reason: "content-type" });
+    // A missing or empty content type is refused (D5).
+    expect(await fetchFeed(PUB.feed, { fetchImpl: async () => new Response(new Blob(["<rss/>"]).stream(), { headers: {} }) })).toEqual({ kind: "error", reason: "content-type" });
+    expect(await fetchFeed(PUB.feed, { fetchImpl: async () => new Response(new Blob(["<rss/>"]).stream(), { headers: { "content-type": "" } }) })).toEqual({ kind: "error", reason: "content-type" });
     const big = "x".repeat(MAX_FEED_BYTES + 1);
     expect(await fetchFeed(PUB.feed, { fetchImpl: async () => response(big) })).toEqual({ kind: "error", reason: "too-large" });
     expect(await fetchFeed(PUB.feed, { maxBytes: 10, fetchImpl: async () => new Response(new Blob(["x".repeat(50)]).stream(), { headers: { "content-type": "application/xml" } }) })).toEqual({ kind: "error", reason: "too-large" });

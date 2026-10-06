@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { XMLParser } from "fast-xml-parser";
 import { runRules } from "@/guards/rules.mjs";
+import { passesHomeChecks } from "@/lib/home-checks";
 import type { Publication } from "./config";
 import { htmlToText, truncate } from "./text";
 
@@ -31,8 +32,6 @@ export const MAX_SUBTITLE = 400;
 
 /** Rules that withhold an item from every surface. */
 const WITHHOLD_RULES = ["secrets", "private-env-identifiers", "long-numeric-id", "pbc-status", "byline"];
-/** Rules that keep an item off Home, where institutional claims apply. */
-const HOME_RULES = ["pbc-mention", "funding-ask", "clinical-function", "initiative-pairing"];
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -117,7 +116,7 @@ export function parseFeed(xml: string, pub: Publication, env: Readonly<Record<st
       url: url.toString(),
       publishedAt: new Date(published).toISOString(),
       mentionsSuicide: /suicid/i.test(shown),
-      homeEligible: runRules(shown, { target: `stream:${pub.id}`, scopes: ["copy"], env, only: HOME_RULES }).length === 0,
+      homeEligible: passesHomeChecks(shown, `stream:${pub.id}`, env),
     });
   });
 
