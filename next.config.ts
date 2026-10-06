@@ -3,6 +3,8 @@ import { securityHeaders } from "./lib/security-headers";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Content files are read at request time; ship them with the server bundle.
+  outputFileTracingIncludes: { "/**": ["./content/**/*"] },
   reactStrictMode: true,
   async redirects() {
     // Old URLs with a deliberate replacement (PRD DN-6). permanent => 308.

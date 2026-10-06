@@ -68,6 +68,8 @@ Storage and upstream reads (server-side only):
 | `SNAPSHOT_DIR` | Directory for the file store (default `.data/snapshots`, gitignored) |
 | `UPSTREAM_REFRESH` | `off` stops all provider fetches (tests, offline work); anything else allows them |
 
+Essays and Record entries are reviewed files under `content/essays/<slug>/index.mdx` and `content/record/<slug>.mdx`, validated by strict schemas (`lib/content/`). Only `published` pieces whose `publishAt` has passed reach pages, feeds or the sitemap. Tests point `ESSAYS_DIR` and `RECORD_DIR` at `tests/fixtures/`, which the loader refuses unless `ALLOW_CONTENT_FIXTURES=true`.
+
 Publication streams are allowlisted in `content/streams.json`. Pages read only the persisted snapshot; refreshes run after the response, at most once per fifteen minutes per feed, and a failed refresh never replaces the last good read.
 
 Other environment variables: `SITE_URL` (defaults to `https://vt-infinite.com`), and in CI the `PRIVATE_IDENTIFIERS` Actions secret: comma-separated values the guard must never find, matched regardless of case, punctuation, hyphens and underscores. CI fails if the secret is empty, except on pull requests from forks, which cannot read secrets and get a warning instead. Configuration values that are private live only in the host's environment, never in this repository.

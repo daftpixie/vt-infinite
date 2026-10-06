@@ -41,14 +41,20 @@ test.describe("route shells render the site frame", () => {
 });
 
 test.describe("feeds", () => {
-  for (const path of ["/words/feed.xml", "/the-record/feed.xml"]) {
-    test(`${path} is valid, empty RSS 2.0`, async ({ request }) => {
-      const res = await request.get(path);
-      expect(res.status()).toBe(200);
-      expect(res.headers()["content-type"]).toContain("application/rss+xml");
-      const xml = await res.text();
-      expect(xml).toMatch(/^<\?xml version="1.0" encoding="UTF-8"\?>\n<rss version="2.0"/);
-      expect(xml).not.toContain("<item>");
-    });
-  }
+  test("/words/feed.xml lists published local essays only", async ({ request }) => {
+    const res = await request.get("/words/feed.xml");
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("application/rss+xml");
+    const xml = await res.text();
+    expect(xml).toMatch(/^<\?xml version="1.0" encoding="UTF-8"\?>\n<rss version="2.0"/);
+    expect(xml.match(/<item>/g)).toHaveLength(2);
+    expect(xml).toContain("/words/synthetic-site-essay");
+    expect(xml).not.toMatch(/synthetic-draft|synthetic-held|synthetic-scheduled|Synthetic stream post/);
+    for (const d of xml.matchAll(/<pubDate>([^<]+)<\/pubDate>/g)) expect(Number.isNaN(Date.parse(d[1] as string))).toBe(false);
+  });
+
+  test("/the-record/feed.xml keeps a republished entry's original GUID", async ({ request }) => {
+    const xml = await (await request.get("/the-record/feed.xml")).text();
+    expect(xml).toContain('<guid isPermaLink="false">synthetic-legacy-guid-0001</guid>');
+  });
 });

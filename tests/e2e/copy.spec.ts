@@ -4,9 +4,11 @@ import { CRISIS_SUPPORT_TEXT } from "@/lib/crisis";
 import { PAGES_200, pageText } from "./helpers";
 
 test.describe("rendered copy passes every guard", () => {
-  for (const path of [...PAGES_200, "/does-not-exist", "/phial"]) {
+  for (const path of [...PAGES_200, "/does-not-exist", "/phial", "/words/synthetic-site-essay", "/words/synthetic-mirror", "/the-record/synthetic-entry"]) {
     test(path, async ({ page }) => {
-      await page.goto(path);
+      const res = await page.goto(path);
+      // A crashed page must fail here, not pass the guards with an error screen.
+      expect(res?.status()).toBeLessThan(500);
       const text = await pageText(page);
       const title = await page.title();
       expect(runRules(`${title}\n${text}`, { target: path })).toEqual([]);

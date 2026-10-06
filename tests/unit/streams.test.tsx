@@ -1,7 +1,9 @@
 import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { StreamStatus } from "@/components/words";
 import { FileSnapshotStore } from "@/lib/storage/file";
 import { StreamsConfigSchema, type Publication, type StreamsConfig } from "@/lib/streams/config";
 import { fetchFeed, MAX_FEED_BYTES, USER_AGENT } from "@/lib/streams/fetch";
@@ -187,5 +189,13 @@ describe("refresh and persistence (SS-5, SS-6)", () => {
     const config: StreamsConfig = { schemaVersion: 1, publications: [PUB], withdrawn: [{ publication: PUB.id, guid: "synthetic-guid-two" }] };
     const view = await readPublication(PUB, { store: s, now: () => t0, config });
     expect(view.status !== "unavailable" && view.items.map((i) => i.guid)).toEqual(["https://everydecimal.substack.com/p/synthetic-post-one"]);
+  });
+});
+
+describe("server-rendered stream states", () => {
+  it("names each state in text, without color", () => {
+    expect(renderToStaticMarkup(<StreamStatus view={{ publication: PUB, status: "unavailable" }} />)).toContain("Publication feed unavailable.");
+    expect(renderToStaticMarkup(<StreamStatus view={{ publication: PUB, status: "fresh", fetchedAt: "2026-09-01T12:00:00Z", items: [] }} />)).toContain("No posts yet.");
+    expect(renderToStaticMarkup(<StreamStatus view={{ publication: PUB, status: "stale", fetchedAt: "2026-09-01T12:00:00Z", items: [] }} />)).toContain("last read");
   });
 });

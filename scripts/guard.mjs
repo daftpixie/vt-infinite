@@ -47,7 +47,11 @@ export function scan(files, env = process.env) {
     } catch {
       continue; // deleted in the working tree
     }
-    const scopes = file.startsWith("content/") ? ["repo", "copy"] : ["repo"];
+    // Institutional content gets the copy rules. Essays and Record entries are
+    // the founder's register (brand §04): repository rules apply, and the
+    // content loader enforces the crisis block and schema.
+    const authored = /^content\/(essays|record)\//.test(file);
+    const scopes = file.startsWith("content/") && !authored ? ["repo", "copy"] : ["repo"];
     findings.push(...runRules(text, { target: file, scopes, env }));
   }
   return findings;
