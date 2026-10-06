@@ -1,0 +1,5 @@
+{
+  "note": "Old vt-infinite.com URLs (PRD DN-6). Redirects live in next.config.ts. 'gone' paths return an explanatory 410. Record slugs are added only from the verified legacy inventory (DN-3); until it arrives the list is empty and unknown Record slugs return 404.",
+  "gone": ["/phial"],
+  "goneRecordSlugs": []
+}
