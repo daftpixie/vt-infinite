@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { after, connection } from "next/server";
 import { CrisisSupport } from "@/components/CrisisSupport";
+import { LorenzFigure } from "@/components/figures/LorenzFigure";
 import { Placeholder } from "@/components/Placeholder";
 import { Unreleased } from "@/components/Unreleased";
 import { StreamStatus, WordsList } from "@/components/words";
@@ -24,10 +25,16 @@ export default async function HomePage() {
   return (
     <>
       <div className="wrap">
-        <h1>{MASTHEAD}</h1>
-        <p className="standfirst">{STANDFIRST}</p>
-        <Unreleased />
-        <Placeholder id="lorenzFigure" />
+        <div className="hero">
+          <div className="hero-text">
+            <h1>{MASTHEAD}</h1>
+            <p className="standfirst">{STANDFIRST}</p>
+            <Unreleased />
+          </div>
+          <div className="hero-figure">
+            <LorenzFigure />
+          </div>
+        </div>
 
         <h2>Directions of work</h2>
         <Placeholder id="directionsOfWork" />

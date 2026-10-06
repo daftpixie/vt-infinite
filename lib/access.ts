@@ -17,6 +17,7 @@ export const GATED_PREFIXES: ReadonlyArray<{ prefix: string; flag: Flag }> = [
   { prefix: "/api/governance/demo", flag: "governanceDemo" },
   { prefix: "/governance/live", flag: "governanceLive" },
   { prefix: "/api/governance/live", flag: "governanceLive" },
+  { prefix: "/figures/mandelbrot", flag: "mandelbrot" },
 ];
 
 /** Marrs Rover child segments that are not entity IDs. */

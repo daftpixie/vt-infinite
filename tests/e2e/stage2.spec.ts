@@ -110,6 +110,66 @@ test.describe("The Record (new system)", () => {
   });
 });
 
+test.describe("Code (G-1 to G-4)", () => {
+  test("shows an honest empty state", async ({ page }) => {
+    await page.goto("/code");
+    await expect(page.getByText("No repositories are listed yet.")).toBeVisible();
+    await expect(page.locator("main")).not.toContainText(/stars|forks|followers/i);
+  });
+});
+
+test.describe("Lorenz figure (PRD §08)", () => {
+  test("still frame and computed caption without JavaScript", async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto("/");
+    const still = page.locator(".lorenz svg[role=img]");
+    await expect(still).toBeVisible();
+    await expect(still).toHaveAttribute("aria-label", /17\.870.*21\.835/);
+    await expect(page.locator("#lorenz-caption")).toContainText("first exceeds 1 at t = 17.870");
+    await expect(page.locator("#lorenz-caption")).toContainText("not a reenactment");
+    await expect(page.getByRole("button", { name: "Start the demonstration" })).toBeHidden();
+    await context.close();
+  });
+
+  test("starts only when asked, pauses, and is operable by keyboard", async ({ page }) => {
+    await page.goto("/");
+    const readout = page.locator(".lorenz .figure-readout");
+    await expect(readout).toHaveText(/^t = 0\.000 · distance 0\.000127 · Together$/);
+    await page.waitForTimeout(300);
+    await expect(readout).toHaveText(/^t = 0\.000/);
+    const start = page.getByRole("button", { name: "Start the demonstration" });
+    await start.focus();
+    await page.keyboard.press("Enter");
+    await expect(readout).not.toHaveText(/^t = 0\.000/);
+    const pause = page.getByRole("button", { name: "Pause" });
+    await pause.focus();
+    await page.keyboard.press("Enter");
+    const paused = await readout.textContent();
+    await page.waitForTimeout(300);
+    await expect(readout).toHaveText(paused ?? "");
+    await expect(page.getByRole("button", { name: "Resume" })).toBeVisible();
+  });
+
+  test.describe("with reduced motion", () => {
+    test.use({ reducedMotion: "reduce" });
+    test("shows the final frame without animating", async ({ page }) => {
+      await page.goto("/");
+      await page.getByRole("button", { name: "Show the result" }).click();
+      await expect(page.locator(".lorenz .figure-readout")).toHaveText(/^t = 40\.000 · distance \d+\.\d{3} · Apart$/);
+    });
+  });
+});
+
+test.describe("Mandelbrot is held until its kernel is approved (P7)", () => {
+  test("Agency shows the placeholder and no figure", async ({ page, request }) => {
+    await page.goto("/agency");
+    await expect(page.locator('[data-placeholder="mandelbrotFigure"]')).toBeVisible();
+    await expect(page.locator(".mandelbrot")).toHaveCount(0);
+    expect((await request.get("/figures/mandelbrot-still.png")).status()).toBe(404);
+  });
+});
+
 test.describe("Proposed governance stays informational (GOV-1 to GOV-3)", () => {
   test("no participation surface", async ({ page }) => {
     await page.goto("/governance");

@@ -37,6 +37,7 @@ export const ROUTES: readonly RouteSpec[] = [
   { path: "/policies/terms", file: "app/policies/terms/page.tsx", status: 200, kind: "page" },
   { path: "/admin", file: "app/admin/[[...path]]/page.tsx", status: 404, kind: "page" },
   { path: "/sitemap.xml", file: "app/sitemap.ts", status: 200, kind: "feed" },
+  { path: "/figures/mandelbrot-still.png", file: "app/figures/mandelbrot-still.png/route.ts", status: 404, kind: "feed" },
 ];
 
 export const PAGES_200 = ROUTES.filter((r) => r.kind === "page" && r.status === 200).map((r) => r.path);
