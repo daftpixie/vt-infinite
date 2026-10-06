@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "publications": [
+    {
+      "id": "the-human-butterfly",
+      "name": "The Human Butterfly",
+      "home": "https://everydecimal.substack.com",
+      "feed": "https://everydecimal.substack.com/feed",
+      "enabled": true
+    },
+    {
+      "id": "incentive-eyes",
+      "name": "Incentive Eyes",
+      "home": "https://incentiveeyes.substack.com",
+      "feed": "https://incentiveeyes.substack.com/feed",
+      "enabled": false
+    }
+  ],
+  "withdrawn": []
+}

@@ -13,7 +13,7 @@ const ROOT_COMMIT = "35d3b17f9ac412e4886d0a0f2b9ac4024ac76255";
 const ALLOWED_TOP = new Set([
   ".github", ".gitignore", ".husky", ".npmrc", ".nvmrc", ".secretlintignore", ".secretlintrc.json",
   "CLAUDE.md", "CONTRIBUTING.md", "LICENSE", "README.md", "SECURITY.md",
-  "app", "components", "content", "docs", "eslint.config.mjs", "guards", "lib", "next.config.ts",
+  "app", "components", "content", "db", "docs", "eslint.config.mjs", "guards", "lib", "next.config.ts",
   "package-lock.json", "package.json", "playwright.config.ts", "proxy.ts", "public", "scripts",
   "tests", "tsconfig.json", "vitest.config.mts",
 ]);

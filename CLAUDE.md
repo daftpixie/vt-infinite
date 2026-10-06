@@ -12,7 +12,7 @@ Never commit the PRD or brand reference, copy files from where they are kept, na
 
 ## Stage
 
-Stage 1 (fresh foundation) is in review. Do not start stage 2 until Matthew has reviewed and merged stage 1.
+Stage 1 is merged. Stage 2 (public hub) is in review as stacked pull requests. Do not start stage 3 until Matthew has reviewed and merged stage 2.
 
 ## Working here
 

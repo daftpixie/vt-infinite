@@ -60,6 +60,16 @@ Server-side only. A flag is on only when its variable is exactly `true`; unset m
 
 `/admin` and `/api/admin` return 404 for every request until authentication and storage exist.
 
+Storage and upstream reads (server-side only):
+
+| Variable | Meaning |
+| --- | --- |
+| `SNAPSHOT_STORE` | `file` (default). `postgres` is reserved and fails loudly until a database is chosen and connected |
+| `SNAPSHOT_DIR` | Directory for the file store (default `.data/snapshots`, gitignored) |
+| `UPSTREAM_REFRESH` | `off` stops all provider fetches (tests, offline work); anything else allows them |
+
+Publication streams are allowlisted in `content/streams.json`. Pages read only the persisted snapshot; refreshes run after the response, at most once per fifteen minutes per feed, and a failed refresh never replaces the last good read.
+
 Other environment variables: `SITE_URL` (defaults to `https://vt-infinite.com`), and in CI the `PRIVATE_IDENTIFIERS` Actions secret: comma-separated values the guard must never find, matched regardless of case, punctuation, hyphens and underscores. CI fails if the secret is empty, except on pull requests from forks, which cannot read secrets and get a warning instead. Configuration values that are private live only in the host's environment, never in this repository.
 
 ## Licenses

@@ -1,0 +1,3 @@
+<?xml version="1.0"?>
+<!DOCTYPE rss [<!ENTITY xxe SYSTEM "file:///etc/passwd"><!ENTITY lol "lol">]>
+<rss version="2.0"><channel><title>&xxe;</title><item><title>&lol;</title><link>https://everydecimal.substack.com/p/x</link><guid>x</guid><pubDate>Wed, 02 Sep 2026 12:00:00 GMT</pubDate></item></channel></rss>

@@ -34,3 +34,6 @@ test-ledger/
 .vercel/
 .DS_Store
 *.log
+
+# Local snapshot store
+.data/
