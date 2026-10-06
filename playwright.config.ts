@@ -5,11 +5,19 @@ const PORT = Number(process.env.E2E_PORT ?? 3100);
 
 // Every feature flag is explicitly unset for the server under test, so the
 // suite proves the default-off behavior rather than inheriting a shell value.
-const serverEnv: Record<string, string> = Object.fromEntries(
-  Object.entries(process.env).filter(
-    (entry): entry is [string, string] => entry[1] !== undefined && !(Object.values(FLAGS) as string[]).includes(entry[0]),
+const serverEnv: Record<string, string> = {
+  ...Object.fromEntries(
+    Object.entries(process.env).filter(
+      (entry): entry is [string, string] => entry[1] !== undefined && !(Object.values(FLAGS) as string[]).includes(entry[0]),
+    ),
   ),
-);
+  // Synthetic fixtures only; never contact upstream providers from tests.
+  ESSAYS_DIR: "tests/fixtures/essays",
+  RECORD_DIR: "tests/fixtures/record",
+  ALLOW_CONTENT_FIXTURES: "true",
+  SNAPSHOT_DIR: "tests/fixtures/snapshots",
+  UPSTREAM_REFRESH: "off",
+};
 
 export default defineConfig({
   testDir: "tests/e2e",

@@ -112,6 +112,8 @@
 
 /* Base */
 *, *::before, *::after { box-sizing: border-box; }
+/* `hidden` always wins over component display rules. */
+[hidden] { display: none !important; }
 html {
   background: var(--ground);
   color: var(--text);
@@ -186,3 +188,27 @@ main { padding-bottom: var(--s16); }
   border: var(--rule) solid var(--edge); padding: 0 var(--s3); cursor: pointer; border-radius: 0;
 }
 .button[aria-pressed="true"], .button:hover { background: var(--figure); color: var(--ground); border-color: var(--figure); }
+
+/* Stage 2: prose and lists */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.words-list { list-style: none; margin: 0; padding: 0; }
+.words-item { border-top: var(--rule) solid var(--hair); padding: var(--s4) 0; }
+.words-title { font-size: var(--step-1); line-height: var(--lead-1); margin: 0 0 var(--s2); }
+.words-subtitle { margin-bottom: var(--s2); }
+.notice-inline { color: var(--text); max-width: var(--measure); }
+.filter-list { list-style: none; margin: 0 0 var(--s6); padding: 0; display: flex; flex-wrap: wrap; gap: 0 var(--s6); }
+.filter-list a { display: inline-flex; align-items: center; min-height: 2.75rem; }
+.filter-list a[aria-current="page"] { background: var(--figure); color: var(--ground); padding: 0 var(--s2); }
+.essay .prose > * { max-width: var(--measure); }
+.byline { color: var(--figure); font-weight: 700; margin-bottom: var(--s2); }
+.essay-cover { display: block; max-width: 100%; height: auto; margin: var(--s6) 0; }
+.corrections { border: var(--rule) solid var(--edge); padding: var(--s4); margin: var(--s6) 0; max-width: var(--measure); }
+.corrections h2 { margin-top: 0; }
+.corrections ul { list-style: none; margin: 0; padding: 0; }
+.margin-note, .source-note { font-size: var(--step--1); line-height: var(--lead--1); color: var(--muted); border-left: var(--rule) solid var(--edge); padding-left: 2ch; margin: var(--s4) 0; max-width: 40ch; }
+.method-note { border-top: var(--rule) solid var(--hair); margin-top: var(--s8); padding-top: var(--s4); }
+blockquote { border-left: var(--rule) solid var(--figure); margin: var(--s4) 0; padding-left: 2ch; }
+

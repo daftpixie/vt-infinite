@@ -1,0 +1,5 @@
+{"schemaVersion":1,"fetchedAt":"2026-09-02T12:05:00.000Z","data":{"etag":null,"lastModified":null,"items":[
+{"key":"fixture000000001","publication":"the-human-butterfly","guid":"synthetic-stream-1","title":"Synthetic stream post (fixture)","subtitle":"Synthetic subtitle for an external post.","url":"https://everydecimal.substack.com/p/synthetic-stream-post","publishedAt":"2026-09-02T12:00:00.000Z","mentionsSuicide":false,"homeEligible":true},
+{"key":"fixture000000002","publication":"the-human-butterfly","guid":"synthetic-mirror-guid","title":"Synthetic fixture mirror","subtitle":null,"url":"https://everydecimal.substack.com/p/synthetic-fixture-mirror","publishedAt":"2026-08-01T12:00:00.000Z","mentionsSuicide":false,"homeEligible":true},
+{"key":"fixture000000003","publication":"the-human-butterfly","guid":"synthetic-home-ineligible","title":"Synthetic post kept off Home (fixture)","subtitle":"Synthetic subtitle.","url":"https://everydecimal.substack.com/p/synthetic-off-home","publishedAt":"2026-09-04T12:00:00.000Z","mentionsSuicide":false,"homeEligible":false}
+]}}
