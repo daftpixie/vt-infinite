@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title><![CDATA[Synthetic fixture channel]]></title>
+    <link>https://everydecimal.substack.com</link>
+    <description><![CDATA[Synthetic test feed]]></description>
+    <item>
+      <title><![CDATA[Synthetic post one &amp; a half]]></title>
+      <description><![CDATA[<p>Synthetic <strong>subtitle</strong> with &#8217;quotes&#8217; <img src=x onerror=alert(1)><script>alert(1)</script> {props.leak}</p>]]></description>
+      <link>https://everydecimal.substack.com/p/synthetic-post-one</link>
+      <guid isPermaLink="false">https://everydecimal.substack.com/p/synthetic-post-one</guid>
+      <dc:creator><![CDATA[Matthew J Adams]]></dc:creator>
+      <pubDate>Tue, 01 Sep 2026 12:00:00 GMT</pubDate>
+      <content:encoded><![CDATA[<p>Full body that must never be imported.</p>]]></content:encoded>
+    </item>
+    <item>
+      <title>Synthetic post two</title>
+      <description>Plain synthetic description.</description>
+      <link>https://everydecimal.substack.com/p/synthetic-post-two</link>
+      <guid isPermaLink="false">synthetic-guid-two</guid>
+      <pubDate>Wed, 02 Sep 2026 12:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Synthetic post with a bad date</title>
+      <link>https://everydecimal.substack.com/p/bad-date</link>
+      <guid>bad-date</guid>
+      <pubDate>not a date</pubDate>
+    </item>
+    <item>
+      <title>Synthetic post linking elsewhere</title>
+      <link>https://evil.example.com/p/elsewhere</link>
+      <guid>elsewhere</guid>
+      <pubDate>Wed, 02 Sep 2026 12:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Synthetic duplicate of post two</title>
+      <link>https://everydecimal.substack.com/p/synthetic-post-two</link>
+      <guid isPermaLink="false">synthetic-guid-two</guid>
+      <pubDate>Wed, 02 Sep 2026 13:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title></title>
+      <link>https://everydecimal.substack.com/p/untitled</link>
+      <guid>untitled</guid>
+      <pubDate>Wed, 02 Sep 2026 12:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Synthetic post with a javascript link</title>
+      <link>javascript:alert(1)</link>
+      <guid>js</guid>
+      <pubDate>Wed, 02 Sep 2026 12:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>

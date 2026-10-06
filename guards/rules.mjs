@@ -9,14 +9,11 @@
 // A legitimate use is recorded in guards/exceptions.json with a reason
 // and the person who approved it; it is never silenced in place.
 
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import EXCEPTIONS_JSON from "./exceptions.json" with { type: "json" };
+import HASHED from "./hashed-phrases.json" with { type: "json" };
 import { normaliseWords, sha256 } from "./normalise.mjs";
 
-const here = dirname(fileURLToPath(import.meta.url));
-const HASHED = JSON.parse(readFileSync(join(here, "hashed-phrases.json"), "utf8"));
-export const EXCEPTIONS = JSON.parse(readFileSync(join(here, "exceptions.json"), "utf8"));
+export const EXCEPTIONS = EXCEPTIONS_JSON;
 
 export const CRISIS_TEXT =
   "If you are thinking about suicide, call or text 988 in the US, or your local crisis line. If your heart is in trouble right now, call 911 or your local emergency number, or follow the plan your care team gave you.";
@@ -271,12 +268,14 @@ export const RULES = [
 
 /**
  * Run rules over one text. `target` is a repo path or a route; exceptions
- * match on rule ID, target and the matched text.
+ * match on rule ID, target and the matched text. `only` limits the run to
+ * the named rule IDs.
  */
-export function runRules(text, { target, scopes = ["repo", "copy"], env = process.env } = {}) {
+export function runRules(text, { target, scopes = ["repo", "copy"], env = process.env, only } = {}) {
   const findings = [];
   for (const rule of RULES) {
     if (!scopes.includes(rule.scope)) continue;
+    if (only && !only.includes(rule.id)) continue;
     for (const f of rule.check(text, env)) {
       const excepted = EXCEPTIONS.some(
         (e) => e.rule === rule.id && e.target === target && (e.match === undefined || e.match === f.match),

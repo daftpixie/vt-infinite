@@ -16,5 +16,5 @@ export function matchHashed(text: string, entries: readonly HashedEntry[]): Arra
 export function sentences(text: string): string[];
 export function runRules(
   text: string,
-  options?: { target?: string; scopes?: Array<"repo" | "copy">; env?: Readonly<Record<string, string | undefined>> },
+  options?: { target?: string; scopes?: Array<"repo" | "copy">; env?: Readonly<Record<string, string | undefined>>; only?: readonly string[] },
 ): Finding[];
