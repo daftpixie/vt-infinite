@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+out/
+build/
+dist/
+next-env.d.ts
+*.tsbuildinfo
+
+# Test output
+test-results/
+playwright-report/
+coverage/
+
+# Environment and secrets: never commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*-keypair.json
+keypair.json
+id.json
+.config/solana/
+
+# Solana / Anchor build output
+target/
+.anchor/
+test-ledger/
+
+# Local tooling
+.vercel/
+.DS_Store
+*.log
