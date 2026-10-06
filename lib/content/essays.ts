@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join, resolve } from "node:path";
 import type { Root as MdastRoot } from "mdast";
 import { z } from "zod";
+import { mentionsSuicide } from "@/lib/crisis";
 import { STREAMS } from "@/lib/streams/config";
 import { isIsoWithOffset } from "./dates";
 import { splitFrontmatter } from "./frontmatter";
@@ -140,8 +141,8 @@ export function loadEssayDir(dir: string, dirSlug: string): Loaded {
     if (!parsed.success) problems.push(...parsed.error.issues.map((i) => `${i.path.join(".") || "frontmatter"}: ${i.message}`));
     else fm = parsed.data;
     tree = parseMdx(body);
-    const text = `${fm?.title ?? ""} ${fm?.subtitle ?? ""} ${body}`;
-    if (/suicid/i.test(text) && !usesCrisisSupport(tree)) problems.push("mentions suicide without <CrisisSupport /> (Q-1)");
+    // The body places the block itself; the page attaches it for the title and subtitle.
+    if (mentionsSuicide(body) && !usesCrisisSupport(tree)) problems.push("mentions suicide without <CrisisSupport /> (Q-1)");
   } catch (err) {
     problems.push((err as Error).message);
   }

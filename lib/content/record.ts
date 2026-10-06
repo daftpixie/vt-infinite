@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type { Root as MdastRoot } from "mdast";
 import { z } from "zod";
+import { mentionsSuicide } from "@/lib/crisis";
 import { isIsoWithOffset } from "./dates";
 import { contentDir, CorrectionSchema } from "./essays";
 import { splitFrontmatter } from "./frontmatter";
@@ -60,7 +61,8 @@ export function loadAllRecord(root: string = contentDir("RECORD_DIR", "content/r
         continue;
       }
       if (parsed.data.slug !== fileSlug) problems.push(`${name}: slug ${parsed.data.slug} does not match the file name`);
-      if (/suicid/i.test(`${parsed.data.title} ${body}`) && !usesCrisisSupport(tree)) problems.push(`${name}: mentions suicide without <CrisisSupport />`);
+      // The body places the block itself; the page attaches it for the other fields.
+      if (mentionsSuicide(body) && !usesCrisisSupport(tree)) problems.push(`${name}: mentions suicide without <CrisisSupport />`);
       out.push({ fm: parsed.data, tree });
     } catch (err) {
       problems.push(`${name}: ${(err as Error).message}`);

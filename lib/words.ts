@@ -1,5 +1,6 @@
 import type { Essay } from "@/lib/content/essays";
 import { SITE_PUBLICATION } from "@/lib/content/essays";
+import { mentionsSuicide } from "@/lib/crisis";
 import { STREAMS } from "@/lib/streams/config";
 import type { StreamView } from "@/lib/streams/service";
 
@@ -38,7 +39,7 @@ export function buildWordsEntries(essays: Essay[], streams: StreamView[]): Words
     publicationName: publicationName(e.publication),
     href: `/words/${e.slug}`,
     local: true,
-    mentionsSuicide: /suicid/i.test(`${e.title} ${e.subtitle ?? ""}`),
+    mentionsSuicide: mentionsSuicide(e.title, e.subtitle),
     homeEligible: true,
   }));
   for (const s of streams) {
