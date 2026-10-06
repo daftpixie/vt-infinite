@@ -57,6 +57,7 @@ Server-side only. A flag is on only when its variable is exactly `true`; unset m
 | `COMMENTS_ENABLED` | `/api/comments/*` |
 | `PLAYLIST_ENABLED` | `/vibes/playlist/*`, `/api/playlist/*` |
 | `MARRS_ROVER_REAL_DATA_ENABLED` | Marrs Rover routes for any entity other than the synthetic `demo` entity |
+| `MANDELBROT_ENABLED` | The Mandelbrot figure on Agency and `/figures/mandelbrot-still.png`, held until Matthew approves its kernel (P7) |
 
 `/admin` and `/api/admin` return 404 for every request until authentication and storage exist.
 
