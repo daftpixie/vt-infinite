@@ -139,12 +139,16 @@ describe("trusted MDX (W-1)", () => {
     ["<div>raw</div>", /not an approved component/],
     ['<MarginNote note={"x"}>a</MarginNote>', /literal string/],
     ["[x](javascript:alert(1))", /unsafe link/],
+    ["[x](//evil.example)", /unsafe link/],
+    ["[x](/\\evil.example)", /unsafe link/],
+    ["[x](\\\\\\\\evil.example)", /unsafe link/], // Markdown unescapes this to \\evil.example
     ["![x](/a.png)", /inline images/],
   ])("refuses %j", (body, pattern) => {
     expect(() => parseMdx(body)).toThrow(pattern);
     expect(() => parseMdx(body)).toThrow(ContentError);
   });
   it("accepts Markdown and approved components", () => {
+    expect(() => parseMdx("[home](/words) [x](/words/a-b)")).not.toThrow();
     expect(() => parseMdx("# A\n\n<MarginNote>note</MarginNote>\n\n<CrisisSupport />\n\n[link](https://example.com)")).not.toThrow();
   });
   it("requires the crisis block wherever suicide is mentioned (Q-1)", () => {

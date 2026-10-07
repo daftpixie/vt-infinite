@@ -25,7 +25,8 @@ export const APPROVED_COMPONENTS = {
   SourceNote,
 } as const;
 
-const SAFE_HREF = /^(?:https:\/\/|http:\/\/|mailto:|#|\/(?!\/))/i;
+// A site path may not start with //, /\ or \\ (browsers read all three as another host).
+const SAFE_HREF = /^(?:https:\/\/|http:\/\/|mailto:|#|\/(?![\/\\]))/i;
 
 type Node = {
   type: string;
