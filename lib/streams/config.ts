@@ -28,8 +28,16 @@ export const StreamsConfigSchema = z
     for (const p of cfg.publications) {
       if (ids.has(p.id)) ctx.addIssue({ code: "custom", message: `duplicate publication id ${p.id}` });
       ids.add(p.id);
-      if (new URL(p.feed).host !== new URL(p.home).host) {
-        ctx.addIssue({ code: "custom", message: `${p.id}: feed and home must share a host` });
+      // The feed is always https://<home host>/feed: on substack.com today, and on
+      // the publication's www host once a custom domain is configured. Item links
+      // must then match that host exactly (parse.ts), so a change of host is one
+      // edit to content/streams.json.
+      const home = new URL(p.home);
+      if (home.pathname !== "/" || home.search || home.hash || home.port || home.username || home.password) {
+        ctx.addIssue({ code: "custom", message: `${p.id}: home must be a bare https origin` });
+      }
+      if (p.feed !== `${home.origin}/feed`) {
+        ctx.addIssue({ code: "custom", message: `${p.id}: feed must be ${home.origin}/feed` });
       }
     }
     for (const w of cfg.withdrawn) {
