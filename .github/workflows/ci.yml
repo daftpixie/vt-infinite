@@ -17,6 +17,21 @@ jobs:
     name: Lint, types, tests, guards, accessibility
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    # A disposable Postgres for the snapshot store tests. It lives only for
+    # this job, holds no data and accepts local connections without a
+    # password.
+    services:
+      postgres:
+        image: postgres:16.15-alpine3.24@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
     steps:
       - name: Check out (full history, for the fresh-history check)
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -39,8 +54,10 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Unit tests (flags, access rules, guards, fresh tree)
+      - name: Unit tests (flags, access rules, guards, fresh tree, snapshot store on Postgres)
         run: npm test
+        env:
+          SNAPSHOT_TEST_DATABASE_URL: postgres://postgres@localhost:5432/postgres
 
       - name: Require the private-identifier secret
         run: node scripts/check-private-config.mjs

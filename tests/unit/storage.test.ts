@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { FileSnapshotStore } from "@/lib/storage/file";
-import { PostgresSnapshotStore, type SqlClient } from "@/lib/storage/postgres";
+import { JsonParam, PostgresSnapshotStore, type SqlClient } from "@/lib/storage/postgres";
 
 const snap = { schemaVersion: 1, fetchedAt: "2026-09-01T00:00:00.000Z", data: { n: 1 } };
 
@@ -50,7 +50,7 @@ describe("postgres snapshot store (adapter only; nothing is connected)", () => {
     const client: SqlClient = {
       async query(text, params) {
         calls.push({ text, params });
-        if (text.startsWith("insert")) rows.set(String(params[0]), { schema_version: params[1], fetched_at: new Date(String(params[2])), data: JSON.parse(String(params[3])) });
+        if (text.startsWith("insert")) rows.set(String(params[0]), { schema_version: params[1], fetched_at: new Date(String(params[2])), data: structuredClone((params[3] as JsonParam).value) });
         if (text.startsWith("delete")) rows.delete(String(params[0]));
         const row = rows.get(String(params[0]));
         return { rows: text.startsWith("select") && row ? [row] : [] };
