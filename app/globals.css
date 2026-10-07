@@ -236,3 +236,23 @@ blockquote { border-left: var(--rule) solid var(--figure); margin: var(--s4) 0; 
 .figure-readout { margin: 0; }
 .figure-caption { margin-top: var(--s3); color: var(--muted); font-size: var(--step--1); line-height: var(--lead--1); }
 .figure-caption p { max-width: 66ch; }
+
+/* Marrs Rover explorer (PRD §12). Brand §10 tables: uppercase labels, hairline rows, no stripes, figures right-aligned. */
+.facts { margin: 0 0 var(--s6); max-width: var(--measure); }
+.facts dt { font-size: var(--step--1); line-height: var(--lead--1); text-transform: uppercase; letter-spacing: var(--label-tracking); color: var(--muted); margin-top: var(--s3); }
+.facts dd { margin: 0; }
+.table-scroll { overflow-x: auto; margin: var(--s4) 0 var(--s6); }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+caption { text-align: left; padding-bottom: var(--s2); color: var(--muted); font-size: var(--step--1); line-height: var(--lead--1); }
+th, td { text-align: left; vertical-align: top; padding: var(--s2) var(--s3) var(--s2) 0; border-bottom: var(--rule) solid var(--hair); }
+thead th { font-size: var(--step--1); line-height: var(--lead--1); text-transform: uppercase; letter-spacing: var(--label-tracking); color: var(--muted); font-weight: 400; border-bottom-color: var(--edge); }
+tbody th { font-weight: 400; color: var(--text); }
+.num { text-align: right; white-space: nowrap; }
+.filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--s4) var(--s6); margin: var(--s4) 0 var(--s6); }
+.field { display: flex; flex-direction: column; gap: var(--s1); min-width: 0; max-width: 100%; }
+.field label { font-size: var(--step--1); line-height: var(--lead--1); text-transform: uppercase; letter-spacing: var(--label-tracking); color: var(--muted); }
+.field select, .field input { font: inherit; color: var(--figure); background: var(--ground); border: var(--rule) solid var(--edge); border-radius: 0; min-height: 2.75rem; padding: 0 var(--s2); max-width: 100%; }
+.code-block { overflow-x: auto; border: var(--rule) solid var(--edge); padding: var(--s4); margin: var(--s4) 0 var(--s6); white-space: pre; }
+.code-block code, .hash { font-family: var(--font); }
+.hash { overflow-wrap: anywhere; word-break: break-all; }
+.demo-label strong { color: var(--figure); }

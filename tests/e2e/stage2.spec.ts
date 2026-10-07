@@ -96,7 +96,7 @@ test.describe("Home", () => {
   });
   test("keeps Matthew-owned placeholders visible", async ({ page }) => {
     await page.goto("/");
-    for (const id of ["directionsOfWork", "oneRhythmSummary", "governanceIntro", "roverDemoEntry"]) {
+    for (const id of ["directionsOfWork", "oneRhythmSummary", "governanceIntro"]) {
       await expect(page.locator(`[data-placeholder="${id}"]`)).toBeVisible();
     }
   });

@@ -170,6 +170,12 @@ That makes 24 events in all.
 
 **State.** One exception is open, and there is no independent report. So the fixture shows a valid hash beside an open exception and an absent review, as PRD §23 requires.
 
+## Stage 4b: the explorer (7 Oct 2026)
+
+- **Reading bundles.** The explorer (`lib/marrs-rover/`) reads sealed bundles from `fixtures/marrs-rover/bundles/demo` at request time and checks each one through this library before any page shows it: the folder name equals the manifest's SHA-256; the folder holds exactly the listed plain files with their sizes and digests; every file is canonical, schema-valid, labeled as demo data and names the same publication; the schemas are the published v1 set; the register obeys the register rules; the root, the count and every inclusion proof match; the totals recompute; and the correction history matches the register. A bundle that fails any check is withheld, and the page says so in plain words. Only the demo entity is read; real data stays off.
+- **Downloads.** Each listed file is served unchanged at `/marrs-rover/<entity>/bundles/<manifest SHA-256>/<file>`, and its digest is checked again on every read.
+- **Schema loading.** `schemas.ts` now loads the v1 schemas and currency mapping with static JSON imports instead of reading a path relative to the module, which the site's bundler cannot follow. The values are unchanged, and each read still returns a fresh copy.
+
 ## Honest limits (MR-38)
 
 A matching root shows that the bundle you examined matches its manifest, and in a later stage a recorded chain commitment. It shows nothing more than that. In particular, it does not show:

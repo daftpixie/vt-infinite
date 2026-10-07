@@ -49,6 +49,18 @@ export default async function CodePage() {
           ))}
         </ol>
       )}
+      <h2>Marrs Rover</h2>
+      <p>
+        <Link href="/marrs-rover">Explore the working demo.</Link> Sample finances, not VT Infinite&rsquo;s accounts.
+      </p>
+      <ul>
+        <li>
+          <Link href="/marrs-rover/verify">Verify a demo publication with the standalone verifier</Link>
+        </li>
+        <li>
+          <Link href="/marrs-rover/method">How Marrs Rover proofs work</Link>
+        </li>
+      </ul>
       <h2>The Record</h2>
       <p>
         <Link href="/the-record">Read the Record</Link>

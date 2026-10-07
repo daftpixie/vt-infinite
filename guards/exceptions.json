@@ -5,5 +5,13 @@
     "reason": "Marrs Rover golden vectors (PRD MR-37) freeze exact integer amounts above 2^53 to prove BigInt arithmetic. They are synthetic amounts, not provider IDs. Scoped to the golden-vector folder only; decided in the review of PR #13.",
     "approvedBy": "Matthew J Adams",
     "approvedOn": "2026-10-07"
+  },
+  {
+    "rule": "brand-words",
+    "target": "/marrs-rover/demo/budgets/syn-budget-alpha",
+    "match": "raised",
+    "reason": "Frozen synthetic MR-48 fixture text (budgets.json, sealed in stage 4a): an amendment reason says a budget line was raised, meaning increased. It is not fundraising language, and the sealed bytes cannot change. Scoped to this one rendered page and this one word.",
+    "approvedBy": "Matthew J Adams",
+    "approvedOn": "2026-10-07"
   }
 ]
