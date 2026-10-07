@@ -29,10 +29,17 @@ let cached: { configHash: string; token: string; expiresAt: number } | null = nu
 
 const hashConfig = (c: OAuthConfig) => createHash("sha256").update(`${c.clientId}\n${c.refreshToken}`).digest("hex");
 
-/** Tests start from an empty cache. */
-export function resetTokenCacheForTests(): void {
+/**
+ * Forget the cached access token. Called when the API answers 401: the
+ * token was revoked or expired early, so the next read exchanges the
+ * refresh token again instead of reusing it until its stated expiry.
+ */
+export function dropCachedAccessToken(): void {
   cached = null;
 }
+
+/** Tests start from an empty cache. */
+export const resetTokenCacheForTests = dropCachedAccessToken;
 
 export async function getAccessToken(
   cfg: OAuthConfig,

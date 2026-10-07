@@ -68,7 +68,7 @@ function planChecks(title: string, env: Env): string[] {
 /** Control, bidi-override and zero-width characters are removed; whitespace collapses. */
 export function cleanTitle(raw: string): string {
   return raw
-    .replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁤⁦-⁩﻿]/g, " ")
+    .replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2060-\u2064\u2066-\u2069\ufeff]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }

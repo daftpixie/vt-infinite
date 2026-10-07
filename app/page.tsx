@@ -2,11 +2,11 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { LorenzFigure } from "@/components/figures/LorenzFigure";
 import { Placeholder } from "@/components/Placeholder";
-import { PlanSummary } from "@/components/plan";
+import { HomePlan } from "@/components/HomePlan";
 import { Unreleased } from "@/components/Unreleased";
 import { StreamStatus, WordsList } from "@/components/words";
 import { publishedEssays } from "@/lib/content/essays";
-import { isShown, readPlan } from "@/lib/plan/service";
+import { readPlan } from "@/lib/plan/service";
 import { FOOTER_LINES } from "@/lib/site";
 import { readAllPublications } from "@/lib/streams/service";
 import { buildWordsEntries, latestForHome } from "@/lib/words";
@@ -39,14 +39,7 @@ export default async function HomePage() {
 
         <h2>Directions of work</h2>
         <Placeholder id="directionsOfWork" />
-        {isShown(plan) ? (
-          <>
-            <Placeholder id="oneRhythmPlanIntro" />
-            <PlanSummary state={plan} />
-          </>
-        ) : (
-          <Placeholder id="oneRhythmSummary" />
-        )}
+        <HomePlan state={plan} />
 
         <h2>Marrs Rover</h2>
         <p>
