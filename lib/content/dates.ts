@@ -17,6 +17,19 @@ export function formatDate(iso: string, timeZone = SITE_TIME_ZONE): string {
   return `${get("day")} ${MONTHS[get("month") - 1]} ${get("year")}`;
 }
 
+/** "7 Oct 2026, 14:05 EDT": a read time, 24-hour clock, in the site time zone. */
+export function formatDateTime(iso: string, timeZone = SITE_TIME_ZONE): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZoneName: "short",
+  }).formatToParts(new Date(iso));
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  return `${formatDate(iso, timeZone)}, ${get("hour")}:${get("minute")} ${get("timeZoneName")}`;
+}
+
 /** Machine form for <time dateTime>. */
 export function isoDate(iso: string): string {
   return new Date(iso).toISOString();

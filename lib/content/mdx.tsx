@@ -28,6 +28,15 @@ export const APPROVED_COMPONENTS = {
 // A site path may not start with //, /\ or \\ (browsers read all three as another host).
 const SAFE_HREF = /^(?:https:\/\/|http:\/\/|mailto:|#|\/(?![\/\\]))/i;
 
+/**
+ * Browsers delete ASCII tab, LF and CR anywhere in a URL before parsing it
+ * (WHATWG URL Standard), so "/\t/host" is read as "//host". Strip them
+ * first, then check, so the check sees what a browser would follow.
+ */
+export function isSafeHref(url: string | null | undefined): boolean {
+  return typeof url === "string" && url.length > 0 && SAFE_HREF.test(url.replace(/[\t\n\r]/g, ""));
+}
+
 type Node = {
   type: string;
   name?: string | null;
@@ -80,7 +89,7 @@ export function parseMdx(body: string): MdastRoot {
         break;
       case "link":
       case "definition":
-        if (!node.url || !SAFE_HREF.test(node.url)) problems.push(`unsafe link ${JSON.stringify(node.url)}${at(node)}`);
+        if (!isSafeHref(node.url)) problems.push(`unsafe link ${JSON.stringify(node.url)}${at(node)}`);
         break;
     }
   });

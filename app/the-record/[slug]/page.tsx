@@ -3,15 +3,16 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { RecordArticle } from "@/components/record";
 import { findRecord } from "@/lib/content/record";
-import { withoutCrisisBlock } from "@/lib/crisis";
+import { documentTitle, withoutCrisisBlock } from "@/lib/crisis";
 
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   await connection();
   const entry = findRecord((await params).slug);
-  // A meta description cannot carry the crisis block, so a summary that mentions suicide stays on the page only.
-  return entry ? { title: entry.title, description: withoutCrisisBlock(entry.summary) } : {};
+  // The document title and meta description cannot carry the crisis block, so
+  // a title or summary that mentions suicide stays on the page only.
+  return entry ? { title: documentTitle(entry.title, "record"), description: withoutCrisisBlock(entry.summary) } : {};
 }
 
 /** Retired legacy slugs are answered with 410 by the proxy before this page runs. */

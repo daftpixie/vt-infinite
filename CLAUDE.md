@@ -12,7 +12,7 @@ Never commit the PRD or brand reference, copy files from where they are kept, na
 
 ## Stage
 
-Stages 1 and 2 are merged. Stage 2d (persistence and hardening) is in review. Do not start stage 3 or 4 until Matthew says so.
+Stages 1 and 2, including 2d (persistence and hardening), are merged. The 2d follow-ups are in review. Do not start stage 3 or 4 until Matthew says so.
 
 ## Working here
 

@@ -21,3 +21,18 @@ export function mentionsSuicide(...texts: Array<string | null | undefined>): boo
 export function withoutCrisisBlock(text: string | null | undefined): string | undefined {
   return text && !mentionsSuicide(text) ? text : undefined;
 }
+
+/** Neutral document titles (PRD Q-1): a browser tab, history entry or bookmark cannot carry the crisis block. */
+export const NEUTRAL_TITLES = {
+  essay: "Essay · Matthew J Adams",
+  record: "Record entry · VT ∞",
+} as const;
+
+/**
+ * The <title> for a page whose heading may mention suicide. Such a title
+ * stays on the page, beside the crisis block; the document title uses the
+ * neutral form instead, set absolute so the site template is not appended.
+ */
+export function documentTitle(title: string, kind: keyof typeof NEUTRAL_TITLES): string | { absolute: string } {
+  return mentionsSuicide(title) ? { absolute: NEUTRAL_TITLES[kind] } : title;
+}
