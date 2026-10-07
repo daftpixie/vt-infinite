@@ -2,6 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 import { FLAGS } from "./lib/flags";
 
 const PORT = Number(process.env.E2E_PORT ?? 3100);
+/** A second server with only the plan flag on. */
+const PLAN_PORT = PORT + 1;
 
 // Every feature flag is explicitly unset for the server under test, so the
 // suite proves the default-off behavior rather than inheriting a shell value.
@@ -39,11 +41,23 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
-    command: `npx next start -p ${PORT} -H 127.0.0.1`,
-    url: `http://127.0.0.1:${PORT}/`,
-    reuseExistingServer: false,
-    timeout: 120_000,
-    env: serverEnv,
-  },
+  webServer: [
+    {
+      command: `npx next start -p ${PORT} -H 127.0.0.1`,
+      url: `http://127.0.0.1:${PORT}/`,
+      reuseExistingServer: false,
+      timeout: 120_000,
+      env: serverEnv,
+    },
+    // The OneRhythm plan with its flag on, reading a synthetic stored
+    // projection only (tests/fixtures/plan-snapshots). It never reaches Asana:
+    // UPSTREAM_REFRESH is off and no plan credentials are set.
+    {
+      command: `npx next start -p ${PLAN_PORT} -H 127.0.0.1`,
+      url: `http://127.0.0.1:${PLAN_PORT}/`,
+      reuseExistingServer: false,
+      timeout: 120_000,
+      env: { ...serverEnv, PLAN_ENABLED: "true", SNAPSHOT_DIR: "tests/fixtures/plan-snapshots" },
+    },
+  ],
 });

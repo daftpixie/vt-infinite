@@ -203,6 +203,14 @@ main { padding-bottom: var(--s16); }
 .words-title { font-size: var(--step-1); line-height: var(--lead-1); margin: 0 0 var(--s2); }
 .words-subtitle { margin-bottom: var(--s2); }
 .notice-inline { color: var(--text); max-width: var(--measure); }
+.plan-list { list-style: none; margin: 0; padding: 0; }
+.plan-initiative { border-top: var(--rule) solid var(--hair); padding: var(--s4) 0; }
+.plan-initiative-title { font-size: var(--step-2); line-height: var(--lead-2); margin: 0 0 var(--s2); }
+.plan-steps { margin: 0; padding-left: 4ch; max-width: var(--measure); }
+.plan-step { margin: var(--s1) 0; }
+.plan-state { display: inline-block; min-width: 5ch; color: var(--muted); }
+.plan-milestone { color: var(--figure); font-weight: 700; }
+.plan-summary-list { margin: 0 0 var(--s4); padding-left: 2ch; max-width: var(--measure); }
 .filter-list { list-style: none; margin: 0 0 var(--s6); padding: 0; display: flex; flex-wrap: wrap; gap: 0 var(--s6); }
 .filter-list a { display: inline-flex; align-items: center; min-height: 2.75rem; }
 .filter-list a[aria-current="page"] { background: var(--figure); color: var(--ground); padding: 0 var(--s2); }

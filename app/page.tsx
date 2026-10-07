@@ -2,9 +2,11 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { LorenzFigure } from "@/components/figures/LorenzFigure";
 import { Placeholder } from "@/components/Placeholder";
+import { PlanSummary } from "@/components/plan";
 import { Unreleased } from "@/components/Unreleased";
 import { StreamStatus, WordsList } from "@/components/words";
 import { publishedEssays } from "@/lib/content/essays";
+import { isShown, readPlan } from "@/lib/plan/service";
 import { FOOTER_LINES } from "@/lib/site";
 import { readAllPublications } from "@/lib/streams/service";
 import { buildWordsEntries, latestForHome } from "@/lib/words";
@@ -17,7 +19,8 @@ const MISSION =
 
 export default async function HomePage() {
   await connection();
-  const streams = await readAllPublications();
+  // Home and the plan page share one snapshot (PRD §05); off or withdrawn, only the placeholder shows.
+  const [streams, plan] = await Promise.all([readAllPublications(), readPlan()]);
   const latest = latestForHome(buildWordsEntries(publishedEssays(), streams));
 
   return (
@@ -36,7 +39,14 @@ export default async function HomePage() {
 
         <h2>Directions of work</h2>
         <Placeholder id="directionsOfWork" />
-        <Placeholder id="oneRhythmSummary" />
+        {isShown(plan) ? (
+          <>
+            <Placeholder id="oneRhythmPlanIntro" />
+            <PlanSummary state={plan} />
+          </>
+        ) : (
+          <Placeholder id="oneRhythmSummary" />
+        )}
 
         <h2>Marrs Rover</h2>
         <p>
