@@ -1,0 +1,11 @@
+{
+  "name": "marrs-rover-verifier",
+  "version": "1.0.0",
+  "description": "Standalone verifier for Marrs Rover publication bundles: schema, digests, canonical bytes, Merkle root, inclusion proofs and balance arithmetic.",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "bin": { "marrs-rover-verify": "verify.mjs" },
+  "engines": { "node": ">=22" },
+  "dependencies": {}
+}

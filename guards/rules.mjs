@@ -267,6 +267,18 @@ export const RULES = [
 ];
 
 /**
+ * Whether an exception covers a target. An exception names one exact target,
+ * or a directory prefix (`targetPrefix`, ending in "/") covering every file
+ * beneath it. A malformed prefix covers nothing.
+ */
+export function exceptionCovers(e, target) {
+  if (typeof e.target === "string") return e.target === target;
+  const p = e.targetPrefix;
+  if (typeof p !== "string" || !p.endsWith("/") || p.startsWith("/") || p.split("/").includes("..") || typeof target !== "string") return false;
+  return target.startsWith(p);
+}
+
+/**
  * Run rules over one text. `target` is a repo path or a route; exceptions
  * match on rule ID, target and the matched text. `only` limits the run to
  * the named rule IDs.
@@ -277,9 +289,7 @@ export function runRules(text, { target, scopes = ["repo", "copy"], env = proces
     if (!scopes.includes(rule.scope)) continue;
     if (only && !only.includes(rule.id)) continue;
     for (const f of rule.check(text, env)) {
-      const excepted = EXCEPTIONS.some(
-        (e) => e.rule === rule.id && e.target === target && (e.match === undefined || e.match === f.match),
-      );
+      const excepted = EXCEPTIONS.some((e) => e.rule === rule.id && exceptionCovers(e, target) && (e.match === undefined || e.match === f.match));
       if (!excepted) findings.push({ rule: rule.id, target, ...f });
     }
   }

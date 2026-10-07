@@ -7,7 +7,9 @@ export type Rule = {
 };
 export const CRISIS_TEXT: string;
 export const RULES: readonly Rule[];
-export const EXCEPTIONS: ReadonlyArray<{ rule: string; target: string; match?: string; reason: string; approvedBy: string; approvedOn: string }>;
+export type GuardException = { rule: string; target?: string; targetPrefix?: string; match?: string; reason: string; approvedBy: string; approvedOn: string };
+export const EXCEPTIONS: ReadonlyArray<GuardException>;
+export function exceptionCovers(e: GuardException, target: string | undefined): boolean;
 export type HashedEntry = { category: "retired"; words: number; sha256: string };
 export function privateIdentifiers(env?: Readonly<Record<string, string | undefined>>): string[][];
 export function containsSequence(words: readonly string[], needle: readonly string[]): boolean;

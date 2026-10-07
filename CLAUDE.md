@@ -12,7 +12,7 @@ Never commit the PRD or brand reference, copy files from where they are kept, na
 
 ## Stage
 
-Stages 1 and 2, including 2d and its follow-ups, are merged. Stage 3 (the OneRhythm plan projection, built complete and disabled behind `PLAN_ENABLED`) is in review. Do not start stage 4 until Matthew says so.
+Stages 1 to 3, with their follow-ups, are merged. Stage 4a (the Marrs Rover proof core: schemas, exporter, proofs and the standalone verifier, local and synthetic only) is in review. Do not start stage 4b (explorer pages) until Matthew says so.
 
 ## Working here
 
@@ -23,5 +23,6 @@ Stages 1 and 2, including 2d and its follow-ups, are merged. Stage 3 (the OneRhy
 - Gated features are added to `GATED_PREFIXES` in `lib/access.ts`, and the page repeats the flag check.
 - Missing copy is a placeholder registered in `lib/placeholders.ts`, never an invented sentence.
 - Retired legacy copy, which was already public, is kept out by hash (`guards/hashed-phrases.json`; add one with `printf '%s' 'phrase' | node scripts/hash-phrase.mjs retired`). Private identifiers are never hashed into this repository: they live only in the `PRIVATE_IDENTIFIERS` Actions secret, which the guard reads in CI.
+- Marrs Rover proof work lives in `packages/ledger-proof`, `tools/ledger-exporter` and `tools/ledger-verifier` (ADR 0005). The verifier stays dependency-free and shares no code with the library. Fixtures in `fixtures/marrs-rover` are frozen by `SHA256SUMS`; `npm run ledger` runs the release checks.
 - Never use the Vercel or Supabase connectors or CLIs to change anything. Migrations are files (`db/migrations/`); Matthew applies them (`docs/ops/database.md`).
 - Design tokens in `app/globals.css` implement the brand reference §08–§13. Change them only with the reference.

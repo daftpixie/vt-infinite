@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vt-infinite:marrs-rover:schema:schemas:1",
+  "title": "Marrs Rover schema set, version 1",
+  "description": "The schemas and currency-exponent mapping a bundle was sealed against. A verifier compares them with its own pinned copies.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "marrs-rover.schemas.1"
+    },
+    "environment": {
+      "$ref": "#/$defs/environment"
+    },
+    "demoLabel": {
+      "$ref": "#/$defs/demoLabel"
+    },
+    "currencies": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "const": "1"
+        },
+        "exponents": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "version",
+        "exponents"
+      ],
+      "additionalProperties": false
+    },
+    "schemas": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema",
+    "environment",
+    "currencies",
+    "schemas"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "environment": {
+            "const": "synthetic-demo"
+          }
+        },
+        "required": [
+          "environment"
+        ]
+      },
+      "then": {
+        "required": [
+          "demoLabel"
+        ]
+      },
+      "else": {
+        "properties": {
+          "demoLabel": false
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "environment": {
+      "enum": [
+        "synthetic-demo",
+        "local-prototype",
+        "devnet",
+        "mainnet-pilot"
+      ]
+    },
+    "demoLabel": {
+      "const": "Demo data — not VT Infinite's financial records."
+    },
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+    },
+    "posInt": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]{0,29}$"
+    },
+    "nonNegInt": {
+      "type": "string",
+      "pattern": "^(?:0|[1-9][0-9]{0,29})$"
+    },
+    "signedInt": {
+      "type": "string",
+      "pattern": "^(?:0|-?[1-9][0-9]{0,29})$"
+    },
+    "signedNonZero": {
+      "type": "string",
+      "pattern": "^-?[1-9][0-9]{0,29}$"
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])$"
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]Z$"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "periodId": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-Q[1-4]$"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]*$"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]*$"
+    },
+    "refs": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "$ref": "#/$defs/slug"
+      }
+    }
+  }
+}
