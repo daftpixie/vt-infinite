@@ -17,6 +17,10 @@ The website of VT Infinite, Inc., rebuilt from an empty repository. This reposit
 | `tests/unit/` | Vitest: flags, access rules, guards, fresh-tree checks, route contracts |
 | `tests/e2e/` | Playwright: routes, keyboard, flags, old URLs, axe accessibility, rendered copy |
 | `public/fonts/` | JetBrains Mono v2.304, subset to WOFF2, with its SIL Open Font License |
+| `packages/ledger-proof/` | Marrs Rover proof library: schemas, canonical JSON, Merkle proofs, balance arithmetic, privacy scan |
+| `tools/ledger-exporter/` | Marrs Rover exporter: books in, sealed bundle out (synthetic books only) |
+| `tools/ledger-verifier/` | Standalone Marrs Rover verifier: no dependencies, runs without the website |
+| `fixtures/marrs-rover/` | Frozen synthetic golden vectors, the MR-48 bundle and a tampered bundle |
 | `docs/adr/` | Architecture decisions |
 
 ## Run it
@@ -38,6 +42,7 @@ npm run typecheck      # Next.js route types, then tsc
 npm test               # unit tests, including the repository guard scan
 npm run guard          # copy, claim, private-identifier and secret guards
 npm run secrets        # secretlint
+npm run ledger         # Marrs Rover: privacy scan, verifier accepts the synthetic bundle and rejects the tampered one, golden vectors
 npm run build          # production build
 npx playwright install chromium   # once
 npm run test:e2e       # builds must exist; starts `next start` on port 3100

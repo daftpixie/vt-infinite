@@ -1,0 +1,273 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vt-infinite:marrs-rover:schema:manifest:1",
+  "title": "Marrs Rover publication manifest, version 1",
+  "description": "The sealed description of one publication (PRD MR-29). It lists every other file in the bundle with its SHA-256 digest and size. It never contains its own digest or a chain transaction signature (MR-31): the bundle's directory is named for the SHA-256 of the manifest's bytes, and a later receipt maps it to a chain commitment.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "marrs-rover.manifest.1"
+    },
+    "environment": {
+      "$ref": "#/$defs/environment"
+    },
+    "demoLabel": {
+      "$ref": "#/$defs/demoLabel"
+    },
+    "entityId": {
+      "$ref": "#/$defs/slug"
+    },
+    "periodId": {
+      "$ref": "#/$defs/periodId"
+    },
+    "commitmentSequence": {
+      "$ref": "#/$defs/posInt"
+    },
+    "basis": {
+      "const": "cash"
+    },
+    "periodStart": {
+      "$ref": "#/$defs/date"
+    },
+    "periodEnd": {
+      "$ref": "#/$defs/date"
+    },
+    "cutoff": {
+      "$ref": "#/$defs/timestamp"
+    },
+    "publishedAt": {
+      "$ref": "#/$defs/timestamp"
+    },
+    "priorRoot": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "amendmentOf": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "versions": {
+      "type": "object",
+      "properties": {
+        "event": {
+          "const": "marrs-rover.event.1"
+        },
+        "currencies": {
+          "const": "1"
+        },
+        "canonicalization": {
+          "const": "RFC8785"
+        },
+        "hash": {
+          "const": "SHA-256"
+        },
+        "merkle": {
+          "const": "marrs-rover-merkle.1"
+        }
+      },
+      "required": [
+        "event",
+        "currencies",
+        "canonicalization",
+        "hash",
+        "merkle"
+      ],
+      "additionalProperties": false
+    },
+    "events": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "$ref": "#/$defs/posInt"
+        },
+        "root": {
+          "$ref": "#/$defs/sha256"
+        },
+        "register": {
+          "const": "register.jsonl"
+        }
+      },
+      "required": [
+        "count",
+        "root",
+        "register"
+      ],
+      "additionalProperties": false
+    },
+    "scopeDigest": {
+      "$ref": "#/$defs/sha256"
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 40,
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*\\.(?:json|jsonl|csv|md)$"
+          },
+          "role": {
+            "$ref": "#/$defs/slug"
+          },
+          "sha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "bytes": {
+            "$ref": "#/$defs/posInt"
+          }
+        },
+        "required": [
+          "path",
+          "role",
+          "sha256",
+          "bytes"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "authoritySet": {
+      "$ref": "#/$defs/slug"
+    },
+    "archiveLocations": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "string",
+        "pattern": "^https://[^\\s]{1,200}$"
+      }
+    },
+    "statement": {
+      "$ref": "#/$defs/text"
+    }
+  },
+  "required": [
+    "schema",
+    "environment",
+    "entityId",
+    "periodId",
+    "commitmentSequence",
+    "basis",
+    "periodStart",
+    "periodEnd",
+    "cutoff",
+    "publishedAt",
+    "priorRoot",
+    "amendmentOf",
+    "versions",
+    "events",
+    "scopeDigest",
+    "files",
+    "authoritySet",
+    "archiveLocations",
+    "statement"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "environment": {
+            "const": "synthetic-demo"
+          }
+        },
+        "required": [
+          "environment"
+        ]
+      },
+      "then": {
+        "required": [
+          "demoLabel"
+        ]
+      },
+      "else": {
+        "properties": {
+          "demoLabel": false
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "environment": {
+      "enum": [
+        "synthetic-demo",
+        "local-prototype",
+        "devnet",
+        "mainnet-pilot"
+      ]
+    },
+    "demoLabel": {
+      "const": "Demo data — not VT Infinite's financial records."
+    },
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+    },
+    "posInt": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]{0,29}$"
+    },
+    "nonNegInt": {
+      "type": "string",
+      "pattern": "^(?:0|[1-9][0-9]{0,29})$"
+    },
+    "signedInt": {
+      "type": "string",
+      "pattern": "^(?:0|-?[1-9][0-9]{0,29})$"
+    },
+    "signedNonZero": {
+      "type": "string",
+      "pattern": "^-?[1-9][0-9]{0,29}$"
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])$"
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]Z$"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "periodId": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-Q[1-4]$"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]*$"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]*$"
+    },
+    "refs": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "$ref": "#/$defs/slug"
+      }
+    }
+  }
+}

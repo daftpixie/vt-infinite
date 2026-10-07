@@ -1,0 +1,19 @@
+{
+  "demoLabel": "Demo data — not VT Infinite's financial records.",
+  "bundle": "tampered/5088d7d5d133b9fb2ee0bbcd60879a2dee52f704dfeb2bb37f245be974b314c5",
+  "change": "register.jsonl line 12: amountMinorUnits and deltaMinorUnits 200000 -> 20000",
+  "exitCode": 1,
+  "bundleValid": false,
+  "inclusionValid": false,
+  "balancePassed": false,
+  "chain": "not attempted",
+  "mustReport": [
+    "register.jsonl: SHA-256 differs from the manifest",
+    "register.jsonl: 20913 bytes, the manifest says 20915",
+    "the root of the register is",
+    "proof 12: leaf hash differs from register line 12",
+    "proof 12: the path does not lead to the manifest's root",
+    "USD operating disbursements: the summary says 1001050, the register gives 821050",
+    "restricted fund fund-a closing: the summary says 554000, the register gives 734000"
+  ]
+}

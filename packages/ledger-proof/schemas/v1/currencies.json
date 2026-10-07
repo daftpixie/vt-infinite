@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "description": "Minor-unit exponents (PRD MR-19). An amount in minor units divided by 10^exponent is the amount in the currency's major unit. A currency not listed here is rejected.",
+  "exponents": {
+    "EUR": "2",
+    "JPY": "0",
+    "USD": "2"
+  }
+}

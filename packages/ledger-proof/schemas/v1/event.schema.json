@@ -1,0 +1,594 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vt-infinite:marrs-rover:schema:event:1",
+  "title": "Marrs Rover public financial event, version 1",
+  "description": "One public event in a reporting period (PRD MR-28). Amounts are integer minor units written as canonical decimal strings. Cash legs carry public bucket IDs only. Rules this schema cannot express (leg arithmetic, references, sequence order, currency mapping) are checked by the proof library and the verifier.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "marrs-rover.event.1"
+    },
+    "environment": {
+      "$ref": "#/$defs/environment"
+    },
+    "demoLabel": {
+      "$ref": "#/$defs/demoLabel"
+    },
+    "eventId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "entityId": {
+      "$ref": "#/$defs/slug"
+    },
+    "periodId": {
+      "$ref": "#/$defs/periodId"
+    },
+    "programId": {
+      "$ref": "#/$defs/slug"
+    },
+    "eventSequence": {
+      "$ref": "#/$defs/posInt"
+    },
+    "effectiveDate": {
+      "$ref": "#/$defs/date"
+    },
+    "publishedAt": {
+      "$ref": "#/$defs/timestamp"
+    },
+    "type": {
+      "enum": [
+        "receipt",
+        "disbursement",
+        "transfer",
+        "reversal",
+        "reclassification",
+        "reconciliation",
+        "attestation"
+      ]
+    },
+    "amountMinorUnits": {
+      "$ref": "#/$defs/posInt"
+    },
+    "currency": {
+      "$ref": "#/$defs/currency"
+    },
+    "transferKind": {
+      "enum": [
+        "internal",
+        "boundary"
+      ]
+    },
+    "cashLegs": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "$ref": "#/$defs/leg"
+      }
+    },
+    "classification": {
+      "$ref": "#/$defs/classification"
+    },
+    "purpose": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "$ref": "#/$defs/text"
+        },
+        "redactionReason": {
+          "enum": [
+            "aggregated",
+            "privacy",
+            "commercial-confidence",
+            "security"
+          ]
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "controls": {
+      "type": "object",
+      "properties": {
+        "approvalRefs": {
+          "$ref": "#/$defs/refs"
+        },
+        "conflictRefs": {
+          "$ref": "#/$defs/refs"
+        },
+        "supportingCommitments": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/$defs/sha256"
+          }
+        }
+      },
+      "required": [
+        "approvalRefs",
+        "conflictRefs",
+        "supportingCommitments"
+      ],
+      "additionalProperties": false
+    },
+    "correction": {
+      "type": "object",
+      "properties": {
+        "originalEventId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "kind": {
+          "enum": [
+            "reversal",
+            "replacement",
+            "reclassification"
+          ]
+        },
+        "reason": {
+          "$ref": "#/$defs/text"
+        },
+        "amendmentRef": {
+          "$ref": "#/$defs/slug"
+        }
+      },
+      "required": [
+        "originalEventId",
+        "kind",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "reportRefs": {
+          "$ref": "#/$defs/refs"
+        },
+        "nativePayment": {
+          "type": "object",
+          "properties": {
+            "network": {
+              "enum": [
+                "solana-devnet",
+                "solana-mainnet"
+              ]
+            },
+            "signature": {
+              "type": "string",
+              "pattern": "^[1-9A-HJ-NP-Za-km-z]{64,88}$"
+            },
+            "payeeKind": {
+              "enum": [
+                "company",
+                "company-internal",
+                "consented"
+              ]
+            }
+          },
+          "required": [
+            "network",
+            "signature",
+            "payeeKind"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "reportRefs"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema",
+    "environment",
+    "eventId",
+    "entityId",
+    "periodId",
+    "programId",
+    "eventSequence",
+    "effectiveDate",
+    "publishedAt",
+    "type",
+    "cashLegs",
+    "classification",
+    "purpose",
+    "controls",
+    "evidence"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "environment": {
+            "const": "synthetic-demo"
+          }
+        },
+        "required": [
+          "environment"
+        ]
+      },
+      "then": {
+        "required": [
+          "demoLabel"
+        ]
+      },
+      "else": {
+        "properties": {
+          "demoLabel": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "enum": [
+              "receipt",
+              "disbursement",
+              "transfer",
+              "reversal"
+            ]
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "required": [
+          "amountMinorUnits",
+          "currency"
+        ],
+        "properties": {
+          "cashLegs": {
+            "minItems": 1
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "amountMinorUnits": false,
+          "currency": false,
+          "cashLegs": {
+            "maxItems": 0
+          },
+          "classification": {
+            "properties": {
+              "flow": {
+                "const": "none"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "enum": [
+              "transfer"
+            ]
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "required": [
+          "transferKind"
+        ],
+        "properties": {
+          "classification": {
+            "properties": {
+              "flow": {
+                "const": "transfer"
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "transferKind": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "enum": [
+              "receipt",
+              "disbursement",
+              "reversal"
+            ]
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "classification": {
+            "properties": {
+              "flow": {
+                "enum": [
+                  "operating",
+                  "financing"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "enum": [
+              "reversal",
+              "reclassification"
+            ]
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "required": [
+          "correction"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "enum": [
+              "reversal"
+            ]
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "correction": {
+            "properties": {
+              "kind": {
+                "const": "reversal"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "enum": [
+              "reclassification"
+            ]
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "correction": {
+            "properties": {
+              "kind": {
+                "const": "reclassification"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "enum": [
+              "receipt",
+              "disbursement"
+            ]
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "correction": {
+            "properties": {
+              "kind": {
+                "const": "replacement"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "enum": [
+              "transfer",
+              "reconciliation",
+              "attestation"
+            ]
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "correction": false
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "environment": {
+      "enum": [
+        "synthetic-demo",
+        "local-prototype",
+        "devnet",
+        "mainnet-pilot"
+      ]
+    },
+    "demoLabel": {
+      "const": "Demo data — not VT Infinite's financial records."
+    },
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+    },
+    "posInt": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]{0,29}$"
+    },
+    "nonNegInt": {
+      "type": "string",
+      "pattern": "^(?:0|[1-9][0-9]{0,29})$"
+    },
+    "signedInt": {
+      "type": "string",
+      "pattern": "^(?:0|-?[1-9][0-9]{0,29})$"
+    },
+    "signedNonZero": {
+      "type": "string",
+      "pattern": "^-?[1-9][0-9]{0,29}$"
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])$"
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]Z$"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "periodId": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-Q[1-4]$"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]*$"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]*$"
+    },
+    "refs": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "$ref": "#/$defs/slug"
+      }
+    },
+    "leg": {
+      "type": "object",
+      "properties": {
+        "legId": {
+          "$ref": "#/$defs/slug"
+        },
+        "bucketId": {
+          "$ref": "#/$defs/slug"
+        },
+        "currency": {
+          "$ref": "#/$defs/currency"
+        },
+        "deltaMinorUnits": {
+          "$ref": "#/$defs/signedNonZero"
+        },
+        "boundary": {
+          "enum": [
+            "external",
+            "internal",
+            "boundary"
+          ]
+        }
+      },
+      "required": [
+        "legId",
+        "bucketId",
+        "currency",
+        "deltaMinorUnits",
+        "boundary"
+      ],
+      "additionalProperties": false
+    },
+    "classification": {
+      "type": "object",
+      "properties": {
+        "categoryId": {
+          "$ref": "#/$defs/slug"
+        },
+        "categoryVersion": {
+          "$ref": "#/$defs/posInt"
+        },
+        "flow": {
+          "enum": [
+            "operating",
+            "financing",
+            "transfer",
+            "none"
+          ]
+        },
+        "restrictionId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+        },
+        "basis": {
+          "const": "cash"
+        }
+      },
+      "required": [
+        "categoryId",
+        "categoryVersion",
+        "flow",
+        "restrictionId",
+        "basis"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

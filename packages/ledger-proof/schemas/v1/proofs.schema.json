@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vt-infinite:marrs-rover:schema:proofs:1",
+  "title": "Marrs Rover inclusion proofs, version 1",
+  "description": "One direction-aware inclusion path per event (PRD MR-33). A path lists each sibling from the leaf up and the side it sits on; a level where the node is promoted has no step.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "marrs-rover.proofs.1"
+    },
+    "environment": {
+      "$ref": "#/$defs/environment"
+    },
+    "demoLabel": {
+      "$ref": "#/$defs/demoLabel"
+    },
+    "entityId": {
+      "$ref": "#/$defs/slug"
+    },
+    "periodId": {
+      "$ref": "#/$defs/periodId"
+    },
+    "algorithm": {
+      "const": "marrs-rover-merkle.1"
+    },
+    "leafCount": {
+      "$ref": "#/$defs/posInt"
+    },
+    "root": {
+      "$ref": "#/$defs/sha256"
+    },
+    "proofs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100000,
+      "items": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "$ref": "#/$defs/uuid"
+          },
+          "eventSequence": {
+            "$ref": "#/$defs/posInt"
+          },
+          "leafIndex": {
+            "$ref": "#/$defs/nonNegInt"
+          },
+          "leaf": {
+            "$ref": "#/$defs/sha256"
+          },
+          "path": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "type": "object",
+              "properties": {
+                "side": {
+                  "enum": [
+                    "left",
+                    "right"
+                  ]
+                },
+                "hash": {
+                  "$ref": "#/$defs/sha256"
+                }
+              },
+              "required": [
+                "side",
+                "hash"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "eventId",
+          "eventSequence",
+          "leafIndex",
+          "leaf",
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "environment",
+    "entityId",
+    "periodId",
+    "algorithm",
+    "leafCount",
+    "root",
+    "proofs"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "environment": {
+            "const": "synthetic-demo"
+          }
+        },
+        "required": [
+          "environment"
+        ]
+      },
+      "then": {
+        "required": [
+          "demoLabel"
+        ]
+      },
+      "else": {
+        "properties": {
+          "demoLabel": false
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "environment": {
+      "enum": [
+        "synthetic-demo",
+        "local-prototype",
+        "devnet",
+        "mainnet-pilot"
+      ]
+    },
+    "demoLabel": {
+      "const": "Demo data — not VT Infinite's financial records."
+    },
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+    },
+    "posInt": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]{0,29}$"
+    },
+    "nonNegInt": {
+      "type": "string",
+      "pattern": "^(?:0|[1-9][0-9]{0,29})$"
+    },
+    "signedInt": {
+      "type": "string",
+      "pattern": "^(?:0|-?[1-9][0-9]{0,29})$"
+    },
+    "signedNonZero": {
+      "type": "string",
+      "pattern": "^-?[1-9][0-9]{0,29}$"
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])$"
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]Z$"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "periodId": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-Q[1-4]$"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]*$"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]*$"
+    },
+    "refs": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "$ref": "#/$defs/slug"
+      }
+    }
+  }
+}

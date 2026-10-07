@@ -57,6 +57,11 @@ jobs:
       - name: Secret scan
         run: npm run secrets
 
+      - name: Marrs Rover release checks (privacy scan, verifier accepts MR-48, rejects tampered, golden vectors)
+        run: npm run ledger
+        env:
+          PRIVATE_IDENTIFIERS: ${{ secrets.PRIVATE_IDENTIFIERS }}
+
       - name: Build
         run: npm run build
 

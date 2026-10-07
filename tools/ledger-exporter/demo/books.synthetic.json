@@ -1,0 +1,803 @@
+{
+  "environment": "synthetic-demo",
+  "entity": {
+    "entityId": "demo",
+    "label": "Synthetic Demo Organization (fictional)"
+  },
+  "period": {
+    "periodId": "2000-Q1",
+    "start": "2000-01-01",
+    "end": "2000-03-31",
+    "cutoff": "2000-03-31T23:59:59Z",
+    "publishedAt": "2000-04-14T16:00:00Z",
+    "commitmentSequence": "1"
+  },
+  "authoritySet": "syn-authority-set-1",
+  "accounts": [
+    {
+      "account": "1000",
+      "name": "Operating cash (synthetic)",
+      "kind": "cash",
+      "bucketId": "operating-cash",
+      "bucketLabel": "Operating cash (synthetic)",
+      "currency": "USD"
+    },
+    {
+      "account": "1010",
+      "name": "Reserve cash (synthetic)",
+      "kind": "cash",
+      "bucketId": "reserve-cash",
+      "bucketLabel": "Reserve cash (synthetic)",
+      "currency": "USD"
+    },
+    {
+      "account": "2500",
+      "name": "Loan principal (synthetic)",
+      "kind": "liability",
+      "categoryId": "loan-principal",
+      "categoryVersion": "1",
+      "flow": "financing"
+    },
+    {
+      "account": "4000",
+      "name": "Program service fees (synthetic)",
+      "kind": "revenue",
+      "categoryId": "program-service-fees",
+      "categoryVersion": "1",
+      "flow": "operating"
+    },
+    {
+      "account": "4100",
+      "name": "Restricted program funding (synthetic)",
+      "kind": "revenue",
+      "categoryId": "restricted-program-funding",
+      "categoryVersion": "1",
+      "flow": "operating"
+    },
+    {
+      "account": "4200",
+      "name": "Other receipts (synthetic)",
+      "kind": "revenue",
+      "categoryId": "other-receipts",
+      "categoryVersion": "1",
+      "flow": "operating"
+    },
+    {
+      "account": "5000",
+      "name": "Program supplies (synthetic)",
+      "kind": "expense",
+      "categoryId": "program-supplies",
+      "categoryVersion": "1",
+      "flow": "operating"
+    },
+    {
+      "account": "5100",
+      "name": "Contract services (synthetic)",
+      "kind": "expense",
+      "categoryId": "contract-services",
+      "categoryVersion": "1",
+      "flow": "operating"
+    },
+    {
+      "account": "5200",
+      "name": "Facilities (synthetic)",
+      "kind": "expense",
+      "categoryId": "facilities",
+      "categoryVersion": "1",
+      "flow": "operating"
+    },
+    {
+      "account": "5300",
+      "name": "Software and hosting (synthetic)",
+      "kind": "expense",
+      "categoryId": "software-and-hosting",
+      "categoryVersion": "1",
+      "flow": "operating"
+    }
+  ],
+  "openingBalances": {
+    "1000": "2500000",
+    "1010": "1000000"
+  },
+  "restrictedFunds": [
+    {
+      "restrictionId": "fund-a",
+      "label": "Synthetic restricted fund A",
+      "currency": "USD",
+      "opening": "300000"
+    },
+    {
+      "restrictionId": "fund-b",
+      "label": "Synthetic restricted fund B",
+      "currency": "USD",
+      "opening": "0"
+    }
+  ],
+  "excluded": [
+    {
+      "description": "No account is excluded: this fictional entity has only the two synthetic cash buckets listed.",
+      "reason": "Synthetic demonstration; there is no real account inventory behind it."
+    }
+  ],
+  "reconciliation": {
+    "status": "partially-reconciled",
+    "date": "2000-04-03",
+    "coverage": "Synthetic: operating cash matched to a synthetic bank statement through 2000-03-31; reserve cash not matched (exception syn-exc-001)."
+  },
+  "scopeStatement": "Synthetic demonstration data for a fictional entity. Cash activity only, on a cash basis; it shows no assets, liabilities or obligations beyond the cash movements listed.",
+  "summaryStatement": "Synthetic demonstration data. Cash activity only: receipts and disbursements are cash movements, and the loan receipt is financing, not income.",
+  "manifestStatement": "Synthetic demonstration publication for a fictional entity. A matching root shows only that these files match this manifest; it says nothing about any real organization's accounts.",
+  "exceptions": [
+    {
+      "exceptionId": "syn-exc-001",
+      "status": "open",
+      "kind": "unreconciled-item",
+      "description": "Synthetic exception: the 2000-03-10 transfer into reserve cash has not been matched to a synthetic bank statement.",
+      "scope": "Reserve cash, 2000-Q1 (synthetic).",
+      "ownerRole": "Synthetic role: accounting reconciler",
+      "openedDate": "2000-04-03",
+      "resolutionRef": null
+    }
+  ],
+  "budgets": [
+    {
+      "budgetId": "syn-budget-alpha",
+      "version": "2",
+      "programId": "program-alpha",
+      "approvedDate": "1999-12-15",
+      "approvalRef": "syn-budget-approval-001",
+      "responsibleRole": "Synthetic role: program lead",
+      "restrictionId": null,
+      "currency": "USD",
+      "lines": [
+        {
+          "categoryId": "program-supplies",
+          "amountMinorUnits": "120000"
+        },
+        {
+          "categoryId": "contract-services",
+          "amountMinorUnits": "250000"
+        }
+      ],
+      "amendments": [
+        {
+          "version": "2",
+          "date": "2000-02-01",
+          "approvalRef": "syn-budget-approval-002",
+          "reason": "Synthetic amendment: contract services raised to cover restricted fund A work (demo)."
+        }
+      ],
+      "varianceNote": "Synthetic: supplies came in under budget after the corrected invoice; contract services matched the amended budget (demo)."
+    },
+    {
+      "budgetId": "syn-budget-beta",
+      "version": "1",
+      "programId": "program-beta",
+      "approvedDate": "1999-12-15",
+      "approvalRef": "syn-budget-approval-003",
+      "responsibleRole": "Synthetic role: program lead",
+      "restrictionId": "fund-b",
+      "currency": "USD",
+      "lines": [
+        {
+          "categoryId": "contract-services",
+          "amountMinorUnits": "200000"
+        },
+        {
+          "categoryId": "program-supplies",
+          "amountMinorUnits": "100000"
+        }
+      ],
+      "amendments": [],
+      "varianceNote": "Synthetic: contract services under budget by the amount still open at period end (demo)."
+    }
+  ],
+  "approvals": [
+    {
+      "approvalRef": "syn-spend-001",
+      "kind": "spending",
+      "role": "Synthetic role: treasurer",
+      "date": "2000-01-03",
+      "scope": "Synthetic spending approval for one listed disbursement (demo)."
+    },
+    {
+      "approvalRef": "syn-spend-002",
+      "kind": "spending",
+      "role": "Synthetic role: treasurer",
+      "date": "2000-01-03",
+      "scope": "Synthetic spending approval for one listed disbursement (demo)."
+    },
+    {
+      "approvalRef": "syn-spend-003",
+      "kind": "spending",
+      "role": "Synthetic role: treasurer",
+      "date": "2000-01-03",
+      "scope": "Synthetic spending approval for one listed disbursement (demo)."
+    },
+    {
+      "approvalRef": "syn-spend-004",
+      "kind": "spending",
+      "role": "Synthetic role: treasurer",
+      "date": "2000-01-03",
+      "scope": "Synthetic spending approval for one listed disbursement (demo)."
+    },
+    {
+      "approvalRef": "syn-spend-005",
+      "kind": "spending",
+      "role": "Synthetic role: treasurer",
+      "date": "2000-01-03",
+      "scope": "Synthetic spending approval for one listed disbursement (demo)."
+    },
+    {
+      "approvalRef": "syn-spend-006",
+      "kind": "spending",
+      "role": "Synthetic role: treasurer",
+      "date": "2000-01-03",
+      "scope": "Synthetic spending approval for one listed disbursement (demo)."
+    },
+    {
+      "approvalRef": "syn-spend-007",
+      "kind": "spending",
+      "role": "Synthetic role: treasurer",
+      "date": "2000-01-03",
+      "scope": "Synthetic spending approval for one listed disbursement (demo)."
+    },
+    {
+      "approvalRef": "syn-spend-008",
+      "kind": "spending",
+      "role": "Synthetic role: treasurer",
+      "date": "2000-01-03",
+      "scope": "Synthetic spending approval for one listed disbursement (demo)."
+    },
+    {
+      "approvalRef": "syn-spend-009",
+      "kind": "spending",
+      "role": "Synthetic role: treasurer",
+      "date": "2000-01-03",
+      "scope": "Synthetic spending approval for one listed disbursement (demo)."
+    },
+    {
+      "approvalRef": "syn-spend-010",
+      "kind": "spending",
+      "role": "Synthetic role: treasurer",
+      "date": "2000-01-03",
+      "scope": "Synthetic spending approval for one listed disbursement (demo)."
+    },
+    {
+      "approvalRef": "syn-spend-011",
+      "kind": "spending",
+      "role": "Synthetic role: treasurer",
+      "date": "2000-01-03",
+      "scope": "Synthetic spending approval for one listed disbursement (demo)."
+    },
+    {
+      "approvalRef": "syn-budget-approval-001",
+      "kind": "budget",
+      "role": "Synthetic role: board finance committee",
+      "date": "1999-12-15",
+      "scope": "Synthetic approval of the program alpha budget, version 1 (demo)."
+    },
+    {
+      "approvalRef": "syn-budget-approval-002",
+      "kind": "budget",
+      "role": "Synthetic role: board finance committee",
+      "date": "2000-02-01",
+      "scope": "Synthetic approval of the program alpha budget amendment, version 2 (demo)."
+    },
+    {
+      "approvalRef": "syn-budget-approval-003",
+      "kind": "budget",
+      "role": "Synthetic role: board finance committee",
+      "date": "1999-12-15",
+      "scope": "Synthetic approval of the program beta budget (demo)."
+    },
+    {
+      "approvalRef": "syn-conflict-001",
+      "kind": "conflict-disclosure",
+      "role": "Synthetic role: program lead",
+      "date": "2000-01-12",
+      "scope": "Synthetic disclosure: the contractor paid from restricted fund A is related to a synthetic staff role; the treasurer approved (demo)."
+    },
+    {
+      "approvalRef": "syn-publication-001",
+      "kind": "publication",
+      "role": "Synthetic role: publication approver",
+      "date": "2000-04-14",
+      "scope": "Synthetic approval to publish this demonstration bundle (demo)."
+    }
+  ],
+  "entries": [
+    {
+      "sourceId": "J-0001",
+      "date": "2000-01-04",
+      "kind": "receipt",
+      "programId": "program-alpha",
+      "restrictionId": null,
+      "currency": "USD",
+      "purpose": "Synthetic receipt: program service fees, January (demo).",
+      "lines": [
+        {
+          "account": "1000",
+          "debit": "125000"
+        },
+        {
+          "account": "4000",
+          "credit": "125000"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0002",
+      "date": "2000-01-11",
+      "kind": "receipt",
+      "programId": "program-alpha",
+      "restrictionId": "fund-a",
+      "currency": "USD",
+      "purpose": "Synthetic receipt: restricted funding for program alpha (demo).",
+      "lines": [
+        {
+          "account": "1000",
+          "debit": "500000"
+        },
+        {
+          "account": "4100",
+          "credit": "500000"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0003",
+      "date": "2000-01-18",
+      "kind": "receipt",
+      "programId": "general",
+      "restrictionId": null,
+      "currency": "USD",
+      "purpose": "Synthetic receipt: loan proceeds; financing, not income (demo).",
+      "lines": [
+        {
+          "account": "1000",
+          "debit": "1000000"
+        },
+        {
+          "account": "2500",
+          "credit": "1000000"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0004",
+      "date": "2000-01-25",
+      "kind": "receipt",
+      "programId": "program-beta",
+      "restrictionId": null,
+      "currency": "USD",
+      "purpose": "Synthetic receipt: program service fees for program beta (demo).",
+      "lines": [
+        {
+          "account": "1000",
+          "debit": "87550"
+        },
+        {
+          "account": "4000",
+          "credit": "87550"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0005",
+      "date": "2000-02-01",
+      "kind": "receipt",
+      "programId": "program-beta",
+      "restrictionId": "fund-b",
+      "currency": "USD",
+      "purpose": "Synthetic receipt: restricted funding for program beta (demo).",
+      "lines": [
+        {
+          "account": "1000",
+          "debit": "400000"
+        },
+        {
+          "account": "4100",
+          "credit": "400000"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0006",
+      "date": "2000-02-08",
+      "kind": "receipt",
+      "programId": "general",
+      "restrictionId": null,
+      "currency": "USD",
+      "purpose": "Synthetic receipt: miscellaneous refund received (demo).",
+      "lines": [
+        {
+          "account": "1000",
+          "debit": "12345"
+        },
+        {
+          "account": "4200",
+          "credit": "12345"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0007",
+      "date": "2000-02-15",
+      "kind": "receipt",
+      "programId": "program-alpha",
+      "restrictionId": null,
+      "currency": "USD",
+      "purpose": "Synthetic receipt: program service fees, February (demo).",
+      "lines": [
+        {
+          "account": "1000",
+          "debit": "230000"
+        },
+        {
+          "account": "4000",
+          "credit": "230000"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0008",
+      "date": "2000-02-22",
+      "kind": "receipt",
+      "programId": "program-beta",
+      "restrictionId": "fund-b",
+      "currency": "USD",
+      "purpose": "Synthetic receipt: second restricted funding installment for program beta (demo).",
+      "lines": [
+        {
+          "account": "1000",
+          "debit": "150000"
+        },
+        {
+          "account": "4100",
+          "credit": "150000"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0009",
+      "date": "2000-03-01",
+      "kind": "receipt",
+      "programId": "program-alpha",
+      "restrictionId": null,
+      "currency": "USD",
+      "purpose": "Synthetic receipt: program service fees, March (demo).",
+      "lines": [
+        {
+          "account": "1000",
+          "debit": "99999"
+        },
+        {
+          "account": "4000",
+          "credit": "99999"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0010",
+      "date": "2000-03-08",
+      "kind": "receipt",
+      "programId": "general",
+      "restrictionId": null,
+      "currency": "USD",
+      "purpose": "Synthetic receipt: interest on operating cash (demo).",
+      "lines": [
+        {
+          "account": "1000",
+          "debit": "5000"
+        },
+        {
+          "account": "4200",
+          "credit": "5000"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0011",
+      "date": "2000-01-06",
+      "kind": "disbursement",
+      "programId": "program-alpha",
+      "restrictionId": null,
+      "currency": "USD",
+      "purpose": "Synthetic disbursement: program supplies (demo).",
+      "approvalRefs": [
+        "syn-spend-001"
+      ],
+      "lines": [
+        {
+          "account": "5000",
+          "debit": "45000"
+        },
+        {
+          "account": "1000",
+          "credit": "45000"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0012",
+      "date": "2000-01-13",
+      "kind": "disbursement",
+      "programId": "program-alpha",
+      "restrictionId": "fund-a",
+      "currency": "USD",
+      "purpose": "Synthetic disbursement: contract services paid from restricted fund A (demo).",
+      "approvalRefs": [
+        "syn-spend-002"
+      ],
+      "conflictRefs": [
+        "syn-conflict-001"
+      ],
+      "lines": [
+        {
+          "account": "5100",
+          "debit": "200000"
+        },
+        {
+          "account": "1000",
+          "credit": "200000"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0013",
+      "date": "2000-01-20",
+      "kind": "disbursement",
+      "programId": "general",
+      "restrictionId": null,
+      "currency": "USD",
+      "purpose": "Synthetic disbursement: facilities, first quarter (demo).",
+      "approvalRefs": [
+        "syn-spend-003"
+      ],
+      "lines": [
+        {
+          "account": "5200",
+          "debit": "150000"
+        },
+        {
+          "account": "1000",
+          "credit": "150000"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0014",
+      "date": "2000-01-27",
+      "kind": "disbursement",
+      "programId": "program-beta",
+      "restrictionId": null,
+      "currency": "USD",
+      "purpose": "Synthetic disbursement: software and hosting (demo).",
+      "approvalRefs": [
+        "syn-spend-004"
+      ],
+      "lines": [
+        {
+          "account": "5300",
+          "debit": "29900"
+        },
+        {
+          "account": "1000",
+          "credit": "29900"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0015",
+      "date": "2000-02-03",
+      "kind": "disbursement",
+      "programId": "program-beta",
+      "restrictionId": "fund-b",
+      "currency": "USD",
+      "purpose": "Synthetic disbursement: contract services paid from restricted fund B (demo).",
+      "approvalRefs": [
+        "syn-spend-005"
+      ],
+      "lines": [
+        {
+          "account": "5100",
+          "debit": "175000"
+        },
+        {
+          "account": "1000",
+          "credit": "175000"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0016",
+      "date": "2000-02-10",
+      "kind": "disbursement",
+      "programId": "general",
+      "restrictionId": null,
+      "currency": "USD",
+      "purpose": "Synthetic disbursement: facilities, second installment (demo).",
+      "approvalRefs": [
+        "syn-spend-006"
+      ],
+      "lines": [
+        {
+          "account": "5200",
+          "debit": "150000"
+        },
+        {
+          "account": "1000",
+          "credit": "150000"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0017",
+      "date": "2000-02-17",
+      "kind": "disbursement",
+      "programId": "program-alpha",
+      "restrictionId": "fund-a",
+      "currency": "USD",
+      "purpose": "Synthetic disbursement: program supplies from restricted fund A (demo).",
+      "approvalRefs": [
+        "syn-spend-007"
+      ],
+      "lines": [
+        {
+          "account": "5000",
+          "debit": "64000"
+        },
+        {
+          "account": "1000",
+          "credit": "64000"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0018",
+      "date": "2000-02-24",
+      "kind": "disbursement",
+      "programId": "program-beta",
+      "restrictionId": null,
+      "currency": "USD",
+      "purpose": "Synthetic disbursement: program supplies for program beta (demo).",
+      "approvalRefs": [
+        "syn-spend-008"
+      ],
+      "lines": [
+        {
+          "account": "5000",
+          "debit": "31250"
+        },
+        {
+          "account": "1000",
+          "credit": "31250"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0019",
+      "date": "2000-03-02",
+      "kind": "disbursement",
+      "programId": "general",
+      "restrictionId": null,
+      "currency": "USD",
+      "purpose": "Synthetic disbursement: software and hosting (demo).",
+      "approvalRefs": [
+        "syn-spend-009"
+      ],
+      "lines": [
+        {
+          "account": "5300",
+          "debit": "29900"
+        },
+        {
+          "account": "1000",
+          "credit": "29900"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0020",
+      "date": "2000-03-09",
+      "kind": "disbursement",
+      "programId": "program-beta",
+      "restrictionId": "fund-b",
+      "currency": "USD",
+      "purpose": "Synthetic disbursement: program supplies from restricted fund B (demo).",
+      "approvalRefs": [
+        "syn-spend-010"
+      ],
+      "lines": [
+        {
+          "account": "5000",
+          "debit": "80000"
+        },
+        {
+          "account": "1000",
+          "credit": "80000"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0021",
+      "date": "2000-03-10",
+      "kind": "transfer",
+      "programId": "general",
+      "restrictionId": null,
+      "currency": "USD",
+      "purpose": "Synthetic internal transfer: operating cash to reserve cash (demo).",
+      "approvalRefs": [
+        "syn-spend-011"
+      ],
+      "lines": [
+        {
+          "account": "1010",
+          "debit": "300000"
+        },
+        {
+          "account": "1000",
+          "credit": "300000"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0022",
+      "date": "2000-03-14",
+      "kind": "reversal",
+      "programId": "program-alpha",
+      "restrictionId": "fund-a",
+      "currency": "USD",
+      "corrects": "J-0017",
+      "reason": "Synthetic correction: the supplies invoice was entered at the wrong amount; this reverses the original entry in full (demo).",
+      "purpose": "Synthetic reversal of the program supplies disbursement entered at the wrong amount (demo).",
+      "approvalRefs": [
+        "syn-spend-007"
+      ],
+      "lines": [
+        {
+          "account": "5000",
+          "credit": "64000"
+        },
+        {
+          "account": "1000",
+          "debit": "64000"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0023",
+      "date": "2000-03-14",
+      "kind": "replacement",
+      "programId": "program-alpha",
+      "restrictionId": "fund-a",
+      "currency": "USD",
+      "corrects": "J-0017",
+      "reason": "Synthetic correction: replaces the reversed entry with the invoice's correct amount (demo).",
+      "purpose": "Synthetic disbursement: program supplies from restricted fund A, at the corrected amount (demo).",
+      "approvalRefs": [
+        "syn-spend-007"
+      ],
+      "lines": [
+        {
+          "account": "5000",
+          "debit": "46000"
+        },
+        {
+          "account": "1000",
+          "credit": "46000"
+        }
+      ]
+    },
+    {
+      "sourceId": "J-0024",
+      "date": "2000-03-31",
+      "kind": "reconciliation",
+      "programId": "general",
+      "restrictionId": null,
+      "purpose": "Synthetic reconciliation statement: operating cash matched to the synthetic bank statement through 2000-03-31; reserve cash not yet matched, see exception syn-exc-001 (demo).",
+      "lines": []
+    }
+  ]
+}

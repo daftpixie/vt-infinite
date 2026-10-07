@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vt-infinite:marrs-rover:schema:scope:1",
+  "title": "Marrs Rover scope statement, version 1",
+  "description": "What one publication covers and leaves out (PRD MR-16, MR-20). Public bucket IDs only; no account numbers.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "marrs-rover.scope.1"
+    },
+    "environment": {
+      "$ref": "#/$defs/environment"
+    },
+    "demoLabel": {
+      "$ref": "#/$defs/demoLabel"
+    },
+    "entityId": {
+      "$ref": "#/$defs/slug"
+    },
+    "entityLabel": {
+      "$ref": "#/$defs/label"
+    },
+    "periodId": {
+      "$ref": "#/$defs/periodId"
+    },
+    "periodStart": {
+      "$ref": "#/$defs/date"
+    },
+    "periodEnd": {
+      "$ref": "#/$defs/date"
+    },
+    "cutoff": {
+      "$ref": "#/$defs/timestamp"
+    },
+    "basis": {
+      "const": "cash"
+    },
+    "buckets": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "properties": {
+          "bucketId": {
+            "$ref": "#/$defs/slug"
+          },
+          "label": {
+            "$ref": "#/$defs/label"
+          },
+          "currency": {
+            "$ref": "#/$defs/currency"
+          }
+        },
+        "required": [
+          "bucketId",
+          "label",
+          "currency"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "restrictedFunds": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "properties": {
+          "restrictionId": {
+            "$ref": "#/$defs/slug"
+          },
+          "label": {
+            "$ref": "#/$defs/label"
+          }
+        },
+        "required": [
+          "restrictionId",
+          "label"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "excluded": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "$ref": "#/$defs/text"
+          },
+          "reason": {
+            "$ref": "#/$defs/text"
+          }
+        },
+        "required": [
+          "description",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "reconciliation": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "not-reconciled",
+            "partially-reconciled",
+            "bank-reconciled"
+          ]
+        },
+        "date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])$"
+        },
+        "coverage": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "status",
+        "date",
+        "coverage"
+      ],
+      "additionalProperties": false
+    },
+    "statement": {
+      "$ref": "#/$defs/text"
+    }
+  },
+  "required": [
+    "schema",
+    "environment",
+    "entityId",
+    "entityLabel",
+    "periodId",
+    "periodStart",
+    "periodEnd",
+    "cutoff",
+    "basis",
+    "buckets",
+    "restrictedFunds",
+    "excluded",
+    "reconciliation",
+    "statement"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "environment": {
+            "const": "synthetic-demo"
+          }
+        },
+        "required": [
+          "environment"
+        ]
+      },
+      "then": {
+        "required": [
+          "demoLabel"
+        ]
+      },
+      "else": {
+        "properties": {
+          "demoLabel": false
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "environment": {
+      "enum": [
+        "synthetic-demo",
+        "local-prototype",
+        "devnet",
+        "mainnet-pilot"
+      ]
+    },
+    "demoLabel": {
+      "const": "Demo data — not VT Infinite's financial records."
+    },
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+    },
+    "posInt": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]{0,29}$"
+    },
+    "nonNegInt": {
+      "type": "string",
+      "pattern": "^(?:0|[1-9][0-9]{0,29})$"
+    },
+    "signedInt": {
+      "type": "string",
+      "pattern": "^(?:0|-?[1-9][0-9]{0,29})$"
+    },
+    "signedNonZero": {
+      "type": "string",
+      "pattern": "^-?[1-9][0-9]{0,29}$"
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])$"
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]Z$"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "periodId": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-Q[1-4]$"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]*$"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]*$"
+    },
+    "refs": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "$ref": "#/$defs/slug"
+      }
+    }
+  }
+}
