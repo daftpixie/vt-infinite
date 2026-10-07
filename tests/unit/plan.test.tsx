@@ -7,10 +7,10 @@ import { PlanBody, PlanSummary } from "@/components/plan";
 import { decide } from "@/lib/access";
 import { CRISIS_SUPPORT_TEXT } from "@/lib/crisis";
 import { ALLOWED_ENDPOINTS, assertAllowed, MAX_PAGES, PlanReadError, readPlanSource } from "@/lib/plan/asana";
-import { keyAllocator } from "@/lib/plan/keys";
+import { keyAllocator, keyIndexDigest, MAX_KEY_INDEX_ENTRIES, type KeyIndex } from "@/lib/plan/keys";
 import { resetTokenCacheForTests, TOKEN_URL } from "@/lib/plan/oauth";
-import { startPlanPolling } from "@/lib/plan/poller";
-import { cleanTitle, MAX_TITLE, projectPlan, stepCounts } from "@/lib/plan/projection";
+import { PLAN_STALE_AFTER_MS, pollPlanOnce, restale, startPlanPolling } from "@/lib/plan/poller";
+import { cleanTitle, MAX_TITLE, projectPlan, stepCounts, type PlanInitiative } from "@/lib/plan/projection";
 import { isShown, PLAN_KEYS, readPlan, refreshPlan, type PlanControl, type PublicPlanState } from "@/lib/plan/service";
 import { setSnapshotStoreForTests, type SnapshotStore } from "@/lib/storage";
 import { FileSnapshotStore } from "@/lib/storage/file";
@@ -163,7 +163,7 @@ describe("projection (A-5, A-6)", () => {
   const project = async (env: Record<string, string> = {}) => {
     const source = await readPlanSource("9001", { token: "t", fetchImpl: asana().fetchImpl });
     const logs: string[] = [];
-    const keys = keyAllocator({}, ENV.PLAN_KEY_SECRET);
+    const keys = keyAllocator(null, ENV.PLAN_KEY_SECRET, { now: t0 });
     return { p: projectPlan(source, { keyFor: keys.keyFor, env, log: (m) => logs.push(m) }), logs, keys };
   };
 
@@ -229,7 +229,7 @@ describe("projection (A-5, A-6)", () => {
   });
 
   it("keeps dates; cleans control characters; limits titles to 200 characters", () => {
-    expect(cleanTitle("A\u0000b‮ c\n\t d​")).toBe("A b c d");
+    expect(cleanTitle("A\u0000b\u202e c\n\t d\u200b\u2066e\ufeff")).toBe("A b c d e");
     const long = "S".repeat(250);
     const p = projectPlan([{ task: { gid: "1", name: long, completed: false }, subtasks: [] }], { keyFor: () => "k", env: {}, log: quiet });
     expect(Array.from(p.initiatives[0]?.title ?? "")).toHaveLength(MAX_TITLE);
@@ -245,7 +245,7 @@ describe("projection (A-5, A-6)", () => {
     }
     expect(new Set(keys1).size).toBe(keys1.length);
     const second = projectPlan(await readPlanSource("9001", { token: "t", fetchImpl: asana().fetchImpl }), {
-      keyFor: keyAllocator(first.keys.index(), ENV.PLAN_KEY_SECRET).keyFor,
+      keyFor: keyAllocator(first.keys.index(), ENV.PLAN_KEY_SECRET, { now: t0 }).keyFor,
       env: {},
       log: quiet,
     });
@@ -384,8 +384,11 @@ describe("refresh and read (A-4, A-8)", () => {
     vi.stubEnv("PLAN_ENABLED", "");
     await expect((await import("@/app/plan/onerhythm/page")).default()).rejects.toThrow(/NEXT_HTTP_ERROR_FALLBACK;404/);
     const api = await import("@/app/api/plan/onerhythm/route");
-    expect((await api.GET()).status).toBe(404);
+    const off = await api.GET();
+    expect(off.status).toBe(404);
+    expect(off.headers.get("cache-control")).toBe("no-store");
     expect((await api.POST()).status).toBe(404);
+    expect((await api.POST()).headers.get("cache-control")).toBe("no-store");
     expect(decide("/plan/onerhythm", {})).toEqual({ action: "deny", reason: "flag", flag: "plan" });
     expect(decide("/api/plan/onerhythm", {})).toEqual({ action: "deny", reason: "flag", flag: "plan" });
     const home = renderToStaticMarkup(await (await import("@/app/page")).default());
@@ -560,4 +563,212 @@ it("isShown hides off and withdrawn", () => {
   expect(isShown({ status: "off" })).toBe(false);
   expect(isShown({ status: "withdrawn" })).toBe(false);
   expect(isShown({ status: "held" })).toBe(true);
+});
+
+describe("stable keys across reads (A-5)", () => {
+  const SECRET = ENV.PLAN_KEY_SECRET;
+  const allKeys = (p: { initiatives: { key: string; steps: { key: string }[] }[] }) => p.initiatives.flatMap((i) => [i.key, ...i.steps.map((s) => s.key)]);
+
+  it("keeps every key ever issued, so an item held back or missing from a read gets its old key when it returns", () => {
+    const first = keyAllocator(null, SECRET, { now: t0 });
+    const a = first.keyFor("9101");
+    const b = first.keyFor("9201");
+    // The second read does not include 9201 (held back, or briefly missing).
+    const second = keyAllocator(first.index(), SECRET, { now: new Date(t0.getTime() + 60_000) });
+    expect(second.keyFor("9101")).toBe(a);
+    const kept = second.index();
+    expect(Object.keys(kept.entries)).toContain(keyIndexDigest("9201", SECRET));
+    // It returns in the third read with the same key.
+    const third = keyAllocator(kept, SECRET, { now: new Date(t0.getTime() + 120_000) });
+    expect(third.keyFor("9201")).toBe(b);
+    expect(third.keyFor("9101")).toBe(a);
+  });
+
+  it("through refresh: a step left out of one read keeps its key in the next", async () => {
+    const { s } = store();
+    const read = (at: number, over?: (u: URL) => Response | null) =>
+      refreshPlan({ store: s, env: ENV, now: () => new Date(t0.getTime() + at), fetchImpl: asana(over).fetchImpl, log: quiet });
+    expect(await read(0)).toBe("updated");
+    const before = allKeys((await s.get<{ initiatives: PlanInitiative[] }>(PLAN_KEYS.data))!.data);
+    // Initiative 9102's steps are missing from the next read.
+    expect(await read(60_000, (u) => (u.pathname.endsWith("/tasks/9102/subtasks") ? new Response('{"data":[],"next_page":null}') : null))).toBe("updated");
+    const during = allKeys((await s.get<{ initiatives: PlanInitiative[] }>(PLAN_KEYS.data))!.data);
+    expect(during.length).toBeLessThan(before.length);
+    expect(await read(120_000)).toBe("updated");
+    expect(allKeys((await s.get<{ initiatives: PlanInitiative[] }>(PLAN_KEYS.data))!.data)).toEqual(before);
+  });
+
+  it("bounds the index: every item in the current read, then the most recently seen others, up to the limit", () => {
+    expect(MAX_KEY_INDEX_ENTRIES).toBe(5_000);
+    let n = 0;
+    const make = () => `s${String(++n).padStart(12, "0")}`;
+    let idx: KeyIndex | null = null;
+    // Five reads, one item each, a minute apart: items 1..5, oldest first.
+    for (let i = 1; i <= 5; i++) {
+      const k = keyAllocator(idx, SECRET, { now: new Date(t0.getTime() + i * 60_000), make, max: 3 });
+      k.keyFor(String(i));
+      idx = k.index();
+    }
+    const digests = (ids: string[]) => ids.map((id) => keyIndexDigest(id, SECRET)).sort();
+    expect(Object.keys(idx!.entries).sort()).toEqual(digests(["3", "4", "5"]));
+    // A read larger than the limit keeps all of its own items.
+    const big = keyAllocator(idx, SECRET, { now: new Date(t0.getTime() + 10 * 60_000), make, max: 3 });
+    for (const id of ["10", "11", "12", "13"]) big.keyFor(id);
+    expect(Object.keys(big.index().entries).sort()).toEqual(digests(["10", "11", "12", "13"]));
+  });
+
+  it("never reuses a key that is in the index, even for an item not in this read", () => {
+    const first = keyAllocator(null, SECRET, { now: t0, make: () => "sAAAAAAAAAAAA" });
+    first.keyFor("1");
+    const keys = ["sAAAAAAAAAAAA", "sBBBBBBBBBBBB"];
+    const second = keyAllocator(first.index(), SECRET, { now: t0, make: () => keys.shift() as string });
+    expect(second.keyFor("2")).toBe("sBBBBBBBBBBBB");
+  });
+
+  it("rotating PLAN_KEY_SECRET re-keys every item and drops the old entries", async () => {
+    const { s } = store();
+    const logs: string[] = [];
+    const read = (env: typeof ENV, at: number) =>
+      refreshPlan({ store: s, env, now: () => new Date(t0.getTime() + at), fetchImpl: asana().fetchImpl, log: (m) => logs.push(m) });
+    await read(ENV, 0);
+    const before = allKeys((await s.get<{ initiatives: PlanInitiative[] }>(PLAN_KEYS.data))!.data);
+    const rotated = { ...ENV, PLAN_KEY_SECRET: "a-different-synthetic-secret-of-32-characters" };
+    expect(await read(rotated, 60_000)).toBe("updated");
+    const after = allKeys((await s.get<{ initiatives: PlanInitiative[] }>(PLAN_KEYS.data))!.data);
+    expect(after).toHaveLength(before.length);
+    for (const k of after) expect(before).not.toContain(k);
+    expect(logs.join("\n")).toMatch(/PLAN_KEY_SECRET changed; every item gets a new public key/);
+    expect(logs.join("\n")).not.toContain(rotated.PLAN_KEY_SECRET);
+    const idx = (await s.get<KeyIndex>(PLAN_KEYS.index))!.data;
+    expect(Object.keys(idx.entries)).toHaveLength(after.length);
+  });
+
+  it("treats an index in any other shape as unreadable and starts afresh", () => {
+    const k = keyAllocator({ [keyIndexDigest("1", SECRET)]: "sAAAAAAAAAAAA" }, SECRET, { now: t0 });
+    expect(k.priorState).toBe("unreadable");
+    expect(k.keyFor("1")).not.toBe("sAAAAAAAAAAAA");
+    expect(keyAllocator(null, SECRET, { now: t0 }).priorState).toBe("empty");
+  });
+});
+
+describe("client staleness (A-3, A-8)", () => {
+  const shown = (status: "fresh" | "stale", readAt = t0.toISOString()): PublicPlanState => ({ status, readAt, initiatives: [], withheld: { initiatives: 0, steps: 0 } });
+
+  it("turns fresh into stale after 30 minutes, from the read time alone", () => {
+    expect(restale(shown("fresh"), t0.getTime() + PLAN_STALE_AFTER_MS).status).toBe("fresh");
+    expect(restale(shown("fresh"), t0.getTime() + PLAN_STALE_AFTER_MS + 1).status).toBe("stale");
+  });
+
+  it("never turns a stale read fresh, and leaves held and unavailable alone", () => {
+    expect(restale(shown("stale"), t0.getTime()).status).toBe("stale");
+    expect(restale({ status: "held" }, t0.getTime() + 10 * PLAN_STALE_AFTER_MS)).toEqual({ status: "held" });
+    expect(restale({ status: "unavailable" }, t0.getTime() + 10 * PLAN_STALE_AFTER_MS)).toEqual({ status: "unavailable" });
+  });
+
+  it("a poll ages the shown read when the request throws, errors or is not JSON; a 404 leaves the page", async () => {
+    const later = () => t0.getTime() + 31 * 60_000;
+    const gone = vi.fn();
+    for (const fetchImpl of [
+      async () => Promise.reject(new Error("synthetic")),
+      async () => new Response("{}", { status: 500 }),
+      async () => new Response("not json", { status: 200 }),
+    ]) {
+      const update = await pollPlanOnce("/api/plan/onerhythm", { fetchImpl, now: later, gone });
+      expect(update(shown("fresh")).status).toBe("stale");
+    }
+    expect(gone).not.toHaveBeenCalled();
+    const update = await pollPlanOnce("/api/plan/onerhythm", { fetchImpl: async () => new Response(null, { status: 404 }), now: later, gone });
+    expect(gone).toHaveBeenCalledTimes(1);
+    expect(update(shown("fresh")).status).toBe("fresh");
+  });
+
+  it("a poll that works shows the new read, aged by the same rule", async () => {
+    const next = shown("fresh", new Date(t0.getTime() + 60_000).toISOString());
+    const update = await pollPlanOnce("/api/plan/onerhythm", { fetchImpl: async () => Response.json(next), now: () => t0.getTime() + 2 * 60_000, gone: () => {} });
+    expect(update(shown("fresh"))).toEqual(next);
+  });
+
+  describe("a tab whose polls keep failing", () => {
+    beforeEach(() => vi.useFakeTimers({ now: t0 }));
+    afterEach(() => vi.useRealTimers());
+
+    it("shows stale once the last read is more than 30 minutes old", async () => {
+      let state = shown("fresh");
+      const doc = { visibilityState: "visible" as DocumentVisibilityState, addEventListener: () => {}, removeEventListener: () => {} };
+      const failing = vi.fn(async () => Promise.reject(new Error("synthetic")));
+      const stop = startPlanPolling({
+        doc,
+        // As PlanLive does it.
+        fetchOnce: async () => {
+          const update = await pollPlanOnce("/api/plan/onerhythm", { fetchImpl: failing, now: () => Date.now(), gone: () => {} });
+          state = update(state);
+        },
+      });
+      await vi.advanceTimersByTimeAsync(30 * 60_000);
+      expect(failing).toHaveBeenCalledTimes(30);
+      expect(state.status).toBe("fresh");
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(state.status).toBe("stale");
+      stop();
+    });
+  });
+});
+
+describe("client nits (A-4)", () => {
+  it("drops the cached access token when the API answers 401, so the next read gets a new one", async () => {
+    const { s } = store();
+    const tokenCalls = (a: ReturnType<typeof asana>) => a.calls.filter((c) => c.url === TOKEN_URL).length;
+    const ok = asana();
+    expect(await refreshPlan({ store: s, env: ENV, now: () => t0, fetchImpl: ok.fetchImpl, log: quiet })).toBe("updated");
+    expect(tokenCalls(ok)).toBe(1);
+    // Within the token's hour, a second read reuses it.
+    const reuse = asana();
+    expect(await refreshPlan({ store: s, env: ENV, now: () => new Date(t0.getTime() + 60_000), fetchImpl: reuse.fetchImpl, log: quiet })).toBe("updated");
+    expect(tokenCalls(reuse)).toBe(0);
+    // The API refuses the token.
+    const refused = asana((u) => (u.pathname.endsWith("/projects/9001/tasks") ? new Response("{}", { status: 401 }) : null));
+    expect(await refreshPlan({ store: s, env: ENV, now: () => new Date(t0.getTime() + 120_000), fetchImpl: refused.fetchImpl, log: quiet })).toBe("failed");
+    expect(tokenCalls(refused)).toBe(0);
+    // The next read, after the backoff, exchanges the refresh token again.
+    const again = asana();
+    expect(await refreshPlan({ store: s, env: ENV, now: () => new Date(t0.getTime() + 300_000), fetchImpl: again.fetchImpl, log: quiet })).toBe("updated");
+    expect(tokenCalls(again)).toBe(1);
+  });
+
+  it("keeps the cached token on other failures", async () => {
+    const { s } = store();
+    await refreshPlan({ store: s, env: ENV, now: () => t0, fetchImpl: asana().fetchImpl, log: quiet });
+    const failing = asana((u) => (u.pathname.endsWith("/projects/9001/tasks") ? new Response("{}", { status: 503 }) : null));
+    expect(await refreshPlan({ store: s, env: ENV, now: () => new Date(t0.getTime() + 60_000), fetchImpl: failing.fetchImpl, log: quiet })).toBe("failed");
+    const again = asana();
+    expect(await refreshPlan({ store: s, env: ENV, now: () => new Date(t0.getTime() + 300_000), fetchImpl: again.fetchImpl, log: quiet })).toBe("updated");
+    expect(again.calls.filter((c) => c.url === TOKEN_URL)).toHaveLength(0);
+  });
+
+  it("stops sibling subtask requests once one fails, and aborts those in flight", async () => {
+    const tasks = Array.from({ length: 12 }, (_, i) => ({ gid: String(9300 + i), name: `Synthetic initiative ${i}`, completed: false }));
+    const started: string[] = [];
+    const aborted: string[] = [];
+    const fetchImpl = vi.fn(async (input: string, init: RequestInit) => {
+      const u = new URL(input);
+      if (u.pathname.endsWith("/projects/9001/tasks")) return Response.json({ data: tasks, next_page: null });
+      const gid = /\/tasks\/(\d+)\/subtasks$/.exec(u.pathname)?.[1] as string;
+      started.push(gid);
+      if (gid === "9300") {
+        await new Promise((r) => setTimeout(r, 5));
+        return new Response("{}", { status: 500 });
+      }
+      // The others wait until they are aborted.
+      return new Promise<Response>((_, reject) =>
+        init.signal?.addEventListener("abort", () => {
+          aborted.push(gid);
+          reject(new Error("aborted"));
+        }),
+      );
+    });
+    await expect(readPlanSource("9001", { token: "t", fetchImpl })).rejects.toThrow("subtasks: HTTP 500");
+    await new Promise((r) => setTimeout(r, 10));
+    expect(started).toHaveLength(4);
+    expect(aborted.sort()).toEqual(["9301", "9302", "9303"]);
+  });
 });

@@ -2,7 +2,8 @@ import { isEnabled } from "@/lib/flags";
 import { getSnapshotStore, type SnapshotStore } from "@/lib/storage";
 import { PlanReadError, readPlanSource, type FetchImpl } from "./asana";
 import { keyAllocator, type KeyIndex } from "./keys";
-import { DEFAULT_REDIRECT_URI, getAccessToken } from "./oauth";
+import { staleness } from "./poller";
+import { DEFAULT_REDIRECT_URI, dropCachedAccessToken, getAccessToken } from "./oauth";
 import { projectPlan, type PlanInitiative, type PlanProjection } from "./projection";
 
 /**
@@ -21,8 +22,6 @@ export const PLAN_KEYS = {
 /** At most one read per minute while the plan is enabled (A-4). */
 export const PLAN_REFRESH_FLOOR_MS = 60 * 1000;
 export const PLAN_MAX_BACKOFF_MS = 15 * 60 * 1000;
-/** A read older than this is labeled stale (A-8). */
-export const PLAN_STALE_AFTER_MS = 30 * 60 * 1000;
 export const PLAN_SCHEMA_VERSION = 1;
 
 /** Environment variable names. Values live only in the host's environment. */
@@ -112,6 +111,7 @@ export async function refreshPlan(deps: Deps = {}): Promise<PlanRefreshResult> {
     );
     source = await readPlanSource(env[PLAN_ENV.projectId] as string, { token, fetchImpl: deps.fetchImpl });
   } catch (err) {
+    if (err instanceof PlanReadError && err.status === 401) dropCachedAccessToken();
     const failures = (meta?.consecutiveFailures ?? 0) + 1;
     const wait = Math.min(PLAN_REFRESH_FLOOR_MS * 2 ** (failures - 1), PLAN_MAX_BACKOFF_MS);
     await putMeta({ consecutiveFailures: failures, nextAttemptAt: new Date(now.getTime() + wait).toISOString(), heldEmptyAt: meta?.heldEmptyAt ?? null });
@@ -119,8 +119,10 @@ export async function refreshPlan(deps: Deps = {}): Promise<PlanRefreshResult> {
     return "failed";
   }
 
-  const prior = (await store.get<KeyIndex>(PLAN_KEYS.index))?.data ?? {};
-  const keys = keyAllocator(prior, env[PLAN_ENV.keySecret] as string);
+  const prior = (await store.get<unknown>(PLAN_KEYS.index))?.data ?? null;
+  const keys = keyAllocator(prior, env[PLAN_ENV.keySecret] as string, { now });
+  if (keys.priorState === "rotated") log("plan: PLAN_KEY_SECRET changed; every item gets a new public key (docs/ops/plan.md)");
+  if (keys.priorState === "unreadable") log("plan: the stored key index was unreadable; every item gets a new public key");
   const projection = projectPlan(source, { keyFor: keys.keyFor, env, log });
   const next = new Date(now.getTime() + PLAN_REFRESH_FLOOR_MS).toISOString();
 
@@ -168,12 +170,11 @@ export async function readPlan(deps: Pick<Deps, "store" | "env" | "now"> = {}): 
     return { status: "unavailable" };
   }
   if (control.withdrawn === true) return { status: "withdrawn" };
-  const staleness = (readAt: string) => (now.getTime() - Date.parse(readAt) > PLAN_STALE_AFTER_MS ? "stale" : "fresh");
   if (meta?.heldEmptyAt) {
     // The operator chose to publish an empty read: show it, not the older plan.
-    if (control.publishEmpty === true) return { status: staleness(meta.heldEmptyAt), readAt: meta.heldEmptyAt, initiatives: [], withheld: { initiatives: 0, steps: 0 } };
+    if (control.publishEmpty === true) return { status: staleness(meta.heldEmptyAt, now.getTime()), readAt: meta.heldEmptyAt, initiatives: [], withheld: { initiatives: 0, steps: 0 } };
     return { status: "held" };
   }
   if (!snap) return { status: "unavailable" };
-  return { status: staleness(snap.fetchedAt), readAt: snap.fetchedAt, initiatives: snap.data.initiatives, withheld: snap.data.withheld };
+  return { status: staleness(snap.fetchedAt, now.getTime()), readAt: snap.fetchedAt, initiatives: snap.data.initiatives, withheld: snap.data.withheld };
 }

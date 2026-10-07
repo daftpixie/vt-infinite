@@ -9,14 +9,15 @@ export const dynamic = "force-dynamic";
  * withdrawal reaches every reader on the next poll.
  */
 export async function GET() {
-  if (!isEnabled("plan")) return new Response(null, { status: 404 });
+  if (!isEnabled("plan")) return notFound();
   const state = await readPlan();
-  if (!isShown(state)) return new Response(null, { status: 404, headers: { "Cache-Control": "no-store" } });
+  if (!isShown(state)) return notFound();
   return Response.json(state, { headers: { "Cache-Control": "no-store" } });
 }
 
+/** Every 404 is uncached too, so turning the plan on or restoring it is never hidden by a cached 404. */
 function notFound() {
-  return new Response(null, { status: 404 });
+  return new Response(null, { status: 404, headers: { "Cache-Control": "no-store" } });
 }
 export const POST = notFound;
 export const PUT = notFound;

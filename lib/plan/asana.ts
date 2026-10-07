@@ -35,7 +35,11 @@ export const REQUEST_TIMEOUT_MS = 10_000;
 const CONCURRENCY = 4;
 
 export class PlanReadError extends Error {
-  constructor(readonly reason: string) {
+  /** `status` is the provider's HTTP status, when it answered with one. */
+  constructor(
+    readonly reason: string,
+    readonly status?: number,
+  ) {
     super(`plan read failed: ${reason}`);
     this.name = "PlanReadError";
   }
@@ -67,7 +71,12 @@ const Page = z.object({
 });
 
 export type FetchImpl = (input: string, init: RequestInit) => Promise<Response>;
-export type ReaderDeps = { token: string; fetchImpl?: FetchImpl };
+export type ReaderDeps = {
+  token: string;
+  fetchImpl?: FetchImpl;
+  /** Aborts requests still in flight once the read has failed elsewhere. */
+  signal?: AbortSignal;
+};
 
 async function getPage(path: string, offset: string | null, deps: ReaderDeps): Promise<z.infer<typeof Page>> {
   const endpoint = assertAllowed("GET", path);
@@ -81,13 +90,13 @@ async function getPage(path: string, offset: string | null, deps: ReaderDeps): P
       method: "GET",
       headers: { Authorization: `Bearer ${deps.token}`, Accept: "application/json", "User-Agent": "vt-infinite.com plan reader" },
       redirect: "error",
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      signal: deps.signal ? AbortSignal.any([deps.signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]) : AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       cache: "no-store",
     });
   } catch {
     throw new PlanReadError(`${endpoint.name}: network`);
   }
-  if (!res.ok) throw new PlanReadError(`${endpoint.name}: HTTP ${res.status}`);
+  if (!res.ok) throw new PlanReadError(`${endpoint.name}: HTTP ${res.status}`, res.status);
   const declared = Number(res.headers.get("content-length") ?? "0");
   if (declared > MAX_RESPONSE_BYTES) throw new PlanReadError(`${endpoint.name}: response too large`);
   const body = await res.text();
@@ -109,6 +118,7 @@ async function getAll(path: string, deps: ReaderDeps): Promise<RawTask[]> {
   const seenOffsets = new Set<string>();
   let offset: string | null = null;
   for (let page = 0; page < MAX_PAGES; page++) {
+    if (deps.signal?.aborted) throw new PlanReadError("stopped after another read failed");
     const p = await getPage(path, offset, deps);
     out.push(...p.data);
     const next = p.next_page?.offset ?? null;
@@ -133,22 +143,34 @@ export type PlanSource = Array<{ task: RawTask; subtasks: RawTask[] }>;
  * Read the whole plan: the project's tasks in project order, and each
  * initiative's subtasks in their own order. A task with a parent is a
  * subtask that is also listed on the project; it appears only under its
- * parent, never as a second initiative.
+ * parent, never as a second initiative. Once one subtask read fails, no
+ * further subtask request starts and those in flight are aborted: the read
+ * has already failed, so they could only add load.
  */
 export async function readPlanSource(projectId: string, deps: ReaderDeps): Promise<PlanSource> {
   if (!isGid(projectId)) throw new PlanReadError("project ID is not a valid identifier");
   const tasks = await getAll(`/projects/${projectId}/tasks`, deps);
   const initiatives = uniqueByGid(tasks.filter((t) => !t.parent && isListed(t)));
   const out: PlanSource = new Array(initiatives.length);
+  const stop = new AbortController();
+  const signal = deps.signal ? AbortSignal.any([deps.signal, stop.signal]) : stop.signal;
   let next = 0;
   const worker = async () => {
-    while (next < initiatives.length) {
+    while (next < initiatives.length && !signal.aborted) {
       const i = next++;
       const task = initiatives[i] as RawTask;
-      const subtasks = await getAll(`/tasks/${task.gid}/subtasks`, deps);
-      out[i] = { task, subtasks: uniqueByGid(subtasks.filter(isListed)) };
+      try {
+        const subtasks = await getAll(`/tasks/${task.gid}/subtasks`, { ...deps, signal });
+        out[i] = { task, subtasks: uniqueByGid(subtasks.filter(isListed)) };
+      } catch (err) {
+        stop.abort();
+        throw err;
+      }
     }
   };
+  // The first failure is the one reported; siblings stopped by it are not.
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, initiatives.length) }, worker));
+  // An outside abort can end the workers early without an error; never return a partial plan.
+  if (Array.from(out).some((x) => x === undefined)) throw new PlanReadError("subtasks: incomplete");
   return out;
 }
