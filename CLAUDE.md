@@ -12,7 +12,7 @@ Never commit the PRD or brand reference, copy files from where they are kept, na
 
 ## Stage
 
-Stage 1 is merged. Stage 2 (public hub) is in review as stacked pull requests. Do not start stage 3 until Matthew has reviewed and merged stage 2.
+Stages 1 and 2 are merged. Stage 2d (persistence and hardening) is in review. Do not start stage 3 or 4 until Matthew says so.
 
 ## Working here
 
@@ -23,4 +23,5 @@ Stage 1 is merged. Stage 2 (public hub) is in review as stacked pull requests. D
 - Gated features are added to `GATED_PREFIXES` in `lib/access.ts`, and the page repeats the flag check.
 - Missing copy is a placeholder registered in `lib/placeholders.ts`, never an invented sentence.
 - Retired legacy copy, which was already public, is kept out by hash (`guards/hashed-phrases.json`; add one with `printf '%s' 'phrase' | node scripts/hash-phrase.mjs retired`). Private identifiers are never hashed into this repository: they live only in the `PRIVATE_IDENTIFIERS` Actions secret, which the guard reads in CI.
+- Never use the Vercel or Supabase connectors or CLIs to change anything. Migrations are files (`db/migrations/`); Matthew applies them (`docs/ops/database.md`).
 - Design tokens in `app/globals.css` implement the brand reference §08–§13. Change them only with the reference.

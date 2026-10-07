@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { after, connection } from "next/server";
+import { connection } from "next/server";
 import { LorenzFigure } from "@/components/figures/LorenzFigure";
 import { Placeholder } from "@/components/Placeholder";
 import { Unreleased } from "@/components/Unreleased";
 import { StreamStatus, WordsList } from "@/components/words";
 import { publishedEssays } from "@/lib/content/essays";
 import { FOOTER_LINES } from "@/lib/site";
-import { readAllPublications, refreshAll } from "@/lib/streams/service";
+import { readAllPublications } from "@/lib/streams/service";
 import { buildWordsEntries, latestForHome } from "@/lib/words";
 
 // Approved lines: brand reference v1.1 §03 (D1) and PRD §05.
@@ -17,7 +17,6 @@ const MISSION =
 
 export default async function HomePage() {
   await connection();
-  after(() => refreshAll());
   const streams = await readAllPublications();
   const latest = latestForHome(buildWordsEntries(publishedEssays(), streams));
 
