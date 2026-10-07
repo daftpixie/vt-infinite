@@ -1,3 +1,5 @@
+import { mentionsSuicide, withoutCrisisBlock } from "@/lib/crisis";
+
 export type FeedItem = {
   title: string;
   link: string;
@@ -15,9 +17,18 @@ function escapeXml(s: string): string {
     .replace(/'/g, "&apos;");
 }
 
+/**
+ * A feed reader cannot show the crisis block (PRD Q-1), so a description
+ * that mentions suicide is left out, and an item whose title does is left
+ * out entirely. The page keeps both, with the block.
+ */
+export function crisisSafeItems(items: readonly FeedItem[]): FeedItem[] {
+  return items.filter((i) => !mentionsSuicide(i.title)).map((i) => ({ ...i, description: withoutCrisisBlock(i.description) }));
+}
+
 /** RSS 2.0 for published local content only (PRD W-6). */
 export function renderRss(channel: { title: string; link: string; selfUrl: string; description: string }, items: readonly FeedItem[]): string {
-  const body = items
+  const body = crisisSafeItems(items)
     .map(
       (i) => `    <item>
       <title>${escapeXml(i.title)}</title>

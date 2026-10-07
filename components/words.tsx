@@ -2,25 +2,30 @@ import Link from "next/link";
 import { formatDate } from "@/lib/content/dates";
 import type { StreamView } from "@/lib/streams/service";
 import type { WordsEntry } from "@/lib/words";
+import { CrisisSupport } from "./CrisisSupport";
 import { ExternalLink } from "./ExternalLink";
 
+/** A list of posts. When any shown title or subtitle mentions suicide, the crisis block follows the list (PRD Q-1). */
 export function WordsList({ entries, headingLevel = 2 }: { entries: WordsEntry[]; headingLevel?: 2 | 3 }) {
   const H = headingLevel === 2 ? "h2" : "h3";
   return (
-    <ol className="words-list">
-      {entries.map((e) => (
-        <li key={e.key} className="words-item">
-          <H className="words-title">
-            {e.local ? <Link href={e.href}>{e.title}</Link> : <ExternalLink href={e.href}>{e.title}</ExternalLink>}
-          </H>
-          {e.subtitle ? <p className="words-subtitle">{e.subtitle}</p> : null}
-          <p className="label">
-            <time dateTime={e.date}>{formatDate(e.date)}</time> · {e.publicationName}
-            {e.local ? "" : " · first published there"}
-          </p>
-        </li>
-      ))}
-    </ol>
+    <>
+      <ol className="words-list">
+        {entries.map((e) => (
+          <li key={e.key} className="words-item">
+            <H className="words-title">
+              {e.local ? <Link href={e.href}>{e.title}</Link> : <ExternalLink href={e.href}>{e.title}</ExternalLink>}
+            </H>
+            {e.subtitle ? <p className="words-subtitle">{e.subtitle}</p> : null}
+            <p className="label">
+              <time dateTime={e.date}>{formatDate(e.date)}</time> · {e.publicationName}
+              {e.local ? "" : " · first published there"}
+            </p>
+          </li>
+        ))}
+      </ol>
+      {entries.some((e) => e.mentionsSuicide) ? <CrisisSupport /> : null}
+    </>
   );
 }
 

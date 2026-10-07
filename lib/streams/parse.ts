@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { XMLParser } from "fast-xml-parser";
 import { runRules } from "@/guards/rules.mjs";
+import { mentionsSuicide } from "@/lib/crisis";
 import { passesHomeChecks } from "@/lib/home-checks";
 import type { Publication } from "./config";
 import { htmlToText, truncate } from "./text";
@@ -115,7 +116,7 @@ export function parseFeed(xml: string, pub: Publication, env: Readonly<Record<st
       subtitle: subtitle ? truncate(subtitle, MAX_SUBTITLE) : null,
       url: url.toString(),
       publishedAt: new Date(published).toISOString(),
-      mentionsSuicide: /suicid/i.test(shown),
+      mentionsSuicide: mentionsSuicide(title, subtitle),
       homeEligible: passesHomeChecks(shown, `stream:${pub.id}`, env),
     });
   });

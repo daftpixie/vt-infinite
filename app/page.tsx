@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { connection } from "next/server";
-import { CrisisSupport } from "@/components/CrisisSupport";
 import { LorenzFigure } from "@/components/figures/LorenzFigure";
 import { Placeholder } from "@/components/Placeholder";
 import { Unreleased } from "@/components/Unreleased";
@@ -66,7 +65,6 @@ export default async function HomePage() {
           <StreamStatus key={s.publication.id} view={s} />
         ))}
         {latest.length > 0 ? <WordsList entries={latest} headingLevel={3} /> : <p>Nothing has been published here yet.</p>}
-        {latest.some((e) => e.mentionsSuicide) ? <CrisisSupport /> : null}
         <p>
           <Link href="/words">All words</Link>
         </p>

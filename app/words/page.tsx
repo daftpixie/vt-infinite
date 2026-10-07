@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
-import { CrisisSupport } from "@/components/CrisisSupport";
 import { PageShell } from "@/components/PageShell";
 import { StreamStatus, WordsList } from "@/components/words";
 import { publishedEssays } from "@/lib/content/essays";
@@ -48,7 +47,6 @@ export default async function WordsPage({ searchParams }: { searchParams: Promis
         </nav>
       ) : null}
       {entries.length > 0 ? <WordsList entries={entries} /> : <p>Nothing has been published here yet.</p>}
-      {entries.some((e) => e.mentionsSuicide) ? <CrisisSupport /> : null}
     </PageShell>
   );
 }

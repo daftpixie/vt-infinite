@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -154,6 +154,17 @@ describe("trusted MDX (W-1)", () => {
   it("requires the crisis block wherever suicide is mentioned (Q-1)", () => {
     fails([{ fm: {}, body: "A passage about suicide." }], /CrisisSupport/);
     expect(publishedEssays(NOW, essayRoot([{ fm: {}, body: "A passage about suicide.\n\n<CrisisSupport />" }]))).toHaveLength(1);
+  });
+  it("leaves the block for front-matter fields to the page, which attaches it (D4)", () => {
+    expect(publishedEssays(NOW, essayRoot([{ fm: { title: "Synthetic on suicide", subtitle: "Synthetic suicide", summary: "Synthetic suicide." } }]))).toHaveLength(1);
+  });
+  it("requires a Record body that mentions suicide to place the block", () => {
+    const root = mkdtempSync(join(tmpdir(), "record-"));
+    const fixture = readFileSync("tests/fixtures/record/synthetic-entry.mdx", "utf8");
+    writeFileSync(join(root, "synthetic-entry.mdx"), fixture.replace("Synthetic description of what changed.", "A passage about suicide."));
+    expect(() => loadAllRecord(root)).toThrow(/CrisisSupport/);
+    writeFileSync(join(root, "synthetic-entry.mdx"), fixture.replace("Synthetic open item.", "Synthetic open item about suicide."));
+    expect(loadAllRecord(root)).toHaveLength(1);
   });
 });
 
