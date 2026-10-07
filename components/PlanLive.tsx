@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PublicPlanState } from "@/lib/plan/service";
 import { startPlanPolling } from "@/lib/plan/poller";
 import { PlanBody } from "./plan";
@@ -15,25 +15,31 @@ export const PLAN_API = "/api/plan/onerhythm";
  */
 export function PlanLive({ initial }: { initial: PublicPlanState }) {
   const [state, setState] = useState(initial);
-  useEffect(
-    () =>
-      startPlanPolling({
-        doc: document,
-        fetchOnce: async () => {
-          let res: Response;
-          try {
-            res = await fetch(PLAN_API, { cache: "no-store", headers: { Accept: "application/json" } });
-          } catch {
-            return; // Keep what is shown; its read time stays visible.
-          }
-          if (res.status === 404) {
-            window.location.reload();
-            return;
-          }
-          if (res.ok) setState((await res.json()) as PublicPlanState);
-        },
-      }),
-    [],
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const stop = startPlanPolling({
+      doc: document,
+      fetchOnce: async () => {
+        let res: Response;
+        try {
+          res = await fetch(PLAN_API, { cache: "no-store", headers: { Accept: "application/json" } });
+        } catch {
+          return; // Keep what is shown; its read time stays visible.
+        }
+        if (res.status === 404) {
+          window.location.reload();
+          return;
+        }
+        if (res.ok) setState((await res.json()) as PublicPlanState);
+      },
+    });
+    // Marks that polling has started (after hydration); without JavaScript it stays "off".
+    if (root.current) root.current.dataset.planLive = "on";
+    return stop;
+  }, []);
+  return (
+    <div ref={root} data-plan-live="off">
+      <PlanBody state={state} />
+    </div>
   );
-  return <PlanBody state={state} />;
 }

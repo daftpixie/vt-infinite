@@ -26,6 +26,7 @@ test.describe("OneRhythm plan, flag on (synthetic projection)", () => {
     await expect(page.locator(".plan-initiative-title")).toHaveText(["Synthetic plan initiative (fixture)", "Milestone: Synthetic milestone initiative (fixture)"]);
     await expect(page.locator(".plan-initiative").first().locator(".label")).toHaveText("1 done · 1 open · Due 30 Nov 2026");
     await expect(page.getByText("1 item is held for review and not shown.")).toBeVisible();
+    await expect(page.locator('[data-plan-live="off"]')).toHaveCount(1);
     await context.close();
   });
 
@@ -46,6 +47,8 @@ test.describe("OneRhythm plan, flag on (synthetic projection)", () => {
   test("polls the site's own projection every 60 seconds", async ({ page }) => {
     await page.clock.install();
     await page.goto(`${PLAN}/plan/onerhythm`);
+    // Fast-forward only once the poller has started; before hydration there is no timer to fire.
+    await expect(page.locator('[data-plan-live="on"]')).toHaveCount(1);
     const polled = page.waitForRequest((r) => r.url() === `${PLAN}/api/plan/onerhythm` && r.method() === "GET");
     await page.clock.fastForward(60_000);
     const req = await polled;
