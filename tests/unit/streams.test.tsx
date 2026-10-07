@@ -253,4 +253,10 @@ describe("server-rendered stream states", () => {
     expect(renderToStaticMarkup(<StreamStatus view={{ publication: PUB, status: "fresh", fetchedAt: "2026-09-01T12:00:00Z", items: [] }} />)).toContain("No posts yet.");
     expect(renderToStaticMarkup(<StreamStatus view={{ publication: PUB, status: "stale", fetchedAt: "2026-09-01T12:00:00Z", items: [] }} />)).toContain("last read");
   });
+  it("shows the time of a fresh read, so Home carries the snapshot time", () => {
+    const item = { guid: "g", title: "Synthetic", link: "https://everydecimal.substack.com/p/s", publishedAt: "2026-09-01T00:00:00Z" } as never;
+    const html = renderToStaticMarkup(<StreamStatus view={{ publication: PUB, status: "fresh", fetchedAt: "2026-09-01T12:00:00Z", items: [item] }} />);
+    expect(html).toContain('data-stream-status="fresh"');
+    expect(html).toContain('<time dateTime="2026-09-01T12:00:00Z">1 Sep 2026, 08:00 EDT</time>');
+  });
 });

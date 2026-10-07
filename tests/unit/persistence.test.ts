@@ -97,10 +97,12 @@ describe("migration (D1)", () => {
     expect(code).toMatch(/alter table site\.public_snapshots enable row level security;/);
     expect(code).not.toMatch(/\bpublic\.public_snapshots\b/);
   });
-  it("revokes everything from public, anon and authenticated", () => {
+  it("revokes everything from public, anon, authenticated and service_role", () => {
+    expect(code).toMatch(/revoke all on schema site from public;/);
     expect(code).toMatch(/revoke all on table site\.public_snapshots from public;/);
-    expect(code).toMatch(/revoke all on table site\.public_snapshots from anon/);
-    expect(code).toMatch(/revoke all on table site\.public_snapshots from authenticated/);
+    expect(code).toMatch(/array\['anon', 'authenticated', 'service_role'\]/);
+    expect(code).toMatch(/revoke all on schema site from %i/);
+    expect(code).toMatch(/revoke all on table site\.public_snapshots from %i/);
   });
   it("creates NOLOGIN roles with least privilege and no passwords", () => {
     expect(code).toMatch(/create role site_reader nologin;/);

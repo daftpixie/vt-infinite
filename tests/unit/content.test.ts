@@ -2,9 +2,9 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { formatDate, isIsoWithOffset } from "@/lib/content/dates";
+import { formatDate, formatDateTime, isIsoWithOffset } from "@/lib/content/dates";
 import { contentDir, essayAssetPath, loadAllEssays, publishedEssays } from "@/lib/content/essays";
-import { ContentError, parseMdx } from "@/lib/content/mdx";
+import { ContentError, isSafeHref, parseMdx } from "@/lib/content/mdx";
 import { loadAllRecord, publishedRecord } from "@/lib/content/record";
 
 const FIXTURES = "tests/fixtures/essays";
@@ -142,10 +142,23 @@ describe("trusted MDX (W-1)", () => {
     ["[x](//evil.example)", /unsafe link/],
     ["[x](/\\evil.example)", /unsafe link/],
     ["[x](\\\\\\\\evil.example)", /unsafe link/], // Markdown unescapes this to \\evil.example
+    ["[x](</\t/evil.example>)", /unsafe link/], // a literal tab; browsers delete it and read //evil.example
+    ["[x](/&#9;/evil.example)", /unsafe link/], // the same tab as a character reference
+    ["[x](/&#10;/evil.example)", /unsafe link/],
+    ["[x](/&#13;/evil.example)", /unsafe link/],
+    ["[x]: </\t/evil.example>\n\n[x]", /unsafe link/],
     ["![x](/a.png)", /inline images/],
   ])("refuses %j", (body, pattern) => {
     expect(() => parseMdx(body)).toThrow(pattern);
     expect(() => parseMdx(body)).toThrow(ContentError);
+  });
+  it("strips tab, CR and LF before checking a link, as browsers do (A5)", () => {
+    for (const bad of ["/\t/host", "/\n/host", "/\r/host", "\t//host", "/\t\\host", "java\tscript:alert(1)", ""]) {
+      expect(isSafeHref(bad), JSON.stringify(bad)).toBe(false);
+    }
+    for (const ok of ["/words", "/wo\trds", "#note", "https://example.com", "mailto:a@example.com"]) {
+      expect(isSafeHref(ok), JSON.stringify(ok)).toBe(true);
+    }
   });
   it("accepts Markdown and approved components", () => {
     expect(() => parseMdx("[home](/words) [x](/words/a-b)")).not.toThrow();
@@ -187,6 +200,10 @@ describe("display dates", () => {
   it("formats in the site time zone", () => {
     expect(formatDate("2026-09-30T02:00:00Z")).toBe("29 Sep 2026");
     expect(formatDate("2026-09-30T16:00:00Z")).toBe("30 Sep 2026");
+  });
+  it("formats a read time on a 24-hour clock with its zone", () => {
+    expect(formatDateTime("2026-09-30T02:05:00Z")).toBe("29 Sep 2026, 22:05 EDT");
+    expect(formatDateTime("2026-12-01T17:00:00Z")).toBe("1 Dec 2026, 12:00 EST");
   });
 });
 

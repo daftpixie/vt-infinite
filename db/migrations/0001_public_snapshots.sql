@@ -21,16 +21,19 @@ alter table site.public_snapshots enable row level security;
 revoke all on table site.public_snapshots from public;
 
 -- Supabase API roles get nothing here, even if the schema were ever exposed.
+-- service_role is included: it bypasses row level security, so it must not
+-- hold privileges on this schema at all (PRD §19). Each role is checked
+-- first, so the block runs on plain Postgres and is safe to re-run.
 do $$
+declare
+  r text;
 begin
-  if exists (select 1 from pg_roles where rolname = 'anon') then
-    execute 'revoke all on schema site from anon';
-    execute 'revoke all on table site.public_snapshots from anon';
-  end if;
-  if exists (select 1 from pg_roles where rolname = 'authenticated') then
-    execute 'revoke all on schema site from authenticated';
-    execute 'revoke all on table site.public_snapshots from authenticated';
-  end if;
+  foreach r in array array['anon', 'authenticated', 'service_role'] loop
+    if exists (select 1 from pg_roles where rolname = r) then
+      execute format('revoke all on schema site from %I', r);
+      execute format('revoke all on table site.public_snapshots from %I', r);
+    end if;
+  end loop;
 end
 $$;
 

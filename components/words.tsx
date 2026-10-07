@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatDate } from "@/lib/content/dates";
+import { formatDate, formatDateTime } from "@/lib/content/dates";
 import type { StreamView } from "@/lib/streams/service";
 import type { WordsEntry } from "@/lib/words";
 import { CrisisSupport } from "./CrisisSupport";
@@ -31,8 +31,8 @@ export function WordsList({ entries, headingLevel = 2 }: { entries: WordsEntry[]
 
 /**
  * Server-rendered stream state (PRD SS-5): a failed first read says the feed
- * is unavailable; an empty successful read says there are no posts; an old
- * read is labeled with its date.
+ * is unavailable; an empty successful read says there are no posts; every
+ * read shows its time, and an old one is labeled stale.
  */
 export function StreamStatus({ view }: { view: StreamView }) {
   const name = <cite>{view.publication.name}</cite>;
@@ -46,16 +46,21 @@ export function StreamStatus({ view }: { view: StreamView }) {
   if (view.status === "stale") {
     return (
       <p className="notice-inline" data-stream-status="stale">
-        ▪ {name}: last read <time dateTime={view.fetchedAt}>{formatDate(view.fetchedAt)}</time>. Newer posts may be missing.
+        ▪ {name}: last read <time dateTime={view.fetchedAt}>{formatDateTime(view.fetchedAt)}</time>. Newer posts may be missing.
       </p>
     );
   }
+  const read = <time dateTime={view.fetchedAt}>{formatDateTime(view.fetchedAt)}</time>;
   if (view.items.length === 0) {
     return (
       <p className="notice-inline" data-stream-status="empty">
-        {name}: No posts yet.
+        {name}: No posts yet. Last read {read}.
       </p>
     );
   }
-  return null;
+  return (
+    <p className="notice-inline" data-stream-status="fresh">
+      {name}: last read {read}.
+    </p>
+  );
 }
