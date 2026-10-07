@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { checkStorageConfig, DATABASE_URL_VARS, getSnapshotStore, setSnapshotStoreForTests } from "@/lib/storage";
-import { errorClass, PostgresSnapshotStore, type SqlClient } from "@/lib/storage/postgres";
+import { errorClass, JsonParam, PostgresSnapshotStore, type SqlClient } from "@/lib/storage/postgres";
 
 const snap = { schemaVersion: 1, fetchedAt: "2026-10-06T00:00:00.000Z", data: { n: 1 } };
 
@@ -54,6 +54,35 @@ describe("postgres store", () => {
     expect(await store.get("stream:a")).toEqual(snap);
     expect(calls.every((c) => c.text.includes("site.public_snapshots"))).toBe(true);
     expect(calls.every((c) => !c.text.includes("stream:a"))).toBe(true);
+  });
+
+  it("writes data as a typed JSON value, never a pre-serialized string", async () => {
+    const calls: Array<{ text: string; params: unknown[] }> = [];
+    const client: SqlClient = {
+      async query(text, params) {
+        calls.push({ text, params });
+        return { rows: [] };
+      },
+    };
+    await new PostgresSnapshotStore(client).put("stream:a", snap);
+    const data = calls[0]?.params[3];
+    expect(data).toBeInstanceOf(JsonParam);
+    expect((data as JsonParam).value).toEqual(snap.data);
+    expect(calls[0]?.params.some((p) => typeof p === "string" && p.includes('"n"'))).toBe(false);
+    await expect(new PostgresSnapshotStore(client).put("stream:a", { ...snap, data: "x" })).rejects.toThrow(/bare string/);
+  });
+
+  it("reads a legacy row whose data is a JSON string, without logging its contents", async () => {
+    const reading = (data: unknown): SqlClient => ({
+      async query() {
+        return { rows: [{ schema_version: 1, fetched_at: snap.fetchedAt, data }] };
+      },
+    });
+    expect(await new PostgresSnapshotStore(reading(JSON.stringify(snap.data))).get("stream:a")).toEqual(snap);
+    const logs: string[] = [];
+    const corrupt = new PostgresSnapshotStore(reading('{"secret": '), (m) => logs.push(m));
+    await expect(corrupt.get("stream:a")).rejects.toThrow(/^Corrupt snapshot for stream:a$/);
+    expect(logs).toEqual([]);
   });
 
   it("logs a failed write with the key and error class, then rethrows", async () => {
