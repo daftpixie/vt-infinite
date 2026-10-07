@@ -19,6 +19,8 @@ const PUB: Publication = {
   feed: "https://everydecimal.substack.com/feed",
   enabled: true,
 };
+/** Synthetic custom-domain publication on a reserved example host. */
+const CUSTOM: Publication = { ...PUB, home: "https://www.example.com", feed: "https://www.example.com/feed" };
 
 describe("config (SS-1)", () => {
   it("ships two publications, Incentive Eyes disabled", async () => {
@@ -35,6 +37,44 @@ describe("config (SS-1)", () => {
     expect(StreamsConfigSchema.safeParse({ ...base, publications: [{ ...PUB, feed: "http://everydecimal.substack.com/feed" }] }).success).toBe(false);
     expect(StreamsConfigSchema.safeParse({ ...base, publications: [{ ...PUB, feed: "https://other.example.com/feed" }] }).success).toBe(false);
     expect(StreamsConfigSchema.safeParse({ ...base, withdrawn: [{ publication: "nope", guid: "x" }] }).success).toBe(false);
+  });
+  it("accepts a custom www host only with its feed at https://<www host>/feed (D3)", () => {
+    const base = { schemaVersion: 1, withdrawn: [] };
+    expect(StreamsConfigSchema.safeParse({ ...base, publications: [CUSTOM] }).success).toBe(true);
+    for (const bad of [
+      { ...CUSTOM, feed: "https://everydecimal.substack.com/feed" },
+      { ...CUSTOM, feed: "https://www.example.com/rss" },
+      { ...CUSTOM, feed: "https://www.example.com/feed/" },
+      { ...CUSTOM, home: "https://www.example.com/blog", feed: "https://www.example.com/blog/feed" },
+      { ...CUSTOM, home: "https://www.example.com:8443", feed: "https://www.example.com:8443/feed" },
+    ]) {
+      expect(StreamsConfigSchema.safeParse({ ...base, publications: [bad] }).success, bad.feed).toBe(false);
+    }
+  });
+});
+
+describe("custom publication host (D3)", () => {
+  const xml = (links: string[]) =>
+    `<?xml version="1.0"?><rss version="2.0"><channel><title>t</title>${links
+      .map((l, i) => `<item><title>Synthetic ${i}</title><link>${l}</link><guid>g${i}</guid><pubDate>Tue, 0${i + 1} Sep 2026 12:00:00 GMT</pubDate></item>`)
+      .join("")}</channel></rss>`;
+
+  it("drops an item still on the old substack.com host once a custom host is configured", () => {
+    const r = parseFeed(xml(["https://everydecimal.substack.com/p/old", "https://www.example.com/p/new"]), CUSTOM, {});
+    if (!r.ok) throw new Error(r.reason);
+    expect(r.items.map((i) => i.url)).toEqual(["https://www.example.com/p/new"]);
+    expect(r.issues).toEqual([{ index: 0, reason: "link outside the publication" }]);
+  });
+
+  it("matches the host exactly: no bare apex, subdomain, port or look-alike", () => {
+    const r = parseFeed(
+      xml(["https://example.com/p/a", "https://evil.www.example.com/p/b", "https://www.example.com:8443/p/c", "https://www.example.com.evil.test/p/d"]),
+      CUSTOM,
+      {},
+    );
+    if (!r.ok) throw new Error(r.reason);
+    expect(r.items).toEqual([]);
+    expect(r.issues.map((i) => i.reason)).toEqual(Array(4).fill("link outside the publication"));
   });
 });
 
@@ -108,11 +148,26 @@ describe("fetching (SS-2)", () => {
     expect(seen?.signal).toBeInstanceOf(AbortSignal);
   });
 
+  it("treats a redirect as a failure and does not follow it (D3)", async () => {
+    let calls = 0;
+    const r = await fetchFeed(PUB.feed, {
+      fetchImpl: async () => {
+        calls += 1;
+        return new Response(null, { status: 301, headers: { location: "https://www.example.com/feed" } });
+      },
+    });
+    expect(r).toEqual({ kind: "error", reason: "status" });
+    expect(calls).toBe(1);
+  });
+
   it("reports timeouts, status errors, wrong types and oversize bodies", async () => {
     const timeout = Object.assign(new Error("t"), { name: "TimeoutError" });
     expect(await fetchFeed(PUB.feed, { fetchImpl: async () => Promise.reject(timeout) })).toEqual({ kind: "error", reason: "timeout" });
     expect(await fetchFeed(PUB.feed, { fetchImpl: async () => new Response("x", { status: 503 }) })).toEqual({ kind: "error", reason: "status" });
     expect(await fetchFeed(PUB.feed, { fetchImpl: async () => new Response("x", { headers: { "content-type": "text/html" } }) })).toEqual({ kind: "error", reason: "content-type" });
+    // A missing or empty content type is refused (D5).
+    expect(await fetchFeed(PUB.feed, { fetchImpl: async () => new Response(new Blob(["<rss/>"]).stream(), { headers: {} }) })).toEqual({ kind: "error", reason: "content-type" });
+    expect(await fetchFeed(PUB.feed, { fetchImpl: async () => new Response(new Blob(["<rss/>"]).stream(), { headers: { "content-type": "" } }) })).toEqual({ kind: "error", reason: "content-type" });
     const big = "x".repeat(MAX_FEED_BYTES + 1);
     expect(await fetchFeed(PUB.feed, { fetchImpl: async () => response(big) })).toEqual({ kind: "error", reason: "too-large" });
     expect(await fetchFeed(PUB.feed, { maxBytes: 10, fetchImpl: async () => new Response(new Blob(["x".repeat(50)]).stream(), { headers: { "content-type": "application/xml" } }) })).toEqual({ kind: "error", reason: "too-large" });

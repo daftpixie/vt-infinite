@@ -37,4 +37,15 @@ describe("Words and Home entries", () => {
   it("shows nothing from an unavailable stream", () => {
     expect(buildWordsEntries([], [{ publication: pub, status: "unavailable" }])).toEqual([]);
   });
+
+  it("keeps a local essay off Home when it fails the homepage claim checks, as a stream post would", () => {
+    const claim = { slug: "c", title: "Synthetic essay", summary: "Synthetic summary: fund us today.", publication: "vt-infinite.com", publishAt: "2026-09-20T00:00:00Z" } as Essay;
+    const plain = { slug: "p", title: "Synthetic plain essay", summary: "Synthetic summary.", publication: "vt-infinite.com", publishAt: "2026-09-19T00:00:00Z" } as Essay;
+    const entries = buildWordsEntries([claim, plain], []);
+    expect(entries.map((e) => [e.title, e.homeEligible])).toEqual([
+      ["Synthetic essay", false],
+      ["Synthetic plain essay", true],
+    ]);
+    expect(latestForHome(entries).map((e) => e.title)).toEqual(["Synthetic plain essay"]);
+  });
 });

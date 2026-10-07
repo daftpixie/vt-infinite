@@ -35,7 +35,8 @@ export async function fetchFeed(
   if (res.status === 304) return { kind: "not-modified" };
   if (!res.ok) return { kind: "error", reason: "status" };
   const type = res.headers.get("content-type") ?? "";
-  if (type && !/xml/i.test(type)) return { kind: "error", reason: "content-type" };
+  // A missing or empty content type is refused too: only declared XML is parsed.
+  if (!/xml/i.test(type)) return { kind: "error", reason: "content-type" };
   const declared = Number(res.headers.get("content-length"));
   if (Number.isFinite(declared) && declared > maxBytes) return { kind: "error", reason: "too-large" };
 

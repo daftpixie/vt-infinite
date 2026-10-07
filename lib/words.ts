@@ -1,6 +1,7 @@
 import type { Essay } from "@/lib/content/essays";
 import { SITE_PUBLICATION } from "@/lib/content/essays";
 import { mentionsSuicide } from "@/lib/crisis";
+import { passesHomeChecks } from "@/lib/home-checks";
 import { STREAMS } from "@/lib/streams/config";
 import type { StreamView } from "@/lib/streams/service";
 
@@ -40,7 +41,8 @@ export function buildWordsEntries(essays: Essay[], streams: StreamView[]): Words
     href: `/words/${e.slug}`,
     local: true,
     mentionsSuicide: mentionsSuicide(e.title, e.subtitle),
-    homeEligible: true,
+    // Local essays pass the same homepage claim checks as stream posts (SS-9).
+    homeEligible: passesHomeChecks([e.title, e.subtitle, e.summary].filter(Boolean).join("\n"), `essay:${e.slug}`),
   }));
   for (const s of streams) {
     if (s.status === "unavailable") continue;
