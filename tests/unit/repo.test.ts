@@ -14,8 +14,8 @@ const ALLOWED_TOP = new Set([
   ".github", ".gitignore", ".husky", ".npmrc", ".nvmrc", ".secretlintignore", ".secretlintrc.json",
   "CLAUDE.md", "CONTRIBUTING.md", "LICENSE", "README.md", "SECURITY.md",
   "app", "components", "content", "db", "docs", "eslint.config.mjs", "guards", "lib", "next.config.ts",
-  "package-lock.json", "package.json", "playwright.config.ts", "proxy.ts", "public", "scripts",
-  "tests", "tsconfig.json", "vitest.config.mts",
+  "instrumentation.ts", "package-lock.json", "package.json", "playwright.config.ts", "proxy.ts", "public", "scripts",
+  "tests", "tsconfig.json", "vercel.json", "vitest.config.mts",
 ]);
 
 describe("fresh tree: nothing from the legacy site", () => {

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { after, connection } from "next/server";
+import { connection } from "next/server";
 import { CrisisSupport } from "@/components/CrisisSupport";
 import { PageShell } from "@/components/PageShell";
 import { StreamStatus, WordsList } from "@/components/words";
 import { publishedEssays } from "@/lib/content/essays";
-import { refreshAll, readAllPublications } from "@/lib/streams/service";
+import { readAllPublications } from "@/lib/streams/service";
 import { buildWordsEntries } from "@/lib/words";
 
 export const metadata: Metadata = { title: "Words" };
@@ -16,7 +16,6 @@ export const metadata: Metadata = { title: "Words" };
  */
 export default async function WordsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await connection();
-  after(() => refreshAll());
   const essays = publishedEssays();
   const streams = await readAllPublications();
   const all = buildWordsEntries(essays, streams);

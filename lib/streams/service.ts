@@ -37,7 +37,7 @@ export function refreshPublication(pub: Publication, deps: Deps = {}): Promise<R
 }
 
 async function doRefresh(pub: Publication, deps: Deps): Promise<RefreshResult> {
-  const store = deps.store ?? getSnapshotStore();
+  const store = deps.store ?? getSnapshotStore("refresh");
   const now = (deps.now ?? (() => new Date()))();
   const log = deps.log ?? ((m: string) => console.warn(m));
   if (!pub.enabled) return "skipped";
@@ -94,12 +94,15 @@ export type StreamView =
 
 /** What a page may show for one publication, read from the persisted snapshot only. */
 export async function readPublication(pub: Publication, deps: Pick<Deps, "store" | "now"> & { config?: StreamsConfig } = {}): Promise<StreamView> {
-  const store = deps.store ?? getSnapshotStore();
+  const store = deps.store ?? getSnapshotStore("read");
   const now = (deps.now ?? (() => new Date()))();
   let snap;
   try {
     snap = await store.get<StreamData>(dataKey(pub.id));
-  } catch {
+  } catch (err) {
+    // A read failure shows "unavailable"; it is logged, never swallowed.
+    const e = err as { name?: string; code?: string };
+    console.error(`snapshots: read failed key=${dataKey(pub.id)} error=${[e?.name ?? "Error", e?.code].filter(Boolean).join(":")}`);
     snap = null;
   }
   if (!snap) return { publication: pub, status: "unavailable" };
@@ -112,9 +115,27 @@ export async function readAllPublications(deps: Pick<Deps, "store" | "now"> & { 
   return Promise.all(enabledPublications(deps.config).map((p) => readPublication(p, deps)));
 }
 
-/** Refresh every enabled publication unless `UPSTREAM_REFRESH=off` (tests, offline builds). */
-export async function refreshAll(deps: Deps = {}): Promise<void> {
+/**
+ * Refresh every enabled publication, for the scheduled job or
+ * `npm run refresh`. Never called from a page. `UPSTREAM_REFRESH=off`
+ * disables it. Each publication still honours the 15-minute floor and its
+ * backoff, so an extra invocation is harmless.
+ */
+export async function refreshAll(deps: Deps = {}): Promise<Record<string, RefreshResult | "error">> {
   const env = deps.env ?? process.env;
-  if (env.UPSTREAM_REFRESH === "off") return;
-  await Promise.allSettled(enabledPublications().map((p) => refreshPublication(p, deps)));
+  const log = deps.log ?? ((m: string) => console.error(m));
+  if (env.UPSTREAM_REFRESH === "off") return {};
+  const pubs = enabledPublications();
+  const results = await Promise.allSettled(pubs.map((p) => refreshPublication(p, deps)));
+  const out: Record<string, RefreshResult | "error"> = {};
+  results.forEach((r, i) => {
+    const id = (pubs[i] as Publication).id;
+    if (r.status === "fulfilled") out[id] = r.value;
+    else {
+      const e = r.reason as { name?: string; code?: string };
+      log(`streams: ${id} refresh threw error=${[e?.name ?? "Error", e?.code].filter(Boolean).join(":")}`);
+      out[id] = "error";
+    }
+  });
+  return out;
 }
