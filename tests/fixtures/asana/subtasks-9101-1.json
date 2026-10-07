@@ -1,0 +1,79 @@
+{
+  "data": [
+    {
+      "gid": "9201",
+      "resource_type": "task",
+      "name": "Synthetic step one",
+      "completed": true,
+      "due_on": "2026-10-01",
+      "resource_subtype": "default_task",
+      "parent": null,
+      "notes": "SYNTHETIC-PRIVATE-NOTE 9201",
+      "assignee": {
+        "gid": "779201",
+        "resource_type": "user",
+        "name": "SYNTHETIC-ASSIGNEE"
+      },
+      "followers": [
+        {
+          "gid": "789201",
+          "name": "SYNTHETIC-FOLLOWER"
+        }
+      ],
+      "tags": [
+        {
+          "gid": "799201",
+          "name": "SYNTHETIC-TAG"
+        }
+      ],
+      "custom_fields": [
+        {
+          "gid": "809201",
+          "name": "SYNTHETIC-CUSTOM-FIELD",
+          "display_value": "SYNTHETIC-CUSTOM-VALUE"
+        }
+      ],
+      "permalink_url": "https://app.asana.com/0/9001/9201"
+    },
+    {
+      "gid": "9202",
+      "resource_type": "task",
+      "name": "Milestone: Synthetic milestone step",
+      "completed": false,
+      "due_on": "2026-11-02",
+      "resource_subtype": "default_task",
+      "parent": null,
+      "notes": "SYNTHETIC-PRIVATE-NOTE 9202",
+      "assignee": {
+        "gid": "779202",
+        "resource_type": "user",
+        "name": "SYNTHETIC-ASSIGNEE"
+      },
+      "followers": [
+        {
+          "gid": "789202",
+          "name": "SYNTHETIC-FOLLOWER"
+        }
+      ],
+      "tags": [
+        {
+          "gid": "799202",
+          "name": "SYNTHETIC-TAG"
+        }
+      ],
+      "custom_fields": [
+        {
+          "gid": "809202",
+          "name": "SYNTHETIC-CUSTOM-FIELD",
+          "display_value": "SYNTHETIC-CUSTOM-VALUE"
+        }
+      ],
+      "permalink_url": "https://app.asana.com/0/9001/9202"
+    }
+  ],
+  "next_page": {
+    "offset": "synthetic-offset-9101-2",
+    "path": "/tasks/9101/subtasks?limit=100&offset=synthetic-offset-9101-2",
+    "uri": "https://app.asana.com/api/1.0/tasks/9101/subtasks?limit=100&offset=synthetic-offset-9101-2"
+  }
+}

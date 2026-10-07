@@ -1,0 +1,149 @@
+{
+  "data": [
+    {
+      "gid": "9203",
+      "resource_type": "task",
+      "name": "Synthetic step three",
+      "completed": false,
+      "due_on": null,
+      "resource_subtype": "default_task",
+      "parent": {
+        "gid": "9101",
+        "resource_type": "task",
+        "name": "SYNTHETIC-PARENT-NAME"
+      },
+      "notes": "SYNTHETIC-PRIVATE-NOTE 9203",
+      "assignee": {
+        "gid": "779203",
+        "resource_type": "user",
+        "name": "SYNTHETIC-ASSIGNEE"
+      },
+      "followers": [
+        {
+          "gid": "789203",
+          "name": "SYNTHETIC-FOLLOWER"
+        }
+      ],
+      "tags": [
+        {
+          "gid": "799203",
+          "name": "SYNTHETIC-TAG"
+        }
+      ],
+      "custom_fields": [
+        {
+          "gid": "809203",
+          "name": "SYNTHETIC-CUSTOM-FIELD",
+          "display_value": "SYNTHETIC-CUSTOM-VALUE"
+        }
+      ],
+      "permalink_url": "https://app.asana.com/0/9001/9203"
+    },
+    {
+      "gid": "9103",
+      "resource_type": "task",
+      "name": "Synthetic initiative three",
+      "completed": true,
+      "due_on": null,
+      "resource_subtype": "default_task",
+      "parent": null,
+      "notes": "SYNTHETIC-PRIVATE-NOTE 9103",
+      "assignee": {
+        "gid": "779103",
+        "resource_type": "user",
+        "name": "SYNTHETIC-ASSIGNEE"
+      },
+      "followers": [
+        {
+          "gid": "789103",
+          "name": "SYNTHETIC-FOLLOWER"
+        }
+      ],
+      "tags": [
+        {
+          "gid": "799103",
+          "name": "SYNTHETIC-TAG"
+        }
+      ],
+      "custom_fields": [
+        {
+          "gid": "809103",
+          "name": "SYNTHETIC-CUSTOM-FIELD",
+          "display_value": "SYNTHETIC-CUSTOM-VALUE"
+        }
+      ],
+      "permalink_url": "https://app.asana.com/0/9001/9103"
+    },
+    {
+      "gid": "9104",
+      "resource_type": "task",
+      "name": "Synthetic initiative with contact synthetic@example.com",
+      "completed": false,
+      "due_on": null,
+      "resource_subtype": "default_task",
+      "parent": null,
+      "notes": "SYNTHETIC-PRIVATE-NOTE 9104",
+      "assignee": {
+        "gid": "779104",
+        "resource_type": "user",
+        "name": "SYNTHETIC-ASSIGNEE"
+      },
+      "followers": [
+        {
+          "gid": "789104",
+          "name": "SYNTHETIC-FOLLOWER"
+        }
+      ],
+      "tags": [
+        {
+          "gid": "799104",
+          "name": "SYNTHETIC-TAG"
+        }
+      ],
+      "custom_fields": [
+        {
+          "gid": "809104",
+          "name": "SYNTHETIC-CUSTOM-FIELD",
+          "display_value": "SYNTHETIC-CUSTOM-VALUE"
+        }
+      ],
+      "permalink_url": "https://app.asana.com/0/9001/9104"
+    },
+    {
+      "gid": "9101",
+      "resource_type": "task",
+      "name": "Synthetic initiative one",
+      "completed": false,
+      "due_on": "2026-11-30",
+      "resource_subtype": "default_task",
+      "parent": null,
+      "notes": "SYNTHETIC-PRIVATE-NOTE 9101",
+      "assignee": {
+        "gid": "779101",
+        "resource_type": "user",
+        "name": "SYNTHETIC-ASSIGNEE"
+      },
+      "followers": [
+        {
+          "gid": "789101",
+          "name": "SYNTHETIC-FOLLOWER"
+        }
+      ],
+      "tags": [
+        {
+          "gid": "799101",
+          "name": "SYNTHETIC-TAG"
+        }
+      ],
+      "custom_fields": [
+        {
+          "gid": "809101",
+          "name": "SYNTHETIC-CUSTOM-FIELD",
+          "display_value": "SYNTHETIC-CUSTOM-VALUE"
+        }
+      ],
+      "permalink_url": "https://app.asana.com/0/9001/9101"
+    }
+  ],
+  "next_page": null
+}

@@ -30,6 +30,12 @@ export function formatDateTime(iso: string, timeZone = SITE_TIME_ZONE): string {
   return `${formatDate(iso, timeZone)}, ${get("hour")}:${get("minute")} ${get("timeZoneName")}`;
 }
 
+/** "7 Oct 2026" for a calendar date (YYYY-MM-DD), which has no time zone. */
+export function formatDay(day: string): string {
+  const [y, m, d] = day.split("-").map(Number);
+  return `${d} ${MONTHS[(m as number) - 1]} ${y}`;
+}
+
 /** Machine form for <time dateTime>. */
 export function isoDate(iso: string): string {
   return new Date(iso).toISOString();

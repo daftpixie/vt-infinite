@@ -1,0 +1,110 @@
+{
+  "data": [
+    {
+      "gid": "9205",
+      "resource_type": "task",
+      "name": "Synthetic step that names MIRmade",
+      "completed": false,
+      "due_on": null,
+      "resource_subtype": "default_task",
+      "parent": null,
+      "notes": "SYNTHETIC-PRIVATE-NOTE 9205",
+      "assignee": {
+        "gid": "779205",
+        "resource_type": "user",
+        "name": "SYNTHETIC-ASSIGNEE"
+      },
+      "followers": [
+        {
+          "gid": "789205",
+          "name": "SYNTHETIC-FOLLOWER"
+        }
+      ],
+      "tags": [
+        {
+          "gid": "799205",
+          "name": "SYNTHETIC-TAG"
+        }
+      ],
+      "custom_fields": [
+        {
+          "gid": "809205",
+          "name": "SYNTHETIC-CUSTOM-FIELD",
+          "display_value": "SYNTHETIC-CUSTOM-VALUE"
+        }
+      ],
+      "permalink_url": "https://app.asana.com/0/9001/9205"
+    },
+    {
+      "gid": "9206",
+      "resource_type": "task",
+      "name": "Synthetic native milestone",
+      "completed": true,
+      "due_on": null,
+      "resource_subtype": "milestone",
+      "parent": null,
+      "notes": "SYNTHETIC-PRIVATE-NOTE 9206",
+      "assignee": {
+        "gid": "779206",
+        "resource_type": "user",
+        "name": "SYNTHETIC-ASSIGNEE"
+      },
+      "followers": [
+        {
+          "gid": "789206",
+          "name": "SYNTHETIC-FOLLOWER"
+        }
+      ],
+      "tags": [
+        {
+          "gid": "799206",
+          "name": "SYNTHETIC-TAG"
+        }
+      ],
+      "custom_fields": [
+        {
+          "gid": "809206",
+          "name": "SYNTHETIC-CUSTOM-FIELD",
+          "display_value": "SYNTHETIC-CUSTOM-VALUE"
+        }
+      ],
+      "permalink_url": "https://app.asana.com/0/9001/9206"
+    },
+    {
+      "gid": "9208",
+      "resource_type": "task",
+      "name": "<script>alert('synthetic')</script> Synthetic step with markup",
+      "completed": false,
+      "due_on": null,
+      "resource_subtype": "default_task",
+      "parent": null,
+      "notes": "SYNTHETIC-PRIVATE-NOTE 9208",
+      "assignee": {
+        "gid": "779208",
+        "resource_type": "user",
+        "name": "SYNTHETIC-ASSIGNEE"
+      },
+      "followers": [
+        {
+          "gid": "789208",
+          "name": "SYNTHETIC-FOLLOWER"
+        }
+      ],
+      "tags": [
+        {
+          "gid": "799208",
+          "name": "SYNTHETIC-TAG"
+        }
+      ],
+      "custom_fields": [
+        {
+          "gid": "809208",
+          "name": "SYNTHETIC-CUSTOM-FIELD",
+          "display_value": "SYNTHETIC-CUSTOM-VALUE"
+        }
+      ],
+      "permalink_url": "https://app.asana.com/0/9001/9208"
+    }
+  ],
+  "next_page": null
+}

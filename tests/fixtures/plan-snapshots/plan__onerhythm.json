@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "fetchedAt": "2026-09-01T12:00:00.000Z",
+  "data": {
+    "initiatives": [
+      {
+        "key": "sSyntheticKey01",
+        "title": "Synthetic plan initiative (fixture)",
+        "milestone": false,
+        "completed": false,
+        "dueOn": "2026-11-30",
+        "mentionsSuicide": false,
+        "steps": [
+          { "key": "sSyntheticKey02", "title": "Synthetic done step (fixture)", "milestone": false, "completed": true, "dueOn": null, "mentionsSuicide": false },
+          { "key": "sSyntheticKey03", "title": "Synthetic milestone step (fixture)", "milestone": true, "completed": false, "dueOn": "2026-11-02", "mentionsSuicide": false }
+        ]
+      },
+      {
+        "key": "sSyntheticKey04",
+        "title": "Synthetic milestone initiative (fixture)",
+        "milestone": true,
+        "completed": false,
+        "dueOn": null,
+        "mentionsSuicide": false,
+        "steps": []
+      }
+    ],
+    "withheld": { "initiatives": 0, "steps": 1 }
+  }
+}

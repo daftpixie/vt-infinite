@@ -9,6 +9,7 @@ export const PLACEHOLDERS = {
   mark: { what: "signed mark artwork (vector master with the D5 wordmark)", owner: "Matthew J Adams" },
   directionsOfWork: { what: "directions of work with dated status records and evidence links", owner: "Matthew J Adams" },
   oneRhythmSummary: { what: "OneRhythm plan summary; held until the plan clears its gate (R4)", owner: "Matthew J Adams" },
+  oneRhythmPlanIntro: { what: "approved description of the OneRhythm plan and what it shows (P11)", owner: "Matthew J Adams" },
   roverDemoEntry: { what: "link to the labeled Marrs Rover demo, once it exists (R5)", owner: "build" },
   governanceIntro: { what: "Home introduction to the proposed governance; counsel sign-off and Matthew's wording (R11)", owner: "Matthew J Adams and counsel" },
   governanceSummary: { what: "proposed-governance summary of 150 words or fewer; counsel sign-off and Matthew's wording (R11)", owner: "Matthew J Adams and counsel" },

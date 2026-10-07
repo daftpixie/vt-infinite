@@ -72,9 +72,19 @@ Storage and upstream reads (server-side only):
 | `CRON_SECRET` | Bearer secret Vercel Cron sends to `/api/cron/refresh`; without it the route answers 404 |
 | `UPSTREAM_REFRESH` | `off` stops all provider fetches (tests, offline work); anything else allows them |
 
+OneRhythm plan (read only while `PLAN_ENABLED` is on; see `docs/ops/plan.md`). Missing values mean the plan is unavailable, never a crash:
+
+| Variable | Meaning |
+| --- | --- |
+| `ASANA_PLAN_PROJECT_ID` | The open plan project's ID (digits). Private configuration; never committed |
+| `ASANA_PLAN_CLIENT_ID`, `ASANA_PLAN_CLIENT_SECRET` | The OAuth app the dedicated Asana account authorized with the `tasks:read` scope |
+| `ASANA_PLAN_REFRESH_TOKEN` | That account's refresh token; the server exchanges it for one-hour access tokens held in memory |
+| `ASANA_PLAN_REDIRECT_URI` | Optional; the redirect URI registered on the OAuth app (default `urn:ietf:wg:oauth:2.0:oob`) |
+| `PLAN_KEY_SECRET` | At least 32 random characters; keys the private index that keeps public item keys stable |
+
 Essays and Record entries are reviewed files under `content/essays/<slug>/index.mdx` and `content/record/<slug>.mdx`, validated by strict schemas (`lib/content/`). Only `published` pieces whose `publishAt` has passed reach pages, feeds or the sitemap. Tests point `ESSAYS_DIR` and `RECORD_DIR` at `tests/fixtures/`, which the loader refuses unless `ALLOW_CONTENT_FIXTURES=true`.
 
-Publication streams are allowlisted in `content/streams.json`. Pages only read persisted snapshots. Providers are contacted only by `/api/cron/refresh`, which Vercel Cron calls every fifteen minutes (`vercel.json`); feeds keep a fifteen-minute floor with backoff, repositories refresh at most hourly, and a failed refresh never replaces the last good read. Locally, `CRON_SECRET=<value> npm run refresh` triggers the same route on a running server.
+Publication streams are allowlisted in `content/streams.json`. Pages only read persisted snapshots. Providers are contacted only by `/api/cron/refresh`, which Vercel Cron calls every fifteen minutes (`vercel.json`); feeds keep a fifteen-minute floor with backoff, repositories refresh at most hourly, the OneRhythm plan at most once a minute while enabled, and a failed refresh never replaces the last good read. Locally, `CRON_SECRET=<value> npm run refresh` triggers the same route on a running server.
 
 Other environment variables: `SITE_URL` (defaults to `https://vt-infinite.com`), and in CI the `PRIVATE_IDENTIFIERS` Actions secret: comma-separated values the guard must never find, matched regardless of case, punctuation, hyphens and underscores. CI fails if the secret is empty, except on pull requests from forks, which cannot read secrets and get a warning instead. Configuration values that are private live only in the host's environment, never in this repository.
 
