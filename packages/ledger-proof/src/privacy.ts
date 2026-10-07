@@ -13,8 +13,6 @@ import { parseStrictJson, type JsonValue } from "./strict-json.ts";
 export type PrivacyFinding = { rule: string; file: string; at: string; excerpt: string; message: string };
 
 export type ScanOptions = {
-  /** Title Case phrases that are approved public labels, not people (for example the synthetic entity's label). */
-  allowedPhrases?: string[];
   /** Private names or identifiers to keep out, from the private configuration (never committed). */
   privateIdentifiers?: string[];
 };
@@ -85,8 +83,13 @@ function luhnValid(s: string): boolean {
 type Hit = { rule: string; match: string; message: string };
 
 /** Rules for any public string. */
-/** Title Case phrases that are part of the fixed public vocabulary, never a person. */
-export const DEFAULT_ALLOWED_PHRASES = ["VT Infinite", "Marrs Rover", "Node.js", "SHA-256", "Demo data"];
+/**
+ * Title Case phrases that are part of the fixed public vocabulary, never a
+ * person. This list is reviewed in pull requests; nothing in a bundle can add
+ * to it. In particular a bundle's own entity label is not trusted: a personal
+ * name used as an entity label is still flagged.
+ */
+export const APPROVED_PHRASES = ["VT Infinite", "Marrs Rover", "Node.js", "SHA-256", "Demo data", "Synthetic Demo Organization"];
 
 export function textHits(text: string, opts: ScanOptions = {}, { names = true } = {}): Hit[] {
   const hits: Hit[] = [];
@@ -108,7 +111,7 @@ export function textHits(text: string, opts: ScanOptions = {}, { names = true } 
   for (const id of opts.privateIdentifiers ?? []) if (id && text.toLowerCase().includes(id.toLowerCase())) push("private-identifier", id, "a private identifier from the private configuration");
   if (names) {
     let t = text;
-    for (const p of [...DEFAULT_ALLOWED_PHRASES, ...(opts.allowedPhrases ?? [])]) t = t.split(p).join(" ");
+    for (const p of APPROVED_PHRASES) t = t.split(p).join(" ");
     for (const m of t.matchAll(/\b(?:Mr|Mrs|Ms|Mx|Dr|Prof)\.?\s+[A-Z][a-z]+/g)) push("personal-name", m[0], "an honorific and a name");
     for (const m of t.matchAll(/\b(?:approved by|signed by|paid to|payee|recipient|beneficiary|on behalf of)\s*:?\s+[A-Z][a-z]+/gi)) push("private-approval", m[0], "names who approved, signed, or was paid");
     for (const m of t.matchAll(/\b[A-Z][a-z]{1,30}(?:\s+[A-Z]\.)?\s+[A-Z][a-z]{1,30}(?:-[A-Z][a-z]+)?\b/g)) push("personal-name", m[0], "two capitalized words in a row: possibly a person's name");
@@ -187,7 +190,8 @@ export function scanBundle(files: Map<string, Uint8Array>, opts: ScanOptions = {
         });
       });
     } else {
-      textHits(text, opts, { names: false }).forEach((h) => out.push({ rule: h.rule, file, at: "text", excerpt: mask(h.match), message: h.message }));
+      // Markdown is prose a person wrote: names are checked here too.
+      textHits(text, opts, { names: true }).forEach((h) => out.push({ rule: h.rule, file, at: "text", excerpt: mask(h.match), message: h.message }));
     }
   }
   return out;

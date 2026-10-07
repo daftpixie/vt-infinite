@@ -65,7 +65,18 @@ jobs:
       - name: Build
         run: npm run build
 
+      # A package mirror can stall this step for the whole job (it once hung
+      # for 20 minutes). Each attempt gets 5 minutes; a failed or timed-out
+      # first attempt gets one retry.
       - name: Install Chromium for Playwright
+        id: chromium
+        continue-on-error: true
+        timeout-minutes: 5
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Chromium for Playwright (retry)
+        if: steps.chromium.outcome != 'success'
+        timeout-minutes: 5
         run: npx playwright install --with-deps chromium
 
       - name: End-to-end (routes, keyboard, flags, legacy URLs, axe, rendered copy)

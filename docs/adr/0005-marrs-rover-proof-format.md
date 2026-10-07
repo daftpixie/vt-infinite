@@ -66,7 +66,7 @@ This is the "second implementation" MR-37 asks for, within one build team. It is
 - **Versioning.** Ten JSON Schemas (draft 2020-12) and a versioned currency-exponent mapping, in `packages/ledger-proof/schemas/v1`. The verifier pins byte-identical copies.
 - **Strictness.** Every object is closed (`additionalProperties: false`), so an unknown or private field is a schema failure.
 - **Synthetic data.** Synthetic files must carry the MR-5 demo label, and real files must not.
-- **Typography of the label.** The label is "Demo data — not VT Infinite's financial records.", with the spaced em dash of brand reference §05 and the public specification. The PRD's text shows a hyphen; changing it is one constant (`DEMO_LABEL`).
+- **Typography of the label.** The label is "Demo data — not VT Infinite's financial records.", with the spaced em dash of brand reference §05 and the public specification. The PRD's text shows a hyphen. **Decision (Matthew J Adams, 7 Oct 2026, in the review of PR #13): keep the em dash.** The label is one constant (`DEMO_LABEL`).
 - **Rules beyond the schemas.** Some rules a schema cannot express, so the library (`invariants.ts`) and the verifier each enforce them:
   - contiguous sequences;
   - unique IDs;
@@ -127,7 +127,17 @@ For each currency:
 | Salts, keys and secrets | Fields named salt, secret, key, seed or token; long hex or base64 values outside digest fields; and keypair-shaped byte arrays |
 | Private configuration | Any name listed in `PRIVATE_IDENTIFIERS` |
 
+**Approved phrases.** The only Title Case phrases exempt from the name check are a short list reviewed in the code (`APPROVED_PHRASES`). Nothing in a bundle can add to it. In particular, the bundle's own entity label is not trusted, so a personal name used as an entity label is flagged. Names are checked in JSON text fields, the CSV's purpose and label columns, and Markdown files.
+
 **What it is not.** It is a release gate and a prompt for a person's review, not proof of safety: a name it misses is still a leak. It never prints a matched value in full.
+
+### Running the verifier
+
+`verify.mjs` is only an entry point, and it runs unconditionally. An earlier version ran only when `import.meta.url` equalled `file://` plus `process.argv[1]`. That test fails for a path containing a space (which the URL percent-encodes) and for a symbolic link (an npm `bin` install is one). In both cases the process exited 0 without checking anything, even on the tampered bundle.
+
+Now no comparison can misfire. The logic lives in `lib/cli.mjs`, which tests import, and `verify.mjs` always calls it. It also fails closed: the exit status is 3 until `main()` returns a status of its own, and an unexpected error exits 3 with "Nothing was verified." Tests run the verifier through a symbolic link and from a path containing a space, on both the MR-48 and the tampered bundle.
+
+A document that fails its schema is reported under the bundle and then never used by a later step. For example, if `proofs.json` fails its schema, the inclusion step is reported as NOT CHECKED with the reason, rather than read in part or crashing.
 
 ### Output (MR-36)
 
@@ -143,6 +153,8 @@ The verifier reports each layer separately:
 | Independent report | present (with its stated scope) or absent |
 
 There is never a single "verified". The exit status is non-zero if the bundle, the proofs or the balances fail.
+
+The report also states which publication was checked. Without `--expect <manifest SHA-256>` it says the result shows internal consistency only, not which publication this is: a bundle that is consistent with itself could still be a different publication from the one a reader meant to check.
 
 ### The MR-48 fixture
 
@@ -172,7 +184,7 @@ The arithmetic checks show internal consistency only. Each of the claims above n
 
 ## Not verified, and open
 
-- **Large amounts.** The repository's `long-numeric-id` guard fails any run of 15 or more digits. So the frozen large-amount vector stops at 14 digits (below 2^53), and amounts above 2^53 are tested in code, not frozen. One RFC 8785 test input is stored hex-encoded for the same reason. Freezing larger amounts needs Matthew's approval of a guard exception.
+- **Large amounts: decided.** The repository's `long-numeric-id` guard fails any run of 15 or more digits. Matthew J Adams approved an exception on 7 Oct 2026, in the review of PR #13, covering files under `fixtures/marrs-rover/golden/` and nothing else. So the `large-amounts` vector freezes 2^53 + 1, 2^53 and a 30-digit amount, with exact totals. The exception is a directory prefix (`targetPrefix` in `guards/exceptions.json`); the guard still applies everywhere else. That is why the generator builds those values from BigInt expressions, and why one RFC 8785 test input, under `tests/fixtures`, stays hex-encoded.
 - **The RFC's Appendix B number vectors.** Not included; the RFC text could not be fetched.
 - **A third party reproducing the roots.** Not yet done. MR-37 requires it before real publication.
 - **Chain work.** Chain commitment, finality, network and program checks (MR-39 to MR-44) belong to stage 7. The verifier's chain result stays "not attempted" until then.

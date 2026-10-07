@@ -34,7 +34,7 @@ export function exportBooks(booksJson: unknown, idsJson: unknown, out: string, {
   if (allocateNew) ({ allocations, added } = allocate(books, allocations));
   const bundle = sealBundle(projectBooks(books, allocations));
 
-  const findings = scanBundle(bundle.files, { allowedPhrases: [books.entity.label], privateIdentifiers });
+  const findings = scanBundle(bundle.files, { privateIdentifiers });
   if (findings.length) {
     throw new Error(`privacy scan failed; nothing written:\n${findings.map((f) => `- ${f.rule} in ${f.file} at ${f.at}: ${f.message} (${f.excerpt})`).join("\n")}`);
   }

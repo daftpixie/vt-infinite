@@ -252,12 +252,13 @@ export function verifyBundle(dir, { expectDigest = null } = {}) {
     entityId: null,
     periodId: null,
     manifestDigest: null,
+    expectedDigest: expectDigest,
     root: null,
     eventCount: null,
     bundle: { valid: false, problems: [] },
-    inclusion: { valid: null, checked: 0, problems: [] },
+    inclusion: { valid: null, checked: 0, problems: [], note: null },
     chain: { state: "not attempted", note: "no chain check is made; this verifier version reads only the downloaded files" },
-    balance: { passed: null, problems: [] },
+    balance: { passed: null, problems: [], note: null },
     reconciliation: { evidence: "absent", status: null, date: null, coverage: null, events: 0, openExceptions: [] },
     review: { report: "absent", scope: null },
     _events: null,
@@ -313,20 +314,33 @@ export function verifyBundle(dir, { expectDigest = null } = {}) {
   }
   if (files.has("scope.json") && hex(sha256(files.get("scope.json"))) !== manifest.scopeDigest) bundleProblem("scope.json does not match the manifest's scope digest");
 
-  // Documents: canonical, schema-valid, one entity and period.
+  // Documents: canonical, schema-valid, one entity and period. A document
+  // that fails its schema is reported and then never used by a later step,
+  // so a malformed file cannot crash the verifier or be half-trusted.
   const docs = {};
+  const unusable = new Map();
   for (const [name, schemaName] of Object.entries(DOC_FILES)) {
     const bytes = files.get(name);
-    if (!bytes) continue;
+    if (!bytes) {
+      unusable.set(schemaName, `${name} is missing`);
+      continue;
+    }
+    let d;
     try {
-      docs[schemaName] = parseJsonBytes(bytes);
+      d = parseJsonBytes(bytes);
     } catch (err) {
       bundleProblem(`${name} is not valid JSON: ${err.message}`);
+      unusable.set(schemaName, `${name} is not valid JSON`);
       continue;
     }
     if (!isCanonicalBytes(bytes)) bundleProblem(`${name} is not in canonical form (RFC 8785)`);
-    schemaProblems(schemaName, docs[schemaName]).forEach((p) => bundleProblem(`${name}${p}`));
-    const d = docs[schemaName];
+    const sp = schemaProblems(schemaName, d);
+    sp.forEach((p) => bundleProblem(`${name}${p}`));
+    if (sp.length) {
+      unusable.set(schemaName, `${name} does not match its v1 schema`);
+      continue;
+    }
+    docs[schemaName] = d;
     if (d.environment !== manifest.environment || (d.demoLabel ?? null) !== (manifest.demoLabel ?? null)) bundleProblem(`${name}: environment or demo label differs from the manifest`);
     if (schemaName !== "schemas" && (d.entityId !== manifest.entityId || d.periodId !== manifest.periodId)) bundleProblem(`${name}: entity or period differs from the manifest`);
   }
@@ -410,6 +424,8 @@ export function verifyBundle(dir, { expectDigest = null } = {}) {
   r.bundle.valid = r.bundle.problems.length === 0;
 
   // Inclusion proofs: one per event, each from its own leaf to the manifest's root.
+  if (!docs.proofs) r.inclusion.note = `${unusable.get("proofs") ?? "proofs.json could not be used"}, so no inclusion proof was checked`;
+  else if (!lines.length) r.inclusion.note = "the register has no events, so no inclusion proof was checked";
   if (docs.proofs && lines.length) {
     const proofs = docs.proofs.proofs;
     if (proofs.length !== lines.length) r.inclusion.problems.push(`${proofs.length} proofs for ${lines.length} events`);
@@ -430,6 +446,8 @@ export function verifyBundle(dir, { expectDigest = null } = {}) {
   }
 
   // Balances: recomputed from the full register (MR-35), reported apart from the cryptographic checks.
+  if (!docs.summary) r.balance.note = `${unusable.get("summary") ?? "summary.json could not be used"}, so no totals were recomputed`;
+  else if (!usable) r.balance.note = "the register or scope statement could not be read, so no totals were recomputed";
   if (usable && docs.summary) {
     try {
       r.balance.problems = balanceProblems(events, docs.summary);

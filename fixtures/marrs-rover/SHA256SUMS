@@ -1,4 +1,4 @@
-929b3465f408b5a243e243b6364e8ef6f54eba12b383e4850505ac1619ad216f  ./README.md
+199e0abf18a15b76087bb5b578d4febbd7f97c2a69dd49253de472a08f8591fe  ./README.md
 be5e9c62c3bbf9e16bd6bc58c1726edb5cd76cabab7d91ec496428c1a03fe5e3  ./bundles/demo/2000-Q1/5088d7d5d133b9fb2ee0bbcd60879a2dee52f704dfeb2bb37f245be974b314c5/approvals.json
 57d9e5b493f9af5cc298ee82a809f99811df2bc639f3a2df535cf4bed42a5101  ./bundles/demo/2000-Q1/5088d7d5d133b9fb2ee0bbcd60879a2dee52f704dfeb2bb37f245be974b314c5/budgets.json
 a34bc69ae8537a1a2f69e52ea734a524ca924181bd7c30a0dfe362a447b9d710  ./bundles/demo/2000-Q1/5088d7d5d133b9fb2ee0bbcd60879a2dee52f704dfeb2bb37f245be974b314c5/corrections.json
@@ -17,10 +17,11 @@ c56d44be274424b51aa769782c11b725fb6d736ad1a39260aecf26201c93d0c3  ./bundles/demo
 4c088c4852c54459889f286126d485b8bafd00f47daba04296794c970ad2b9eb  ./golden/correction/vector.json
 3c9a8f47c905f136ded182904c0d66da45a7f150e45f4556f9d911c509a89cee  ./golden/empty-optional/events/001.json
 49661e41a90eafb1de8a921d6d0a7b6cbcfe33ad5bca5a9e6897493972f35750  ./golden/empty-optional/vector.json
-e62eb13aa57df1edf13fdc8c0df89db65cbdae2732c2ae222701bf86ccb8449a  ./golden/index.json
-b69ad33067ca0b09cd7f71ff98ded7733a7be8d58c96f7551f20a20cc3ea2e88  ./golden/large-amounts/events/001.json
-ce9eb6c12d495313e66a88ff6fc4e1b6977ead3de38ac6bae5942ad4262301a6  ./golden/large-amounts/events/002.json
-68df68294e284353d06f20a6ad5c225f9e38843d3ffa405221a6c2574c740ab8  ./golden/large-amounts/vector.json
+5354d1339796d99f9293631f1b8283c981e037a4a909391bc55b64c6a46f2541  ./golden/index.json
+0c9d7e6a1187b7427759509f7fd789d90b03de76cc188bc5d1224378440a56cd  ./golden/large-amounts/events/001.json
+57f861e2517ab988caeb1a0e6447d839da1babb1894eb5c4b23bd78cd80cf1b5  ./golden/large-amounts/events/002.json
+06d8f0f02780a93b0f03e94c14fab82dfcbfa8715f5a1b5119215758e1c75b6d  ./golden/large-amounts/events/003.json
+c12d1a31e6b3eb65b130ce9c8132a55224066b7cf87185c8e507732db16d85c2  ./golden/large-amounts/vector.json
 55d8d102e3621cd3cd8830f7eea527c2cb21c32e7923fb7d28a7fb8690214337  ./golden/leaves-1/events/001.json
 eaf7af4981df4a1135a038283a0a5f9cdc379d18df354493122e7141fbde12cc  ./golden/leaves-1/vector.json
 4d92f4e673eba00c87ad8632bb04deeba5f188941a05110cf4ac7bfe17a4422c  ./golden/leaves-2/events/001.json

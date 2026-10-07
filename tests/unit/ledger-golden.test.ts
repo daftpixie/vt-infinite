@@ -47,6 +47,19 @@ describe("frozen fixtures (MR-37)", () => {
     expect(unicode).toContain("naïve café receipt — 日本語 — €12 — 𝄞 — \\\"quoted\\\"");
   });
 
+  it("freezes amounts above 2^53 and their exact totals", () => {
+    const v = readJson<{ totals: { currencies: { receipts: { operating: string }; disbursements: { operating: string }; closing: string }[] } }>(join(ROOT, "golden", "large-amounts", "vector.json"));
+    const amounts = readdirSync(join(ROOT, "golden", "large-amounts", "events")).map((f) => BigInt(readJson<{ amountMinorUnits: string }>(join(ROOT, "golden", "large-amounts", "events", f)).amountMinorUnits));
+    expect(amounts).toEqual([2n ** 53n + 1n, 10n ** 29n + 7n, 2n ** 53n]);
+    expect(amounts.every((a) => a > BigInt(Number.MAX_SAFE_INTEGER))).toBe(true);
+    const usd = v.totals.currencies[0]!;
+    expect(BigInt(usd.receipts.operating)).toBe(2n ** 53n + 1n + 10n ** 29n + 7n);
+    expect(BigInt(usd.disbursements.operating)).toBe(2n ** 53n);
+    expect(BigInt(usd.closing)).toBe(10n ** 29n + 8n);
+    // A float cannot even represent the first amount.
+    expect(BigInt(Number(amounts[0]))).not.toBe(amounts[0]);
+  });
+
   it("the standalone verifier's own implementation reproduces every root, leaf and path", () => {
     const results = checkGolden(join(ROOT, "golden"));
     expect(results.length).toBe(14);

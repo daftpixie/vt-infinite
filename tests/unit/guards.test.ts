@@ -2,7 +2,7 @@
 // repository scan skips it for that reason (scripts/guard.mjs, SKIP).
 import { describe, expect, it } from "vitest";
 import { phraseEntry } from "@/guards/normalise.mjs";
-import { CRISIS_TEXT, HASHED_PHRASES, containsSequence, matchHashed, privateIdentifiers, runRules } from "@/guards/rules.mjs";
+import { CRISIS_TEXT, EXCEPTIONS, HASHED_PHRASES, containsSequence, exceptionCovers, matchHashed, privateIdentifiers, runRules } from "@/guards/rules.mjs";
 
 const rules = (text: string, scopes: Array<"repo" | "copy"> = ["repo", "copy"], env = {}) =>
   [...new Set(runRules(text, { target: "test", scopes, env }).map((f) => f.rule))];
@@ -121,5 +121,44 @@ describe("guards stay quiet on correct copy", () => {
     "VT Infinite",
   ])("%s", (text) => {
     expect(rules(text)).toEqual([]);
+  });
+});
+
+describe("guard exceptions", () => {
+  const big = "9007199254740993";
+  const longIds = (target: string) => runRules(`"amountMinorUnits":"${big}"`, { target, scopes: ["repo"], env: {} }).filter((f) => f.rule === "long-numeric-id");
+
+  it("every exception has a reason, an approver and a date, and names one target or one directory prefix", () => {
+    for (const e of EXCEPTIONS) {
+      expect(e.reason.length).toBeGreaterThan(20);
+      expect(e.approvedBy).toBe("Matthew J Adams");
+      expect(e.approvedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect([e.target, e.targetPrefix].filter((x) => x !== undefined)).toHaveLength(1);
+    }
+  });
+
+  it("the long-number exception covers only files under fixtures/marrs-rover/golden/", () => {
+    expect(longIds("fixtures/marrs-rover/golden/large-amounts/events/001.json")).toEqual([]);
+    expect(longIds("fixtures/marrs-rover/golden/index.json")).toEqual([]);
+    for (const outside of [
+      "fixtures/marrs-rover/bundles/demo/2000-Q1/x/register.jsonl",
+      "fixtures/marrs-rover/golden",
+      "fixtures/marrs-rover/goldenx/a.json",
+      "tests/fixtures/rfc8785/input/values.json",
+      "packages/ledger-proof/src/arithmetic.ts",
+      "content/x.md",
+    ]) {
+      expect(longIds(outside), outside).toHaveLength(1);
+    }
+    // Other rules are not excepted under that folder.
+    expect(runRules("ghp_" + "a".repeat(36), { target: "fixtures/marrs-rover/golden/x.json", scopes: ["repo"], env: {} }).map((f) => f.rule)).toContain("secrets");
+  });
+
+  it("a malformed prefix covers nothing", () => {
+    const base = { rule: "long-numeric-id", reason: "x", approvedBy: "x", approvedOn: "2026-10-07" };
+    expect(exceptionCovers({ ...base, targetPrefix: "fixtures/marrs-rover/golden" }, "fixtures/marrs-rover/golden/a.json")).toBe(false);
+    expect(exceptionCovers({ ...base, targetPrefix: "/fixtures/" }, "/fixtures/a.json")).toBe(false);
+    expect(exceptionCovers({ ...base, targetPrefix: "fixtures/../" }, "fixtures/../a.json")).toBe(false);
+    expect(exceptionCovers({ ...base, targetPrefix: "" }, "a.json")).toBe(false);
   });
 });

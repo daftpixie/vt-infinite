@@ -53,7 +53,7 @@ const rulesFor = (text: string) => jsonFindings("register.jsonl", purposeWith(te
 
 describe("privacy scan (MR-22 to MR-27)", () => {
   it("the MR-48 bundle has no findings", () => {
-    expect(scanBundle(bundleFiles(MR48_DIR), { allowedPhrases: ["Synthetic Demo Organization (fictional)"] })).toEqual([]);
+    expect(scanBundle(bundleFiles(MR48_DIR))).toEqual([]);
   });
 
   it.each([
@@ -101,7 +101,7 @@ describe("privacy scan (MR-22 to MR-27)", () => {
   });
 
   it("leaves amounts, digests, UUIDs and approved labels alone", () => {
-    expect(textHits("Synthetic Demo Organization (fictional)", { allowedPhrases: ["Synthetic Demo Organization (fictional)"] })).toEqual([]);
+    expect(textHits("Synthetic Demo Organization (fictional)")).toEqual([]);
     expect(textHits("Demo data — not VT Infinite's financial records.")).toEqual([]);
     const e = mr48Events()[0]!;
     expect(jsonFindings("register.jsonl", e as never)).toEqual([]);
@@ -115,6 +115,31 @@ describe("privacy scan (MR-22 to MR-27)", () => {
     const rules = scanBundle(files).map((f) => `${f.file}:${f.rule}`);
     expect(rules).toContain("register.csv:personal-name");
     expect(rules).toContain("verify.md:email");
+  });
+
+  it("never trusts the bundle's own entity label: a personal name there is flagged, in the scope statement and in the CSV", () => {
+    const files = bundleFiles(MR48_DIR);
+    const scope = JSON.parse(new TextDecoder().decode(files.get("scope.json")));
+    scope.entityLabel = "Jane Placeholder";
+    files.set("scope.json", new Uint8Array(canonicalBytes(scope)));
+    const found = scanBundle(files);
+    expect(found.filter((f) => f.file === "scope.json" && f.at === "/entityLabel").map((f) => f.rule)).toContain("personal-name");
+    // The script used to approve whatever the scope statement named; it must not.
+    const dir = copyBundle();
+    writeFileSync(join(dir, "scope.json"), canonicalBytes(scope));
+    const run = spawnSync(process.execPath, ["scripts/ledger-privacy-scan.ts", dir], { encoding: "utf8" });
+    expect(run.status).toBe(1);
+    expect(run.stdout).toMatch(/personal-name in scope\.json at \/entityLabel/);
+  });
+
+  it("checks Markdown for names too", () => {
+    const files = bundleFiles(MR48_DIR);
+    const md = new TextDecoder().decode(files.get("verify.md"));
+    expect(scanBundle(files).filter((f) => f.file === "verify.md")).toEqual([]);
+    files.set("verify.md", new TextEncoder().encode(`${md}\nPrepared for Jane Placeholder.\n`));
+    expect(scanBundle(files).filter((f) => f.file === "verify.md").map((f) => f.rule)).toContain("personal-name");
+    files.set("verify.md", new TextEncoder().encode(`${md}\nQuestions to Dr. Placeholder.\n`));
+    expect(scanBundle(files).filter((f) => f.file === "verify.md").map((f) => f.rule)).toContain("personal-name");
   });
 
   it("the release-check script passes the MR-48 bundle and fails a bundle with a leak", () => {

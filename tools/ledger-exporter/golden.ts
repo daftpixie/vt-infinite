@@ -86,8 +86,9 @@ export const VECTORS: Vector[] = [
   },
   {
     name: "large-amounts",
-    description: "Exact integer minor units at 14 digits, the longest the repository's guards allow without an approved exception; arithmetic is BigInt throughout.",
-    specs: [receipt("99999999999999"), disbursement("99999999999998")],
+    description: "Exact integer minor units above 2^53, where a float cannot hold them: 2^53 + 1, 2^53, and a 30-digit amount (the longest the schema allows). The totals are exact; arithmetic is BigInt throughout.",
+    // Built from BigInt expressions so that no long digit run sits in this source file (the repository's guard; ADR 0005).
+    specs: [receipt((2n ** 53n + 1n).toString()), receipt((10n ** 29n + 7n).toString()), disbursement((2n ** 53n).toString())],
     openings: USD_BUCKETS(),
   },
   {

@@ -22,7 +22,13 @@ Options:
 | `--golden <folder>` | Reproduce the golden vectors (`fixtures/marrs-rover/golden`) with this verifier's own code. |
 | `--version` | Print the version. |
 
-Exit status: `0` when the bundle, its inclusion proofs and its balance checks all pass, `1` when any of them fails, and `2` for a usage error.
+Exit status:
+- `0`: the bundle, its inclusion proofs and its balance checks all pass.
+- `1`: any of them fails.
+- `2`: a usage error.
+- `3`: the verifier itself could not finish, and nothing was verified.
+
+`verify.mjs` always runs its checks, however it is launched: directly, from a path containing spaces, or through a symbolic link such as an npm `bin` install. It fails closed: the exit status stays 3 until a run finishes and sets its own.
 
 Try it on the synthetic fixtures:
 
@@ -67,7 +73,11 @@ The first must pass and the second must fail. Both are synthetic: **Demo data â€
 
 ## Output
 
-Each layer is reported on its own line, as `VALID` or `INVALID`, `PASSED` or `FAILED`, `PRESENT` or `ABSENT`, and `NOT ATTEMPTED` for the chain. There is no single "verified". This is the actual output for the synthetic MR-48 bundle:
+Each layer is reported on its own line, as `VALID` or `INVALID`, `PASSED` or `FAILED`, `PRESENT` or `ABSENT`, and `NOT ATTEMPTED` for the chain. A step that could not run says `NOT CHECKED` and why; for example, a `proofs.json` that fails its schema means no inclusion proof is checked. There is no single "verified".
+
+The last line says which publication was checked. Without `--expect`, the result shows internal consistency only: these files agree with each other, but nothing ties them to the publication you meant to check. Give the manifest SHA-256 from a publication receipt with `--expect` to tie them.
+
+This is the actual output for the synthetic MR-48 bundle:
 
 ```
 Marrs Rover verifier 1.0.0
@@ -85,6 +95,7 @@ Reconciliation evidence: PRESENT - the scope statement says partially reconciled
     Open exceptions: 1
     - syn-exc-001 (unreconciled-item): Synthetic exception: the 2000-03-10 transfer into reserve cash has not been matched to a synthetic bank statement.
 Independent report: ABSENT - the bundle includes no independent examination.
+Which publication: NOT CHECKED - no outside manifest SHA-256 was given (--expect), so this result shows internal consistency only, not which publication this is.
 
 What this does and does not show: a valid bundle and proofs mean these files match this manifest and its root. They do not show that the source records are genuine, that every account is included, that amounts are classified correctly, or that any audit took place.
 
@@ -97,7 +108,8 @@ A matching root shows that the bundle you examined matches its manifest, and, on
 
 ## Files
 
-- `verify.mjs`: the command.
+- `verify.mjs`: the command. It only calls `lib/cli.mjs` and sets the exit status.
+- `lib/cli.mjs`: argument handling and the plain-words report.
 - `lib/json.mjs`: strict JSON parsing and RFC 8785 canonical serialization.
 - `lib/schema.mjs`: a validator for exactly the JSON Schema keywords the v1 schemas use. It refuses any other keyword.
 - `lib/merkle.mjs`: the `marrs-rover-merkle.1` tree and proof checks.

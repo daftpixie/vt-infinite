@@ -8,7 +8,7 @@ import { Books, projectBooks, type Allocations } from "@/tools/ledger-exporter/b
 import { verifyBundle } from "@/tools/ledger-verifier/lib/checks.mjs";
 import { canonicalize } from "@/tools/ledger-verifier/lib/json.mjs";
 import { hex, sha256 } from "@/tools/ledger-verifier/lib/merkle.mjs";
-import { main } from "@/tools/ledger-verifier/verify.mjs";
+import { main } from "@/tools/ledger-verifier/lib/cli.mjs";
 import { BOOKS, copyBundle, IDS, MR48_DIGEST, MR48_DIR, readJson, TAMPERED_DIR } from "./ledger-helpers";
 
 /** Run the CLI in-process and capture what it prints. */
@@ -201,6 +201,105 @@ describe("amendments keep the earlier publication (MR-21, MR-35)", () => {
     const bad = run(amendmentDir(true), "--prior", MR48_DIR);
     expect(bad.code).toBe(1);
     expect(bad.out).toMatch(/^Prior publication: BROKEN\n {4}- the earlier events are not an unchanged prefix/m);
+  });
+});
+
+describe("entry point: always runs, fails closed (review of PR #13)", () => {
+  /** A copy of the verifier somewhere awkward, plus both fixture bundles beside it. */
+  function awkwardInstall() {
+    const where = mkdtempSync(join(tmpdir(), "rover entry "));
+    const home = join(where, "with space", "ledger verifier");
+    mkdirSync(dirname(home), { recursive: true });
+    cpSync("tools/ledger-verifier", home, { recursive: true });
+    // An npm bin install is a symbolic link to the script.
+    mkdirSync(join(where, "bin"));
+    symlinkSync(join(home, "verify.mjs"), join(where, "bin", "marrs-rover-verify"));
+    cpSync(MR48_DIR, join(where, "good", MR48_DIGEST), { recursive: true });
+    cpSync(TAMPERED_DIR, join(where, "bad", MR48_DIGEST), { recursive: true });
+    return { where, script: join(home, "verify.mjs"), link: join(where, "bin", "marrs-rover-verify"), good: join(where, "good", MR48_DIGEST), bad: join(where, "bad", MR48_DIGEST) };
+  }
+  const exec = (cmd: string, args: string[], cwd?: string) => spawnSync(process.execPath, [cmd, ...args], { encoding: "utf8", cwd });
+
+  it.each([
+    ["from a path containing a space", "script"],
+    ["through a symbolic link", "link"],
+  ] as const)("%s it accepts the MR-48 bundle and rejects the tampered one", (_, how) => {
+    const i = awkwardInstall();
+    expect(i[how]).toMatch(how === "script" ? / / : /marrs-rover-verify$/);
+    const ok = exec(i[how], [i.good]);
+    expect(ok.status).toBe(0);
+    expect(ok.stdout).toMatch(/^Bundle: VALID/m);
+    expect(ok.stdout).toMatch(/^Result: the bundle, its proofs and its arithmetic check out \(exit 0\)\./m);
+    const bad = exec(i[how], [i.bad]);
+    expect(bad.status).toBe(1);
+    expect(bad.stdout).toMatch(/^Bundle: INVALID/m);
+    expect(bad.stdout).toContain("register.jsonl: SHA-256 differs from the manifest");
+  });
+
+  it("through a relative symbolic link, from another working directory", () => {
+    const i = awkwardInstall();
+    symlinkSync(join("..", "with space", "ledger verifier", "verify.mjs"), join(i.where, "bin", "rel-verify"));
+    const bad = exec(join("bin", "rel-verify"), [join("bad", MR48_DIGEST)], i.where);
+    expect(bad.status).toBe(1);
+    expect(bad.stdout).toMatch(/^Bundle: INVALID/m);
+  });
+
+  it("exits non-zero when main() throws or returns no status: nothing passes by default", () => {
+    const i = awkwardInstall();
+    const cli = join(dirname(i.script), "lib", "cli.mjs");
+    writeFileSync(cli, 'export function main() { throw new Error("synthetic failure"); }\n');
+    const thrown = exec(i.script, [i.good]);
+    expect(thrown.status).toBe(3);
+    expect(thrown.stderr).toContain("Nothing was verified.");
+    writeFileSync(cli, "export function main() { return undefined; }\n");
+    expect(exec(i.script, [i.good]).status).toBe(3);
+    writeFileSync(cli, "export function main() { return 0.5; }\n");
+    expect(exec(i.script, [i.good]).status).toBe(3);
+  });
+
+  it("verify.mjs has no main-module test to get wrong", () => {
+    const src = readFileSync("tools/ledger-verifier/verify.mjs", "utf8");
+    expect(src).not.toMatch(/import\.meta\.url|process\.argv\[1\]/);
+    expect(src).toMatch(/process\.exitCode = 3;\s*try/);
+  });
+});
+
+describe("a schema-invalid proofs.json (review of PR #13)", () => {
+  it.each([
+    ["proofs is not a list", (p: Record<string, unknown>) => (p.proofs = "none")],
+    ["a path is not a list", (p: { proofs: { path: unknown }[] }) => (p.proofs[0]!.path = 7)],
+    ["an unknown field", (p: Record<string, unknown>) => (p.extra = true)],
+  ] as const)("%s: inclusion is NOT CHECKED with the reason, and nothing crashes", (_, mutate) => {
+    const dir = copyBundle();
+    const p = JSON.parse(readFileSync(join(dir, "proofs.json"), "utf8"));
+    (mutate as (x: unknown) => void)(p);
+    writeFileSync(join(dir, "proofs.json"), canonicalize(p));
+    const { code, out } = run(dir);
+    expect(code).toBe(1);
+    expect(out).toMatch(/^Bundle: INVALID/m);
+    expect(out).toMatch(/proofs\.json\//);
+    expect(out).toMatch(/^Inclusion proofs: NOT CHECKED - proofs\.json does not match its v1 schema, so no inclusion proof was checked\./m);
+    expect(out).toMatch(/^Balance checks: PASSED/m);
+  });
+
+  it("a schema-invalid summary skips the balance step the same way", () => {
+    const dir = copyBundle();
+    const s = JSON.parse(readFileSync(join(dir, "summary.json"), "utf8"));
+    s.currencies = "USD";
+    writeFileSync(join(dir, "summary.json"), canonicalize(s));
+    const { code, out } = run(dir);
+    expect(code).toBe(1);
+    expect(out).toMatch(/^Balance checks: NOT CHECKED - summary\.json does not match its v1 schema, so no totals were recomputed\./m);
+  });
+});
+
+describe("which publication (review of PR #13)", () => {
+  it("without --expect, says the result shows internal consistency only", () => {
+    expect(run(MR48_DIR).out).toMatch(/^Which publication: NOT CHECKED - no outside manifest SHA-256 was given \(--expect\), so this result shows internal consistency only, not which publication this is\.$/m);
+  });
+  it("with --expect, says whether it matched", () => {
+    expect(run(MR48_DIR, "--expect", MR48_DIGEST).out).toMatch(/^Which publication: MATCHED/m);
+    expect(run(MR48_DIR, "--expect", "0".repeat(64)).out).toMatch(/^Which publication: MISMATCHED/m);
   });
 });
 
