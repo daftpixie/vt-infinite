@@ -45,7 +45,9 @@ export default async function HomePage() {
         <p>
           <Link href="/marrs-rover">See how Marrs Rover will show where resources go, starting with a labeled demo.</Link>
         </p>
-        <Placeholder id="roverDemoEntry" />
+        <p>
+          <Link href="/marrs-rover">Explore the working demo.</Link> Sample finances, not VT Infinite&rsquo;s accounts.
+        </p>
 
         <h2>Proposed governance</h2>
         <p className="label">Proposed — not yet adopted</p>

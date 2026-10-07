@@ -4,7 +4,8 @@ import { securityHeaders } from "./lib/security-headers";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Content files are read at request time; ship them with the server bundle.
-  outputFileTracingIncludes: { "/**": ["./content/**/*"] },
+  // Marrs Rover reads its sealed bundles from the repository at request time.
+  outputFileTracingIncludes: { "/**": ["./content/**/*", "./fixtures/marrs-rover/bundles/**/*"] },
   reactStrictMode: true,
   async redirects() {
     // Old URLs with a deliberate replacement (PRD DN-6). permanent => 308.

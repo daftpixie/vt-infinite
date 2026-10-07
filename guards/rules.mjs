@@ -90,6 +90,10 @@ const WRONG_NAMES = [
   [/\bAgent OS\b/g, "agentOS"],
 ];
 
+// Present-tense money verbs and states, for the real-money-tense rule.
+const REAL_MONEY_VERB = /\b(?:spends|receives|holds|pays|earns|owes|banks|has (?:spent|received|paid|earned|raised))\b/i;
+const REAL_MONEY_STATE = /\b(?:balance|balances|cash|funds|revenue|income|spending|finances|accounts) (?:is|are|stands at|total|totals)\b/i;
+
 const INITIATIVES = /\b(?:OneRhythm|MIRmade|abl8)\b/i;
 const CLINICAL = /\b(?:diagnos(?:e|es|ed|ing|is)|detect(?:s|ed|ing)?|treat(?:s|ed|ing|ment)?|prevent(?:s|ed|ing)?)\b/i;
 
@@ -247,6 +251,21 @@ export const RULES = [
       sentences(t)
         .filter((s) => INITIATIVES.test(s) && CLINICAL.test(s))
         .map((s) => ({ match: s.slice(0, 160), message: "Describe support and research, not clinical function." })),
+  },
+  {
+    id: "real-money-tense",
+    scope: "copy",
+    description:
+      "No present-tense statement about VT Infinite's real money while Marrs Rover shows only demo data (PRD MR-5, MR-7, MR-8; kickoff copy rules). A sentence that negates, looks ahead or names the demo passes.",
+    check: (t) =>
+      sentences(t)
+        .filter(
+          (s) =>
+            /\bVT Infinite\b/.test(s) &&
+            (REAL_MONEY_VERB.test(s) || REAL_MONEY_STATE.test(s) || /\$\s?\d/.test(s)) &&
+            !/\b(?:not|no|never|nothing|will|would|demo|synthetic|sample|fictional)\b/i.test(s),
+        )
+        .map((s) => ({ match: s.slice(0, 160), message: "Use demo or future wording; never present tense about real money." })),
   },
   {
     id: "funding-ask",

@@ -31,6 +31,26 @@ describe("repo guards fire", () => {
 
 });
 
+describe("real-money-tense (copy)", () => {
+  it.each([
+    "VT Infinite spends $4,000.00 a month on hosting.",
+    "VT Infinite's cash balance is $12,000.00.",
+    "VT Infinite holds two restricted grants.",
+    "Here VT Infinite's finances are public.",
+  ])("fires: %s", (text) => {
+    expect(rules(text, ["copy"])).toContain("real-money-tense");
+  });
+  it.each([
+    "Demo data — not VT Infinite's financial records.",
+    "Explore the working demo. Sample finances, not VT Infinite's accounts.",
+    "See how Marrs Rover will show where resources go, starting with a labeled demo.",
+    "It shows how Marrs Rover will present records; it says nothing about VT Infinite's money.",
+    "VT Infinite builds tools, research, and communities.",
+  ])("passes: %s", (text) => {
+    expect(rules(text, ["copy"])).not.toContain("real-money-tense");
+  });
+});
+
 describe("hashed phrases", () => {
   // Synthetic phrases only, so no retired line is written into this repository.
   const entries = [phraseEntry("Synthetic Retired Name", "retired"), phraseEntry("a synthetic retired line", "retired")];
