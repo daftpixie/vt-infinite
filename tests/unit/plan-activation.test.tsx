@@ -17,7 +17,7 @@ import { FileSnapshotStore } from "@/lib/storage/file";
  *
  * The gate itself runs only where PLAN_ENABLED is "true" in the real
  * environment: the production build runs this file first in that case
- * (scripts/check-plan-activation.mjs, the `prebuild` script), so a deploy
+ * (scripts/check-release.mjs, the `prebuild` script), so a deploy
  * with the plan on and a placeholder still in place fails to build. CI runs
  * with the plan off and checks that the gate can see what it must.
  */
@@ -72,8 +72,8 @@ describe("plan activation gate (P11)", () => {
 
   it("the build runs the check first, and with the plan off it does nothing", () => {
     const pkg = JSON.parse(readFileSync("package.json", "utf8")) as { scripts: Record<string, string> };
-    expect(pkg.scripts.prebuild).toBe("node scripts/check-plan-activation.mjs");
-    const run = spawnSync(process.execPath, ["scripts/check-plan-activation.mjs"], { env: { ...process.env, PLAN_ENABLED: "" }, encoding: "utf8" });
+    expect(pkg.scripts.prebuild).toBe("node scripts/check-release.mjs");
+    const run = spawnSync(process.execPath, ["scripts/check-release.mjs"], { env: { ...process.env, PLAN_ENABLED: "", SITE_MODE: "" }, encoding: "utf8" });
     expect(run.status).toBe(0);
     expect(run.stdout).toContain("PLAN_ENABLED is not on; nothing to check.");
   });

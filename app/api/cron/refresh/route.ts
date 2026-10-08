@@ -3,6 +3,7 @@ import { isAuthorizedCron } from "@/lib/cron/auth";
 import { runJob } from "@/lib/cron/jobs";
 import { refreshPlan } from "@/lib/plan/service";
 import { refreshAll } from "@/lib/streams/service";
+import { landingNotFound } from "@/lib/mode-gate";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -12,11 +13,14 @@ export const maxDuration = 60;
  * Vercel Cron every fifteen minutes (vercel.json). Publications keep their
  * own fifteen-minute floor and backoff; repositories refresh at most hourly;
  * the OneRhythm plan at most once a minute, and only while PLAN_ENABLED is on.
+ * In landing mode (SITE_MODE=landing) it does nothing and answers 404.
  * Anything without the cron authorization gets a plain 404. Otherwise the
  * answer is 200 with each job's own status: one job failing (a store write,
  * say) never hides the others' results or turns the run into a 500.
  */
 export async function GET(request: Request) {
+  const landing = landingNotFound();
+  if (landing) return landing;
   if (!isAuthorizedCron(request.headers.get("authorization"), process.env.CRON_SECRET)) {
     return new Response(null, { status: 404 });
   }

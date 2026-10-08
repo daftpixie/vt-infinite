@@ -26,6 +26,10 @@ export const PLACEHOLDERS = {
   policyComments: { what: "approved comment policy (R2)", owner: "Matthew J Adams and counsel" },
   policyPrivacy: { what: "approved privacy notice (R2, Q-12)", owner: "Matthew J Adams and counsel" },
   policyTerms: { what: "approved terms (R2)", owner: "Matthew J Adams and counsel" },
+  landingPrivacyNotice: {
+    what: "versioned privacy notice for the email list: purpose, data kept, provider, retention, unsubscribe and deletion, contact; reviewed by counsel before the form opens (R14)",
+    owner: "Matthew J Adams and counsel",
+  },
 } as const;
 
 export type PlaceholderId = keyof typeof PLACEHOLDERS;

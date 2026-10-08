@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PageShell } from "@/components/PageShell";
 import { Placeholder } from "@/components/Placeholder";
+import { fullSiteOnly } from "@/lib/mode-gate";
 
 export const metadata: Metadata = { title: "Proposed corporate governance" };
 
@@ -9,6 +10,7 @@ export const metadata: Metadata = { title: "Proposed corporate governance" };
  * demonstration surface lives here; dormant modules stay behind their flags.
  */
 export default function GovernancePage() {
+  fullSiteOnly();
   return (
     <PageShell title="Proposed corporate governance">
       <p className="label">Proposed — not yet adopted</p>

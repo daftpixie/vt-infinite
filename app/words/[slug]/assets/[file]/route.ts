@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 import { essayAssetPath } from "@/lib/content/essays";
+import { landingNotFound } from "@/lib/mode-gate";
 
 const TYPES: Record<string, string> = {
   ".jpg": "image/jpeg",
@@ -13,6 +14,8 @@ const TYPES: Record<string, string> = {
 
 /** Serves only the cover and PDF a published essay names (PRD W-5). */
 export async function GET(_req: Request, { params }: { params: Promise<{ slug: string; file: string }> }) {
+  const landing = landingNotFound();
+  if (landing) return landing;
   const { slug, file } = await params;
   const path = essayAssetPath(slug, file);
   const type = TYPES[extname(file).toLowerCase()];

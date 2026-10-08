@@ -256,3 +256,37 @@ tbody th { font-weight: 400; color: var(--text); }
 .code-block code, .hash { font-family: var(--font); }
 .hash { overflow-wrap: anywhere; word-break: break-all; }
 .demo-label strong { color: var(--figure); }
+
+/* Landing release (SITE_MODE=landing): the mark, the acrostic, the motto. Quiet, black and white. */
+.landing { padding-top: var(--s12); }
+.landing-mark { margin: 0 0 var(--s12); }
+.landing-lockup { width: 15rem; max-width: 100%; color: var(--figure); }
+.landing-lockup svg { display: block; width: 100%; height: auto; }
+/*
+ * Three columns on one baseline grid: every line shares one size and
+ * leading, and stacked blocks are one blank line apart. The columns sit in
+ * a row or stack whole, never two and one:
+ * below --acrostic-threshold (set from the words, lib/landing.ts) each
+ * item's basis jumps to the full width.
+ */
+.acrostic-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--lead-2) var(--s8);
+  max-width: var(--acrostic-threshold);
+  font-size: var(--step-2); line-height: var(--lead-2); color: var(--figure);
+}
+@media (min-width: 48rem) {
+  .acrostic-list { font-size: var(--step-3); line-height: var(--lead-3); row-gap: var(--lead-3); }
+}
+.acrostic-item { flex-grow: 1; flex-basis: calc((var(--acrostic-threshold) - 100%) * 999); min-width: 0; }
+/* One word per line: the sentence is one run of text in a box as narrow as its longest word. */
+.acrostic-text { display: block; width: min-content; }
+.acrostic-across { font-weight: 700; }
+.motto { margin: var(--s12) 0 0; color: var(--muted); font-size: var(--step-1); line-height: var(--lead-1); }
+.landing-links { list-style: none; margin: var(--s12) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 var(--s6); }
+.landing-links a { display: inline-flex; align-items: center; min-height: 2.75rem; }
+.landing-signup { margin: var(--s8) 0 0; }
+.landing-footer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s4) var(--s8); }
+.landing-footer > p { margin: 0; }
+.landing-footer .footer-links { display: flex; flex-wrap: wrap; gap: 0 var(--s6); }
+.landing-footer a { overflow-wrap: anywhere; }

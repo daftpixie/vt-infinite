@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { RecordArticle } from "@/components/record";
 import { findRecord } from "@/lib/content/record";
 import { documentTitle, withoutCrisisBlock } from "@/lib/crisis";
+import { fullSiteOnly } from "@/lib/mode-gate";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -18,6 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 /** Retired legacy slugs are answered with 410 by the proxy before this page runs. */
 export default async function RecordEntryPage({ params }: Props) {
   await connection();
+  fullSiteOnly();
   const entry = findRecord((await params).slug);
   if (!entry) notFound();
   return <RecordArticle entry={entry} />;

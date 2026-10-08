@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Placeholder } from "@/components/Placeholder";
 import { RoverShell, roverMetadata } from "@/components/rover";
+import { fullSiteOnly } from "@/lib/mode-gate";
 
 export const metadata = roverMetadata("Marrs Rover method", "Definitions, the proof format and the limits of what a proof shows.");
 
@@ -27,6 +28,7 @@ const TERMS: [string, string][] = [
 
 /** Method (PRD MR-14, MR-38): definitions, the proof format (ADR 0005) and the limits of proof. */
 export default function MarrsRoverMethodPage() {
+  fullSiteOnly();
   return (
     <RoverShell title="Marrs Rover method" current="/marrs-rover/method">
       <p>

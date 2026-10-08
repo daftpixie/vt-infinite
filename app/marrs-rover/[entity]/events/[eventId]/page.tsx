@@ -17,6 +17,7 @@ import {
   TYPE_LABELS,
 } from "@/lib/marrs-rover/explorer";
 import { day, formatAmount, formatMovement, utcTime } from "@/lib/marrs-rover/format";
+import { fullSiteOnly } from "@/lib/mode-gate";
 
 type Params = { entity: string; eventId: string };
 
@@ -28,6 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
 /** Financial event (PRD MR-12). */
 export default async function EventPage({ params }: { params: Promise<Params> }) {
   await connection();
+  fullSiteOnly();
   const { entity, eventId } = await params;
   if (entity !== DEMO_ENTITY_ID && !isEnabled("marrsRoverRealData")) notFound();
   const found = findEvent(publications(), entity, eventId);

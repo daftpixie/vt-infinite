@@ -1,9 +1,10 @@
 import legacy from "@/content/legacy/urls.json" with { type: "json" };
 import { DEMO_ENTITY_ID, isEnabled, type Env, type Flag } from "./flags";
+import { isLanding, LANDING_PATHS } from "./mode";
 
 export type Decision =
   | { action: "pass" }
-  | { action: "deny"; reason: "admin" | "flag"; flag?: Flag }
+  | { action: "deny"; reason: "admin" | "flag" | "landing"; flag?: Flag }
   | { action: "gone" };
 
 /** Path prefixes held behind a feature flag. A prefix matches itself and its children. */
@@ -53,9 +54,18 @@ function realRoverFlag(path: string): boolean {
  * Decide what the edge does with a request before any page renders.
  * Admin is denied outright until stage 6. Flagged features are denied
  * unless their flag is on. Retired legacy paths are gone (410).
+ *
+ * In landing mode (lib/mode.ts) only the landing paths pass. The old-URL
+ * table still applies: retired paths stay 410, and the redirects in
+ * next.config.ts run before this.
  */
 export function decide(pathname: string, env: Env = process.env): Decision {
   const path = normalise(pathname);
+
+  if (isLanding(env)) {
+    if (isGone(path)) return { action: "gone" };
+    return LANDING_PATHS.includes(path) ? { action: "pass" } : { action: "deny", reason: "landing" };
+  }
 
   if (under(path, "/admin") || under(path, "/api/admin")) {
     return { action: "deny", reason: "admin" };
@@ -66,10 +76,15 @@ export function decide(pathname: string, env: Env = process.env): Decision {
   if (realRoverFlag(path) && !isEnabled("marrsRoverRealData", env)) {
     return { action: "deny", reason: "flag", flag: "marrsRoverRealData" };
   }
-  if (legacy.gone.includes(path)) return { action: "gone" };
+  if (isGone(path)) return { action: "gone" };
+  return { action: "pass" };
+}
+
+function isGone(path: string): boolean {
+  if (legacy.gone.includes(path)) return true;
   if (path.startsWith("/the-record/")) {
     const slug = path.slice("/the-record/".length);
-    if ((legacy.goneRecordSlugs as string[]).includes(slug)) return { action: "gone" };
+    if ((legacy.goneRecordSlugs as string[]).includes(slug)) return true;
   }
-  return { action: "pass" };
+  return false;
 }

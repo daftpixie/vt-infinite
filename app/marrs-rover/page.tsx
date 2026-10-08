@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { Placeholder } from "@/components/Placeholder";
 import { periodPath, PlainMeaning, reviewPath, RoverShell, roverMetadata, StateFields, Withheld } from "@/components/rover";
 import { defaultSelection, entities, periodBundles, periods, publications } from "@/lib/marrs-rover/explorer";
+import { fullSiteOnly } from "@/lib/mode-gate";
 
 export const metadata = roverMetadata("Marrs Rover Block Explorer", "Overview of the synthetic demo publication.");
 
@@ -12,6 +13,7 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) 
 /** Overview (PRD MR-9): environment, entity, cutoff, scope, basis, publication date and separate evidence states. */
 export default async function MarrsRoverPage({ searchParams }: { searchParams: Promise<Query> }) {
   await connection();
+  fullSiteOnly();
   const query = await searchParams;
   const pubs = publications();
   const fallback = defaultSelection(pubs);

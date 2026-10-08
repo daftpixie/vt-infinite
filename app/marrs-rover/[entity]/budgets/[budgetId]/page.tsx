@@ -6,6 +6,7 @@ import { DemoCaption, periodPath, PlainMeaning, RoverShell, roverMetadata, State
 import { DEMO_ENTITY_ID, isEnabled } from "@/lib/flags";
 import { findBudget, netDisbursed, publications, readable, restrictionLabel } from "@/lib/marrs-rover/explorer";
 import { day, formatAmount } from "@/lib/marrs-rover/format";
+import { fullSiteOnly } from "@/lib/mode-gate";
 
 type Params = { entity: string; budgetId: string };
 
@@ -17,6 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
 /** Budget (PRD MR-13): approved version, approval, responsible role, restrictions, amendments and variance. */
 export default async function BudgetPage({ params }: { params: Promise<Params> }) {
   await connection();
+  fullSiteOnly();
   const { entity, budgetId } = await params;
   if (entity !== DEMO_ENTITY_ID && !isEnabled("marrsRoverRealData")) notFound();
   const found = findBudget(publications(), entity, budgetId);

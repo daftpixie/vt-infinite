@@ -1,5 +1,6 @@
 import { isEnabled } from "@/lib/flags";
 import { isShown, readPlan } from "@/lib/plan/service";
+import { landingNotFound } from "@/lib/mode-gate";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,8 @@ export const dynamic = "force-dynamic";
  * withdrawal reaches every reader on the next poll.
  */
 export async function GET() {
+  const landing = landingNotFound();
+  if (landing) return landing;
   if (!isEnabled("plan")) return notFound();
   const state = await readPlan();
   if (!isShown(state)) return notFound();

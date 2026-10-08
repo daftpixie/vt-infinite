@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { periodPath, PlainMeaning, RoverShell, roverMetadata, StateFields } from "@/components/rover";
 import { DEMO_ENTITY_ID } from "@/lib/flags";
 import { periodBundles, publications } from "@/lib/marrs-rover/explorer";
+import { fullSiteOnly } from "@/lib/mode-gate";
 
 type Params = { reviewId: string };
 
@@ -20,6 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function ReviewPage({ params }: { params: Promise<Params> }) {
   await connection();
+  fullSiteOnly();
   const { reviewId } = await params;
   const prefix = `${DEMO_ENTITY_ID}-`;
   if (!reviewId.startsWith(prefix)) notFound();
