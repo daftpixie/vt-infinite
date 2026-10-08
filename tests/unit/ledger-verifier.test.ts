@@ -110,7 +110,7 @@ describe("independent tamper detection (PRD §23)", () => {
       const m = JSON.parse(readFileSync(join(d, "manifest.json"), "utf8"));
       m.publishedAt = "2000-04-15T16:00:00Z";
       writeFileSync(join(d, "manifest.json"), canonicalize(m));
-    }, /the folder is named 5088d7d5.* but the manifest's SHA-256 is/],
+    }, /the folder is named 7986bc37.* but the manifest's SHA-256 is/],
     ["an extra file", (d) => writeFileSync(join(d, "notes.md"), "extra"), /notes\.md is in the folder but not in the manifest/],
     ["a missing file", (d) => rmSync(join(d, "exceptions.json")), /exceptions\.json is listed but missing/],
     ["a file replaced by a symbolic link", (d) => {

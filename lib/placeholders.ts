@@ -23,7 +23,6 @@ export const PLACEHOLDERS = {
     what: "disclosure scope, redaction rules, publication delay, control roles, authority changes and corrections policy for real publications (MR-14, MR-23, MR-26, MR-47); accounting and privacy decisions, with counsel where needed",
     owner: "Matthew J Adams",
   },
-  roverVerifierSource: { what: "approved public link to the verifier's source (tools/ledger-verifier), once its repository is listed on Code (G-1)", owner: "Matthew J Adams" },
   policyComments: { what: "approved comment policy (R2)", owner: "Matthew J Adams and counsel" },
   policyPrivacy: { what: "approved privacy notice (R2, Q-12)", owner: "Matthew J Adams and counsel" },
   policyTerms: { what: "approved terms (R2)", owner: "Matthew J Adams and counsel" },

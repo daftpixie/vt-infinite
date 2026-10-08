@@ -7,15 +7,17 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DEMO_LABEL } from "@/packages/ledger-proof/src/constants.ts";
 import { sha256Hex } from "@/packages/ledger-proof/src/merkle.ts";
 import { bundleFileBytes, listBundles, loadBundle, setBundleRootForTests } from "@/lib/marrs-rover/bundles";
-import { applyFilters, correctionStatus, filterQuery, netByCurrency, netDisbursed, parseFilters, publications } from "@/lib/marrs-rover/explorer";
+import { applyFilters, correctionStatus, eventMovement, filterQuery, netByCurrency, netDisbursed, parseFilters, publications } from "@/lib/marrs-rover/explorer";
 import { formatAmount, formatMovement, formatSigned } from "@/lib/marrs-rover/format";
+import { buildVerifierArchive, VERIFIER_ARCHIVE_PATH, verifierArchive } from "@/lib/marrs-rover/verifier-archive";
 import { EXPECTED_VERIFIER_RUN } from "@/lib/marrs-rover/verifier-output";
 import type { LoadedBundle } from "@/lib/marrs-rover/types";
+import type { PublicEvent } from "@/packages/ledger-proof/src/types.ts";
 
 // Pages call connection(); outside a request it is a no-op here.
 vi.mock("next/server", async (orig) => ({ ...(await orig<object>()), connection: async () => {} }));
 
-const DIGEST = "5088d7d5d133b9fb2ee0bbcd60879a2dee52f704dfeb2bb37f245be974b314c5";
+const DIGEST = "7986bc37de829a3875ca8cbc6c1177b4d7c79462502aeb4e17ab80a3e194db8a";
 const FIXTURE = `fixtures/marrs-rover/bundles/demo/2000-Q1/${DIGEST}`;
 const REF = { entityId: "demo", periodId: "2000-Q1", digest: DIGEST };
 const X = { USD: 2, JPY: 0, EUR: 2 };
@@ -274,6 +276,132 @@ describe("Verify page (B5)", () => {
     const html = renderToStaticMarkup(await (await import("@/app/marrs-rover/verify/page")).default());
     for (const f of loaded().files) expect(html).toContain(`/marrs-rover/demo/bundles/${DIGEST}/${f.path}`);
     expect(html).toContain(`verify.mjs ${DIGEST} --expect ${DIGEST}`);
-    expect(html).toContain('data-placeholder="roverVerifierSource"');
+    expect(html).not.toContain("data-placeholder=");
+    expect(html).toContain(`node ledger-verifier/verify.mjs ${DIGEST} --expect ${DIGEST}`);
+  });
+});
+
+describe("verifier download (F1, decision D1)", () => {
+  const entries = (tar: Uint8Array) => {
+    const out: Array<{ name: string; size: number; mode: string; mtime: string; uid: string; uname: string }> = [];
+    for (let at = 0; at + 512 <= tar.length; ) {
+      const h = Buffer.from(tar.subarray(at, at + 512));
+      if (h.every((b) => b === 0)) break;
+      const field = (o: number, n: number) => h.subarray(o, o + n).toString("utf8").replace(/\0.*$/s, "");
+      const size = Number.parseInt(field(124, 12), 8);
+      out.push({ name: field(0, 100), size, mode: field(100, 8), mtime: field(136, 12), uid: field(108, 8), uname: field(265, 32) });
+      at += 512 + Math.ceil(size / 512) * 512;
+    }
+    return out;
+  };
+
+  it("is reproducible byte for byte, with fixed order, times and owners", () => {
+    const a = buildVerifierArchive();
+    expect(Buffer.from(buildVerifierArchive()).equals(Buffer.from(a))).toBe(true);
+    const list = entries(a);
+    expect(list.map((e) => e.name)).toEqual([...list.map((e) => e.name)].sort((x, y) => Buffer.compare(Buffer.from(x), Buffer.from(y))));
+    for (const e of list) expect(e).toMatchObject({ mode: "0000644", mtime: "00000000000", uid: "0000000", uname: "" });
+    expect(list.map((e) => e.name)).toContain("ledger-verifier/verify.mjs");
+    expect(verifierArchive().sha256).toBe(sha256Hex(a));
+  });
+
+  it("holds every verifier file unchanged, including the Apache-2.0 LICENSE", () => {
+    const tar = buildVerifierArchive();
+    const list = entries(tar);
+    expect(list.map((e) => e.name)).toContain("ledger-verifier/LICENSE");
+    expect(Buffer.from(tar).toString("latin1")).toContain("Apache License");
+    const r = spawnSync("tar", ["-tf", "-"], { input: Buffer.from(tar), encoding: "utf8" });
+    if (r.status === 0) expect(r.stdout.trim().split("\n")).toEqual(list.map((e) => e.name));
+  });
+
+  it("changing any verifier file changes the digest", () => {
+    const base = sha256Hex(buildVerifierArchive());
+    const src = "tools/ledger-verifier";
+    for (const { name } of entries(buildVerifierArchive())) {
+      const work = mkdtempSync(join(tmpdir(), "rover-verifier-"));
+      cpSync(src, work, { recursive: true });
+      const file = join(work, name.slice("ledger-verifier/".length));
+      writeFileSync(file, Buffer.concat([readFileSync(file), Buffer.from(" ")]));
+      expect(sha256Hex(buildVerifierArchive(work)), name).not.toBe(base);
+      rmSync(work, { recursive: true });
+    }
+  });
+
+  it("the Verify page links the download and shows the served file's SHA-256 and size", async () => {
+    const html = renderToStaticMarkup(await (await import("@/app/marrs-rover/verify/page")).default());
+    const { sha256, size } = verifierArchive();
+    expect(html).toContain(`href="${VERIFIER_ARCHIVE_PATH}"`);
+    expect(html).toContain(sha256);
+    expect(html).toContain(`${size.toLocaleString("en-US")} bytes`);
+    expect(html).toContain("sha256sum marrs-rover-verifier.tar");
+  });
+
+  it("the route serves exactly the built archive, as an attachment", async () => {
+    const res = await (await import("@/app/marrs-rover/verifier/marrs-rover-verifier.tar/route")).GET();
+    expect(Buffer.from(await res.arrayBuffer()).equals(Buffer.from(buildVerifierArchive()))).toBe(true);
+    expect(res.headers.get("content-disposition")).toBe('attachment; filename="marrs-rover-verifier.tar"');
+  });
+});
+
+describe("tables and summary amounts (F3, F4, F6)", () => {
+  const LABEL_HTML = DEMO_LABEL.replace("'", "&#x27;");
+  const render = async () => {
+    const period = await import("@/app/marrs-rover/[entity]/periods/[period]/page");
+    const event = await import("@/app/marrs-rover/[entity]/events/[eventId]/page");
+    const budget = await import("@/app/marrs-rover/[entity]/budgets/[budgetId]/page");
+    const overview = await import("@/app/marrs-rover/page");
+    return {
+      period: renderToStaticMarkup(await period.default({ params: Promise.resolve({ entity: "demo", period: "2000-Q1" }), searchParams: Promise.resolve({}) })),
+      event: renderToStaticMarkup(await event.default({ params: Promise.resolve({ entity: "demo", eventId: "2121f48f-0fa0-4236-a748-f77aac1546d7" }) })),
+      budget: renderToStaticMarkup(await budget.default({ params: Promise.resolve({ entity: "demo", budgetId: "syn-budget-alpha" }) })),
+      overview: renderToStaticMarkup(await overview.default({ searchParams: Promise.resolve({}) })),
+    };
+  };
+
+  it("every rendered table's caption carries the full demo label (MR-5)", async () => {
+    const pages = await render();
+    let tables = 0;
+    for (const [name, html] of Object.entries(pages)) {
+      const count = (html.match(/<table>/g) ?? []).length;
+      const captions = [...html.matchAll(/<caption>([\s\S]*?)<\/caption>/g)].map((m) => m[1] ?? "");
+      expect(captions, name).toHaveLength(count);
+      for (const c of captions) expect(c, name).toContain(LABEL_HTML);
+      tables += count;
+    }
+    // Money movement, balances, restricted funds, budgets, register and files on the period page, plus the others.
+    expect(tables).toBeGreaterThanOrEqual(9);
+  });
+
+  it("net summary amounts state their direction in words", async () => {
+    const { period } = await render();
+    const row = (label: string) => period.match(new RegExp(`<th scope="row">${label}</th><td class="num">([^<]*)</td>`))?.[1];
+    expect(row("Reversals, net")).toBe("$640.00 in");
+    expect(row("Internal transfers, net \\(always zero\\)")).toBe("no cash movement");
+    expect(row("Transfers across the scope boundary, net")).toBe("no cash movement");
+    // Restricted fund A's reversal column.
+    expect(period).toMatch(/Synthetic restricted fund A<\/th>(?:<td class="num">[^<]*<\/td>){3}<td class="num">\$640\.00 in<\/td>/);
+  });
+
+  it("the budget page is titled with the budget's published ID, not a reworded slug", async () => {
+    const { budget } = await render();
+    expect(budget).toContain("<h1>Demo budget syn-budget-alpha</h1>");
+    // D3: the re-sealed variance note states what the numbers show.
+    expect(budget).toContain("contract services $2,000.00 paid against a $2,500.00 line; program supplies $910.00 paid against a $1,200.00 line");
+  });
+});
+
+describe("cash movement per currency (F7)", () => {
+  const X2 = { USD: 2, EUR: 2 };
+  const leg = (currency: string, delta: string) => ({ legId: `leg-${currency}`, bucketId: `b-${currency}`, currency, deltaMinorUnits: delta, boundary: "external" as const });
+  const event = (legs: ReturnType<typeof leg>[]) => ({ cashLegs: legs }) as unknown as PublicEvent;
+
+  it("a single-currency event reads as one movement", () => {
+    expect(eventMovement(event([leg("USD", "-45000")]), X2)).toBe("$450.00 out");
+    expect(eventMovement(event([]), X2)).toBe("no cash movement");
+  });
+  it("a synthetic two-currency event gets one figure per currency, never one sum under the first leg's currency", () => {
+    const e = event([leg("USD", "-10000"), leg("EUR", "9000")]);
+    expect(eventMovement(e, X2)).toBe("90.00 EUR in (EUR); $100.00 out (USD)");
+    expect(eventMovement(e, X2)).not.toContain("$10.00");
   });
 });

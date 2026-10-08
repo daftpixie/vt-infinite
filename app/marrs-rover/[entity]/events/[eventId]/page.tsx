@@ -2,15 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { eventPath, Hash, periodPath, PlainMeaning, RoverShell, roverMetadata, StateFields } from "@/components/rover";
+import { DemoCaption, eventPath, Hash, periodPath, PlainMeaning, RoverShell, roverMetadata, StateFields } from "@/components/rover";
 import { DEMO_ENTITY_ID, isEnabled } from "@/lib/flags";
 import {
   bucketLabel,
   CORRECTION_LABELS,
   correctionStatus,
+  eventMovement,
   findEvent,
   FLOW_LABELS,
-  netDelta,
   publications,
   readable,
   restrictionLabel,
@@ -53,7 +53,7 @@ export default async function EventPage({ params }: { params: Promise<Params> })
         <dt>Amount</dt>
         <dd>{e.amountMinorUnits && e.currency ? `${formatAmount(e.amountMinorUnits, e.currency, x)} (${e.currency})` : "None: this event moves no cash."}</dd>
         <dt>Cash movement</dt>
-        <dd>{e.cashLegs.length ? formatMovement(netDelta(e), e.cashLegs[0]?.currency ?? "", x) : "No cash movement."}</dd>
+        <dd>{eventMovement(e, x)}</dd>
         <dt>Effective date</dt>
         <dd>{day(e.effectiveDate)}</dd>
         <dt>Published</dt>
@@ -75,7 +75,7 @@ export default async function EventPage({ params }: { params: Promise<Params> })
       {e.cashLegs.length ? (
         <div className="table-scroll" role="region" aria-label="Cash legs" tabIndex={0}>
           <table>
-            <caption>The cash movements that make up this event.</caption>
+            <DemoCaption>The cash movements that make up this event.</DemoCaption>
             <thead>
               <tr>
                 <th scope="col">Bucket</th>

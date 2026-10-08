@@ -176,6 +176,13 @@ That makes 24 events in all.
 - **Downloads.** Each listed file is served unchanged at `/marrs-rover/<entity>/bundles/<manifest SHA-256>/<file>`, and its digest is checked again on every read.
 - **Schema loading.** `schemas.ts` now loads the v1 schemas and currency mapping with static JSON imports instead of reading a path relative to the module, which the site's bundler cannot follow. The values are unchanged, and each read still returns a fresh copy.
 
+## Stage 4 follow-ups: decisions of 7 Oct 2026 (Matthew J Adams)
+
+- **D1. Verifier source.** The verifier is offered as a download from the site, not through the Code page's repository list. `lib/marrs-rover/verifier-archive.ts` builds `tools/ledger-verifier` into a plain POSIX ustar archive at request time, so the download always matches the current source: files in byte order of their paths, every timestamp 0, mode 0644, owner and group 0 with no names, no directory entries, no compression. It is the same byte for byte on every build. It is served at `/marrs-rover/verifier/marrs-rover-verifier.tar` as an attachment, and the Verify page shows its SHA-256 and size, with the commands to check the digest before extracting. The Apache-2.0 LICENSE is inside.
+- **D2. Exceptions.** Listing exceptions by scope satisfies MR-11. There is no per-event exception link and no v2 schema for now. The register says so where the filter would be.
+- **D3. Re-seal.** The MR-48 fixture was re-sealed so that `syn-budget-alpha`'s variance note states what its numbers show: contract services $2,000.00 paid against a $2,500.00 line; program supplies $910.00 paid against a $1,200.00 line. Only `budgets.json` changed, and with it the manifest that lists its digest; the register, the root (`c0de9543…12dd`), the proofs and the summary are unchanged. The manifest SHA-256 moved from `5088d7d5…4c5` to `7986bc37…db8a`. The tampered bundle was regenerated from the new one with the same single change (event 12's amount, 200000 to 20000), and its `register.jsonl` is byte-identical to the earlier tampered register. No golden vector embeds this bundle, so none changed.
+- **D4. Review IDs.** A period-keyed review ID (`reviews/demo-2000-Q1`) is acceptable until real outside reports have their own IDs.
+
 ## Honest limits (MR-38)
 
 A matching root shows that the bundle you examined matches its manifest, and in a later stage a recorded chain commitment. It shows nothing more than that. In particular, it does not show:

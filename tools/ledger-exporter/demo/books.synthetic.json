@@ -167,7 +167,7 @@
           "reason": "Synthetic amendment: contract services raised to cover restricted fund A work (demo)."
         }
       ],
-      "varianceNote": "Synthetic: supplies came in under budget after the corrected invoice; contract services matched the amended budget (demo)."
+      "varianceNote": "Synthetic: contract services $2,000.00 paid against a $2,500.00 line; program supplies $910.00 paid against a $1,200.00 line (demo)."
     },
     {
       "budgetId": "syn-budget-beta",

@@ -28,7 +28,7 @@ Reproduce every root with the standalone verifier's own implementation:
 
 **Large amounts.** The repository's `long-numeric-id` guard fails any run of 15 or more digits. Matthew J Adams approved an exception (`guards/exceptions.json`, 7 Oct 2026) for this `golden/` folder only, so these vectors freeze amounts above 2^53. Everywhere else the guard still applies, which is why the generator builds these values from BigInt expressions.
 
-## `bundles/demo/2000-Q1/5088d7d5d133b9fb2ee0bbcd60879a2dee52f704dfeb2bb37f245be974b314c5/`: the MR-48 bundle
+## `bundles/demo/2000-Q1/7986bc37de829a3875ca8cbc6c1177b4d7c79462502aeb4e17ab80a3e194db8a/`: the MR-48 bundle
 
 The first proof target (PRD MR-48), sealed by:
 
@@ -36,6 +36,6 @@ The first proof target (PRD MR-48), sealed by:
 
 It holds one synthetic quarter: 10 receipts (one of them loan proceeds, shown as financing), 10 disbursements, two restricted funds, one internal transfer, one correction (the reversal of a disbursement entered at the wrong amount, then its replacement), and one reconciliation event, which makes 24 events in all. One exception is open (`syn-exc-001`, unreconciled) and there is no independent report, so a valid bundle sits alongside an open exception and an absent review. The folder name is the SHA-256 of its `manifest.json`. The verifier must accept it.
 
-## `tampered/5088d7d5d133b9fb2ee0bbcd60879a2dee52f704dfeb2bb37f245be974b314c5/`: the tampered bundle
+## `tampered/7986bc37de829a3875ca8cbc6c1177b4d7c79462502aeb4e17ab80a3e194db8a/`: the tampered bundle
 
 A copy of the MR-48 bundle with one change: on line 12 of `register.jsonl` (event 12, a disbursement from restricted fund A), the amount and its cash leg go from `200000` to `20000`. Nothing else is touched, so the manifest still describes the original. The verifier must reject it, and `tampered.expected.json` lists the failures it must report.
