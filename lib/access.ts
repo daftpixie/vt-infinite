@@ -21,7 +21,7 @@ export const GATED_PREFIXES: ReadonlyArray<{ prefix: string; flag: Flag }> = [
 ];
 
 /** Marrs Rover child segments that are not entity IDs. */
-const ROVER_STATIC = new Set(["method", "verify"]);
+const ROVER_STATIC = new Set(["method", "verify", "verifier"]);
 
 function normalise(pathname: string): string {
   let p = pathname;

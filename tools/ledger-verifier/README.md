@@ -32,8 +32,8 @@ Exit status:
 
 Try it on the synthetic fixtures:
 
-    node tools/ledger-verifier/verify.mjs fixtures/marrs-rover/bundles/demo/2000-Q1/5088d7d5d133b9fb2ee0bbcd60879a2dee52f704dfeb2bb37f245be974b314c5
-    node tools/ledger-verifier/verify.mjs fixtures/marrs-rover/tampered/5088d7d5d133b9fb2ee0bbcd60879a2dee52f704dfeb2bb37f245be974b314c5
+    node tools/ledger-verifier/verify.mjs fixtures/marrs-rover/bundles/demo/2000-Q1/7986bc37de829a3875ca8cbc6c1177b4d7c79462502aeb4e17ab80a3e194db8a
+    node tools/ledger-verifier/verify.mjs fixtures/marrs-rover/tampered/7986bc37de829a3875ca8cbc6c1177b4d7c79462502aeb4e17ab80a3e194db8a
     node tools/ledger-verifier/verify.mjs --golden fixtures/marrs-rover/golden
 
 The first must pass and the second must fail. Both are synthetic: **Demo data — not VT Infinite's financial records.**
@@ -81,10 +81,10 @@ This is the actual output for the synthetic MR-48 bundle:
 
 ```
 Marrs Rover verifier 1.0.0
-Folder: fixtures/marrs-rover/bundles/demo/2000-Q1/5088d7d5d133b9fb2ee0bbcd60879a2dee52f704dfeb2bb37f245be974b314c5
+Folder: fixtures/marrs-rover/bundles/demo/2000-Q1/7986bc37de829a3875ca8cbc6c1177b4d7c79462502aeb4e17ab80a3e194db8a
 Environment: Synthetic demo. Demo data — not VT Infinite's financial records.
 Entity: demo   Period: 2000-Q1   Events: 24
-Manifest SHA-256: 5088d7d5d133b9fb2ee0bbcd60879a2dee52f704dfeb2bb37f245be974b314c5
+Manifest SHA-256: 7986bc37de829a3875ca8cbc6c1177b4d7c79462502aeb4e17ab80a3e194db8a
 Published root:   c0de954323d3f888a9e59b561337a9caecc555d952096d16ec2ddaa7143312dd
 
 Bundle: VALID - every file matches the manifest; the 24 events are canonical, schema-valid and in order, and they give the published root.

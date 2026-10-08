@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
-import { budgetPath, eventPath, filePath, Hash, periodPath, PlainMeaning, reviewPath, RoverShell, roverMetadata, StateFields, Withheld } from "@/components/rover";
+import { DemoCaption, budgetPath, eventPath, filePath, Hash, periodPath, PlainMeaning, reviewPath, RoverShell, roverMetadata, StateFields, Withheld } from "@/components/rover";
 import { DEMO_ENTITY_ID, isEnabled } from "@/lib/flags";
 import {
   applyFilters,
@@ -10,11 +10,11 @@ import {
   CORRECTION_LABELS,
   correctionStatus,
   entities,
+  eventMovement,
   filterOptions,
   filterQuery,
   isFiltered,
   netByCurrency,
-  netDelta,
   netDisbursed,
   PAGE_SIZE,
   parseFilters,
@@ -114,7 +114,7 @@ function Balances({ b }: { b: LoadedBundle }) {
       <h2 id="balances">Balances</h2>
       <div className="table-scroll" role="region" aria-label="Balances by cash bucket" tabIndex={0}>
         <table>
-          <caption>Opening and closing cash for each synthetic cash bucket, {b.manifest.periodId}.</caption>
+          <DemoCaption>Opening and closing cash for each synthetic cash bucket, {b.manifest.periodId}.</DemoCaption>
           <thead>
             <tr>
               <th scope="col">Bucket</th>
@@ -142,7 +142,7 @@ function Balances({ b }: { b: LoadedBundle }) {
       <h3>Restricted funds</h3>
       <div className="table-scroll" role="region" aria-label="Restricted funds" tabIndex={0}>
         <table>
-          <caption>Each restricted fund rolled forward on its own. A restriction is part of the cash above, not extra cash.</caption>
+          <DemoCaption>Each restricted fund rolled forward on its own. A restriction is part of the cash above, not extra cash.</DemoCaption>
           <thead>
             <tr>
               <th scope="col">Fund</th>
@@ -170,7 +170,7 @@ function Balances({ b }: { b: LoadedBundle }) {
                 <td className="num">{formatSigned(r.opening, r.currency, x)}</td>
                 <td className="num">{formatAmount(r.receipts, r.currency, x)}</td>
                 <td className="num">{formatAmount(r.disbursements, r.currency, x)}</td>
-                <td className="num">{formatSigned(r.reversalsNet, r.currency, x)}</td>
+                <td className="num">{formatMovement(r.reversalsNet, r.currency, x)}</td>
                 <td className="num">{formatSigned(r.closing, r.currency, x)}</td>
               </tr>
             ))}
@@ -193,7 +193,7 @@ function Budgets({ b }: { b: LoadedBundle }) {
       </p>
       <div className="table-scroll" role="region" aria-label="Budgets compared with spending" tabIndex={0}>
         <table>
-          <caption>Approved budget lines against net amounts paid out, {b.manifest.periodId}.</caption>
+          <DemoCaption>Approved budget lines against net amounts paid out, {b.manifest.periodId}.</DemoCaption>
           <thead>
             <tr>
               <th scope="col">Budget and line</th>
@@ -216,7 +216,7 @@ function Budgets({ b }: { b: LoadedBundle }) {
                 return (
                   <tr key={`${g.budgetId}-${l.categoryId}`}>
                     <th scope="row">
-                      <Link href={budgetPath(b, g.budgetId)}>{readable(g.budgetId)}</Link>, {readable(l.categoryId)}
+                      <Link href={budgetPath(b, g.budgetId)}>{g.budgetId}</Link>, {readable(l.categoryId)}
                     </th>
                     <td className="num">{formatAmount(l.amountMinorUnits, g.currency, x)}</td>
                     <td className="num">{formatAmount(spent, g.currency, x)}</td>
@@ -351,8 +351,8 @@ function Register({ b, f, pubs }: { b: LoadedBundle; f: RegisterFilters; pubs: {
         {filtered ? <Link href={`${here}#register`}>Clear filters</Link> : null}
       </form>
       <p className="notice-inline">
-        Exceptions are disclosed for a scope, not for single events, so there is no exception filter: the open exceptions are listed under Reconciliation and
-        exceptions.
+        There is no exception filter here. Exceptions are disclosed for a scope, not linked to single events, and they are listed under{" "}
+        <a href="#reconciliation">Reconciliation and exceptions</a>.
       </p>
 
       <p role="status">
@@ -368,10 +368,10 @@ function Register({ b, f, pubs }: { b: LoadedBundle; f: RegisterFilters; pubs: {
       ) : (
         <div className="table-scroll" role="region" aria-label="Register table" tabIndex={0}>
           <table>
-            <caption>
+            <DemoCaption>
               Register, {b.manifest.periodId}: events {(page - 1) * PAGE_SIZE + 1} to {(page - 1) * PAGE_SIZE + shown.length} of {matching.length}
-              {filtered ? " matching the filters" : ""}. Demo data.
-            </caption>
+              {filtered ? " matching the filters" : ""}.
+            </DemoCaption>
             <thead>
               <tr>
                 <th scope="col" className="num">
@@ -405,7 +405,7 @@ function Register({ b, f, pubs }: { b: LoadedBundle; f: RegisterFilters; pubs: {
                   </td>
                   <td>{restrictionLabel(b, e.classification.restrictionId)}</td>
                   <td className="num">{e.amountMinorUnits && e.currency ? formatAmount(e.amountMinorUnits, e.currency, x) : "none"}</td>
-                  <td className="num">{e.cashLegs.length ? formatMovement(netDelta(e), e.cashLegs[0]?.currency ?? "", x) : "no cash movement"}</td>
+                  <td className="num">{eventMovement(e, x)}</td>
                   <td>{CORRECTION_LABELS[correctionStatus(b, e)]}</td>
                 </tr>
               ))}
@@ -440,7 +440,7 @@ function Files({ b }: { b: LoadedBundle }) {
       </p>
       <div className="table-scroll" role="region" aria-label="Files of this publication" tabIndex={0}>
         <table>
-          <caption>Files of the {b.manifest.periodId} demo publication, with their SHA-256 digests and sizes.</caption>
+          <DemoCaption>Files of the {b.manifest.periodId} demo publication, with their SHA-256 digests and sizes.</DemoCaption>
           <thead>
             <tr>
               <th scope="col">File</th>

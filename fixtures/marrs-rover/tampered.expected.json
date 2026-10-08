@@ -1,6 +1,6 @@
 {
   "demoLabel": "Demo data — not VT Infinite's financial records.",
-  "bundle": "tampered/5088d7d5d133b9fb2ee0bbcd60879a2dee52f704dfeb2bb37f245be974b314c5",
+  "bundle": "tampered/7986bc37de829a3875ca8cbc6c1177b4d7c79462502aeb4e17ab80a3e194db8a",
   "change": "register.jsonl line 12: amountMinorUnits and deltaMinorUnits 200000 -> 20000",
   "exitCode": 1,
   "bundleValid": false,

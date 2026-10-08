@@ -2,6 +2,7 @@ import { parseMinor } from "@/packages/ledger-proof/src/arithmetic.ts";
 import type { PublicEvent } from "@/packages/ledger-proof/src/types.ts";
 import { DEMO_ENTITY_ID } from "@/lib/flags";
 import { listBundles, loadBundle, type BundleRef } from "./bundles";
+import { formatMovement } from "./format";
 import type { BundleResult, FailedBundle, LoadedBundle } from "./types";
 
 /**
@@ -215,6 +216,18 @@ export function netByCurrency(events: PublicEvent[]): Map<string, bigint> {
   const out = new Map<string, bigint>();
   for (const e of events) for (const l of e.cashLegs) out.set(l.currency, (out.get(l.currency) ?? 0n) + parseMinor(l.deltaMinorUnits));
   return new Map([...out].sort(([a], [b]) => (a < b ? -1 : 1)));
+}
+
+/**
+ * An event's cash movement in words, per currency. A single-currency event
+ * reads "$450.00 out"; an event whose legs span currencies gets one figure
+ * per currency, never one sum labelled with the first leg's currency.
+ */
+export function eventMovement(e: PublicEvent, exponents: Record<string, number>): string {
+  const per = [...netByCurrency([e])];
+  if (per.length === 0) return "no cash movement";
+  if (per.length === 1) return formatMovement(per[0]![1], per[0]![0], exponents);
+  return per.map(([c, n]) => `${formatMovement(n, c, exponents)} (${c})`).join("; ");
 }
 
 /** Query string for a filter state, dropping empty values. */

@@ -38,7 +38,7 @@ describe("flagged features return 404 when off", () => {
 });
 
 describe("public routes pass", () => {
-  it.each(["/", "/governance", "/marrs-rover", "/marrs-rover/method", "/marrs-rover/verify", "/marrs-rover/demo/periods/q1", "/marrs-rover/reviews/demo-1", "/vibes", "/words/feed.xml"])(
+  it.each(["/", "/governance", "/marrs-rover", "/marrs-rover/method", "/marrs-rover/verify", "/marrs-rover/verifier/marrs-rover-verifier.tar", "/marrs-rover/demo/bundles/x/register.csv", "/marrs-rover/demo/periods/q1", "/marrs-rover/reviews/demo-1", "/vibes", "/words/feed.xml"])(
     "%s",
     (path) => expect(decide(path, OFF)).toEqual({ action: "pass" }),
   );

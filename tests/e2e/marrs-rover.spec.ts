@@ -3,10 +3,11 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { buildVerifierArchive, VERIFIER_ARCHIVE_PATH } from "@/lib/marrs-rover/verifier-archive";
 import { DEMO_LABEL } from "@/packages/ledger-proof/src/constants.ts";
 
 /** Stage 4b: the Marrs Rover explorer over the sealed synthetic MR-48 bundle. Demo data only. */
-const DIGEST = "5088d7d5d133b9fb2ee0bbcd60879a2dee52f704dfeb2bb37f245be974b314c5";
+const DIGEST = "7986bc37de829a3875ca8cbc6c1177b4d7c79462502aeb4e17ab80a3e194db8a";
 const FIXTURE = `fixtures/marrs-rover/bundles/demo/2000-Q1/${DIGEST}`;
 const PERIOD = "/marrs-rover/demo/periods/2000-Q1";
 const ROVER_PAGES = [
@@ -126,6 +127,19 @@ test.describe("downloads (MR-30, MR-31)", () => {
       expect((await request.get(path)).status(), path).toBe(404);
     }
   });
+});
+
+test("the verifier download equals a fresh build, and the Verify page shows the served file's SHA-256 (D1)", async ({ page, request }) => {
+  const res = await request.get(VERIFIER_ARCHIVE_PATH);
+  expect(res.status()).toBe(200);
+  expect(res.headers()["content-disposition"]).toBe('attachment; filename="marrs-rover-verifier.tar"');
+  const served = await res.body();
+  expect(served.equals(Buffer.from(buildVerifierArchive()))).toBe(true);
+  const sha = createHash("sha256").update(served).digest("hex");
+  await page.goto("/marrs-rover/verify");
+  await expect(page.getByRole("main")).toContainText(sha);
+  await expect(page.getByRole("main")).toContainText(`${served.length.toLocaleString("en-US")} bytes`);
+  await expect(page.getByRole("link", { name: "marrs-rover-verifier.tar" })).toHaveAttribute("href", VERIFIER_ARCHIVE_PATH);
 });
 
 test("Home, Code and the footer point to the explorer with the approved demo wording (MR-2)", async ({ page }) => {

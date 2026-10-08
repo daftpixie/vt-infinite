@@ -33,14 +33,26 @@ describe("repo guards fire", () => {
 
 describe("real-money-tense (copy)", () => {
   it.each([
+    // The reviewer's cases (7 Oct 2026): a "not", "no" or "will" elsewhere in the sentence does not excuse the money clause.
+    "VT Infinite holds $40,000, not counting grants.",
+    "VT Infinite's revenue is $3,000 this quarter, with no debt.",
+    "VT Infinite now has $40,000 in the bank and will spend it.",
+    "VT Infinite received $10,000 from a sample donor.",
+    "VT Infinite has 12,000 dollars in reserve.",
+    "VT Infinite is funded by its founder.",
     "VT Infinite spends $4,000.00 a month on hosting.",
     "VT Infinite's cash balance is $12,000.00.",
-    "VT Infinite holds two restricted grants.",
     "Here VT Infinite's finances are public.",
+    "$40,000 sits with VT Infinite today.",
   ])("fires: %s", (text) => {
     expect(rules(text, ["copy"])).toContain("real-money-tense");
   });
   it.each([
+    "VT Infinite's accounts are open to anyone who asks.",
+    "VT Infinite pays its contributors fairly.",
+    "VT Infinite will publish its accounts once they are reviewed.",
+    "VT Infinite has no real figures here; this is a demo.",
+    "VT Infinite will spend $5,000.00 on hosting next year.",
     "Demo data — not VT Infinite's financial records.",
     "Explore the working demo. Sample finances, not VT Infinite's accounts.",
     "See how Marrs Rover will show where resources go, starting with a labeled demo.",

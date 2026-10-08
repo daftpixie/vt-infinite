@@ -12,7 +12,7 @@ Never commit the PRD or brand reference, copy files from where they are kept, na
 
 ## Stage
 
-Stages 1 to 4a, with their follow-ups, are merged. Stage 4b (the Marrs Rover explorer pages over the synthetic MR-48 bundle) is in review. Do not start stage 5 (cutover) until Matthew says so.
+Stages 1 to 4b are merged. The stage 4 follow-ups (verifier download, re-sealed MR-48 fixture, label and guard fixes) are in review. Do not start stage 5 (cutover) until Matthew says so.
 
 ## Working here
 

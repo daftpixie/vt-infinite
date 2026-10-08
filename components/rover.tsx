@@ -9,7 +9,7 @@ import {
   readable,
   restrictionLabel,
 } from "@/lib/marrs-rover/explorer";
-import { day, formatAmount, formatSigned, utcTime } from "@/lib/marrs-rover/format";
+import { day, formatAmount, formatMovement, formatSigned, utcTime } from "@/lib/marrs-rover/format";
 import type { FailedBundle, LoadedBundle } from "@/lib/marrs-rover/types";
 
 /**
@@ -23,6 +23,15 @@ export { DEMO_LABEL };
 export function roverMetadata(title: string, description?: string): Metadata {
   const full = description ? `${DEMO_LABEL} ${description}` : DEMO_LABEL;
   return { title: `${title} (demo)`, description: full, other: { "marrs-rover-environment": "synthetic-demo" } };
+}
+
+/** Every table caption carries the full MR-5 label (ADR 0005), after its own description. */
+export function DemoCaption({ children }: { children: ReactNode }) {
+  return (
+    <caption>
+      {children} <span data-demo-label>{DEMO_LABEL}</span>
+    </caption>
+  );
 }
 
 export function DemoLabel() {
@@ -128,9 +137,9 @@ export function PlainMeaning({ bundle: b, headingLevel = 2 }: { bundle: LoadedBu
       {b.summary.currencies.map((c) => (
         <div key={c.currency} className="table-scroll" role="region" aria-label={`Money movement in ${c.currency}`} tabIndex={0}>
           <table>
-            <caption>
+            <DemoCaption>
               Cash movement in {c.currency}, {b.manifest.periodId}, computed from the full register. Loan proceeds are financing, not income.
-            </caption>
+            </DemoCaption>
             <thead>
               <tr>
                 <th scope="col">Line</th>
@@ -146,9 +155,9 @@ export function PlainMeaning({ bundle: b, headingLevel = 2 }: { bundle: LoadedBu
                 ["Received, financing (not income)", formatAmount(c.receipts.financing, c.currency, x)],
                 ["Paid out, operating", formatAmount(c.disbursements.operating, c.currency, x)],
                 ["Paid out, financing", formatAmount(c.disbursements.financing, c.currency, x)],
-                ["Reversals, net", formatSigned(c.reversalsNet, c.currency, x)],
-                ["Internal transfers, net (always zero)", formatSigned(c.transfers.internalNet, c.currency, x)],
-                ["Transfers across the scope boundary, net", formatSigned(c.transfers.boundaryNet, c.currency, x)],
+                ["Reversals, net", formatMovement(c.reversalsNet, c.currency, x)],
+                ["Internal transfers, net (always zero)", formatMovement(c.transfers.internalNet, c.currency, x)],
+                ["Transfers across the scope boundary, net", formatMovement(c.transfers.boundaryNet, c.currency, x)],
                 ["Cash at the end", formatSigned(c.closing, c.currency, x)],
               ].map(([k, v]) => (
                 <tr key={k}>

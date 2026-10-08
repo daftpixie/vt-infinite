@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { connection } from "next/server";
-import { Placeholder } from "@/components/Placeholder";
 import { filePath, Hash, periodPath, RoverShell, roverMetadata, Withheld } from "@/components/rover";
 import { defaultSelection, periodBundles, publications } from "@/lib/marrs-rover/explorer";
+import { VERIFIER_ARCHIVE_NAME, VERIFIER_ARCHIVE_PATH, verifierArchive } from "@/lib/marrs-rover/verifier-archive";
 import { EXPECTED_VERIFIER_RUN } from "@/lib/marrs-rover/verifier-output";
 import { siteUrl } from "@/lib/site";
 
@@ -20,7 +20,9 @@ export default async function VerifyPage() {
   const b = sel ? periodBundles(pubs, sel.entityId, sel.periodId)[0] : undefined;
   const base = siteUrl();
   const download = b ? [`mkdir ${b.digest}`, `cd ${b.digest}`, ...b.files.map((f) => `curl -fsSO ${base}${filePath(b, f.path)}`), "cd .."].join("\n") : "";
-  const run = b ? `node <verifier folder>/verify.mjs ${b.digest} --expect ${b.digest}` : "";
+  const run = b ? `node ledger-verifier/verify.mjs ${b.digest} --expect ${b.digest}` : "";
+  const archive = verifierArchive();
+  const getVerifier = [`curl -fsSO ${base}${VERIFIER_ARCHIVE_PATH}`, `sha256sum ${VERIFIER_ARCHIVE_NAME}`, `tar -xf ${VERIFIER_ARCHIVE_NAME}`].join("\n");
   const expected = b && b.digest === EXPECTED_VERIFIER_RUN.digest ? EXPECTED_VERIFIER_RUN.output : null;
 
   return (
@@ -34,17 +36,30 @@ export default async function VerifyPage() {
         <p>No demo publication can be shown at the moment, so there is nothing to download.</p>
       ) : (
         <>
-          <h2>01 / 05 What you need</h2>
+          <h2>01 / 06 What you need</h2>
           <ul>
             <li>Node.js 22 or later.</li>
-            <li>A terminal, and curl (included with macOS, Windows 10 and later, and most Linux systems).</li>
-            <li>
-              The verifier: the <code>tools/ledger-verifier</code> folder of the vt-infinite repository. It has no dependencies, so the folder alone is enough.{" "}
-              <Placeholder id="roverVerifierSource" inline />
-            </li>
+            <li>A terminal, with curl and tar (both included with macOS, Windows 10 and later, and most Linux systems).</li>
+            <li>An empty folder to work in. Run every command below from it.</li>
           </ul>
 
-          <h2>02 / 05 Download the publication</h2>
+          <h2>02 / 06 Download the verifier and check it</h2>
+          <p>
+            The verifier is a small program in plain JavaScript with no dependencies, licensed under Apache-2.0 (the license is in the download). It comes as one
+            archive, <a href={VERIFIER_ARCHIVE_PATH}>{VERIFIER_ARCHIVE_NAME}</a> ({archive.size.toLocaleString("en-US")} bytes), whose SHA-256 is{" "}
+            <Hash value={archive.sha256} />. The archive is rebuilt from the same source the same way every time, so this value changes only when the verifier
+            changes.
+          </p>
+          <pre className="code-block" tabIndex={0} aria-label="Verifier download commands">
+            <code>{getVerifier}</code>
+          </pre>
+          <p>
+            Before you extract it, the SHA-256 the second command prints must equal the value above. On macOS use <code>shasum -a 256</code>; in PowerShell,{" "}
+            <code>Get-FileHash -Algorithm SHA256</code>. A match shows the file is the one this site serves, undamaged. It does not show that the program is
+            trustworthy: for that, read its source, which is short and in the <code>ledger-verifier</code> folder the third command creates.
+          </p>
+
+          <h2>03 / 06 Download the publication</h2>
           <p>
             The demo publication for {b.manifest.periodId} lives at an address named for its manifest&rsquo;s SHA-256, <Hash value={b.digest} />. These commands make
             a folder with that name and download every file into it, unchanged. The files are also listed, with their digests, on the{" "}
@@ -57,7 +72,7 @@ export default async function VerifyPage() {
             On Windows, run the same commands in PowerShell with <code>curl.exe</code> in place of <code>curl</code>.
           </p>
 
-          <h2>03 / 05 Check which publication you have</h2>
+          <h2>04 / 06 Check which publication you have</h2>
           <p>The folder&rsquo;s name is a claim. Check it: the SHA-256 of the manifest must equal it.</p>
           <pre className="code-block" tabIndex={0} aria-label="Digest command">
             <code>{`sha256sum ${b.digest}/manifest.json`}</code>
@@ -67,8 +82,8 @@ export default async function VerifyPage() {
             that value from somewhere other than this site, such as a publication receipt, compare against that instead.
           </p>
 
-          <h2>04 / 05 Run the verifier</h2>
-          <p>From the folder that holds the downloaded publication, replacing &lt;verifier folder&gt; with where you put the verifier:</p>
+          <h2>05 / 06 Run the verifier</h2>
+          <p>From the same folder, which now holds both the <code>ledger-verifier</code> folder and the publication&rsquo;s folder:</p>
           <pre className="code-block" tabIndex={0} aria-label="Verifier command">
             <code>{run}</code>
           </pre>
@@ -77,7 +92,7 @@ export default async function VerifyPage() {
             files agree with each other.
           </p>
 
-          <h2>05 / 05 Read the result</h2>
+          <h2>06 / 06 Read the result</h2>
           {expected ? (
             <>
               <p>For this demo publication, the verifier prints exactly this and exits with status 0:</p>

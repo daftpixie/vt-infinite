@@ -90,9 +90,38 @@ const WRONG_NAMES = [
   [/\bAgent OS\b/g, "agentOS"],
 ];
 
-// Present-tense money verbs and states, for the real-money-tense rule.
-const REAL_MONEY_VERB = /\b(?:spends|receives|holds|pays|earns|owes|banks|has (?:spent|received|paid|earned|raised))\b/i;
-const REAL_MONEY_STATE = /\b(?:balance|balances|cash|funds|revenue|income|spending|finances|accounts) (?:is|are|stands at|total|totals)\b/i;
+// The real-money-tense rule. A money clause is an amount, a funding phrase or
+// a money state ("revenue is", "in the bank"). It is excused only when a
+// negation or future word sits between "VT Infinite" and that clause, so the
+// word governs it: "VT Infinite will spend $5" passes, while "VT Infinite
+// holds $40,000, not counting grants" fails, because its "not" comes after.
+const MONEY_CLAUSE = new RegExp(
+  [
+    String.raw`\$\s?\d`,
+    String.raw`\b\d[\d,]*(?:\.\d+)?\s?(?:dollars|USD)\b`,
+    String.raw`\b(?:is|are|was|were)\s+(?:funded|financed|paid for)\b`,
+    String.raw`\bfunded by\b`,
+    String.raw`\b(?:balance|balances|cash|funds|revenue|revenues|income|spending|finances|budget)\s+(?:is|are|stands at|stand at|totals?)\b`,
+    String.raw`\bin the bank\b`,
+    String.raw`\bin reserve\b`,
+  ].join("|"),
+  "gi",
+);
+const GOVERNING = /\b(?:not|no|never|nothing|none|will|would|shall|won['’]t|isn['’]t|aren['’]t|doesn['’]t|don['’]t|hasn['’]t|haven['’]t)\b/i;
+
+/** True when a sentence names VT Infinite and states a money clause that no negation or future word governs. */
+export function presentTenseRealMoney(sentence) {
+  const subjects = [...sentence.matchAll(/\bVT Infinite\b/g)];
+  const clauses = [...sentence.matchAll(MONEY_CLAUSE)];
+  return subjects.some((s) =>
+    clauses.some((c) => {
+      const sEnd = s.index + s[0].length;
+      const cEnd = c.index + c[0].length;
+      const between = c.index >= sEnd ? sentence.slice(sEnd, c.index) : sentence.slice(cEnd, s.index);
+      return !GOVERNING.test(between);
+    }),
+  );
+}
 
 const INITIATIVES = /\b(?:OneRhythm|MIRmade|abl8)\b/i;
 const CLINICAL = /\b(?:diagnos(?:e|es|ed|ing|is)|detect(?:s|ed|ing)?|treat(?:s|ed|ing|ment)?|prevent(?:s|ed|ing)?)\b/i;
@@ -256,15 +285,10 @@ export const RULES = [
     id: "real-money-tense",
     scope: "copy",
     description:
-      "No present-tense statement about VT Infinite's real money while Marrs Rover shows only demo data (PRD MR-5, MR-7, MR-8; kickoff copy rules). A sentence that negates, looks ahead or names the demo passes.",
+      "No present-tense statement about VT Infinite's real money while Marrs Rover shows only demo data (PRD MR-5, MR-7, MR-8; kickoff copy rules). Negation or future tense excuses a money clause only when it governs that clause.",
     check: (t) =>
       sentences(t)
-        .filter(
-          (s) =>
-            /\bVT Infinite\b/.test(s) &&
-            (REAL_MONEY_VERB.test(s) || REAL_MONEY_STATE.test(s) || /\$\s?\d/.test(s)) &&
-            !/\b(?:not|no|never|nothing|will|would|demo|synthetic|sample|fictional)\b/i.test(s),
-        )
+        .filter(presentTenseRealMoney)
         .map((s) => ({ match: s.slice(0, 160), message: "Use demo or future wording; never present tense about real money." })),
   },
   {

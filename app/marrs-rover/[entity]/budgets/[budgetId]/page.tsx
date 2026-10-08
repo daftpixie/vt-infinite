@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { periodPath, PlainMeaning, RoverShell, roverMetadata, StateFields } from "@/components/rover";
+import { DemoCaption, periodPath, PlainMeaning, RoverShell, roverMetadata, StateFields } from "@/components/rover";
 import { DEMO_ENTITY_ID, isEnabled } from "@/lib/flags";
 import { findBudget, netDisbursed, publications, readable, restrictionLabel } from "@/lib/marrs-rover/explorer";
 import { day, formatAmount } from "@/lib/marrs-rover/format";
@@ -11,7 +11,7 @@ type Params = { entity: string; budgetId: string };
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { budgetId } = await params;
-  return roverMetadata(`Budget ${readable(budgetId.slice(0, 40))}`, "One synthetic approved budget, its amendments and its variance.");
+  return roverMetadata(`Budget ${budgetId.slice(0, 64)}`, "One synthetic approved budget, its amendments and its variance.");
 }
 
 /** Budget (PRD MR-13): approved version, approval, responsible role, restrictions, amendments and variance. */
@@ -27,7 +27,7 @@ export default async function BudgetPage({ params }: { params: Promise<Params> }
   const first = approval(g.approvalRef);
 
   return (
-    <RoverShell title={`Demo budget: ${readable(g.budgetId)}`}>
+    <RoverShell title={`Demo budget ${g.budgetId}`}>
       <p>
         <Link href={periodPath(b)}>Back to period {b.manifest.periodId}</Link>
       </p>
@@ -52,9 +52,9 @@ export default async function BudgetPage({ params }: { params: Promise<Params> }
 
       <div className="table-scroll" role="region" aria-label="Budget lines" tabIndex={0}>
         <table>
-          <caption>
+          <DemoCaption>
             Version {g.version} budget lines against net amounts paid out in {b.manifest.periodId}, computed from the full register ({g.currency}).
-          </caption>
+          </DemoCaption>
           <thead>
             <tr>
               <th scope="col">Category</th>

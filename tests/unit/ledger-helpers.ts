@@ -4,7 +4,7 @@ import { join } from "node:path";
 import type { PublicEvent } from "@/packages/ledger-proof/src/types.ts";
 
 /** The frozen MR-48 bundle (fixtures/marrs-rover/README.md). */
-export const MR48_DIGEST = "5088d7d5d133b9fb2ee0bbcd60879a2dee52f704dfeb2bb37f245be974b314c5";
+export const MR48_DIGEST = "7986bc37de829a3875ca8cbc6c1177b4d7c79462502aeb4e17ab80a3e194db8a";
 export const MR48_DIR = `fixtures/marrs-rover/bundles/demo/2000-Q1/${MR48_DIGEST}`;
 export const TAMPERED_DIR = `fixtures/marrs-rover/tampered/${MR48_DIGEST}`;
 export const BOOKS = "tools/ledger-exporter/demo/books.synthetic.json";
