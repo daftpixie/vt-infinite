@@ -219,6 +219,8 @@ test.describe("the landing page", () => {
 type Layout = { lefts: number[]; tops: number[]; heights: number[]; lineHeight: number; fontSize: number; scroll: number; client: number };
 
 async function layout(page: Page): Promise<Layout> {
+  // Measure the layout a reader settles on: with the web font, not the fallback it replaces.
+  await page.evaluate(async () => void (await document.fonts.load(`1rem "JetBrains Mono"`)));
   return page.evaluate(() => {
     const items = [...document.querySelectorAll<HTMLElement>(".acrostic-list > li .acrostic-text")];
     const r = items.map((el) => el.getBoundingClientRect());
@@ -411,6 +413,7 @@ test.describe("text size and spacing", () => {
   test("at 360 px with WCAG 1.4.12 text spacing the row holds, columns do not overlap and nothing scrolls sideways", async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 900 });
     await page.goto("/");
+    await page.evaluate(async () => void (await document.fonts.load(`1rem "JetBrains Mono"`)));
     await page.addStyleTag({ content: "* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; } p { margin-bottom: 2em !important; }" });
     const boxes = await page.locator(".acrostic-list > li .acrostic-text").evaluateAll((els) => els.map((el) => ({ left: el.getBoundingClientRect().left, right: el.getBoundingClientRect().right, top: el.getBoundingClientRect().top, item: el.parentElement!.getBoundingClientRect().right })));
     expect(new Set(boxes.map((b) => Math.round(b.top))).size).toBe(1);
