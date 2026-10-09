@@ -6,6 +6,12 @@ const PORT = Number(process.env.E2E_PORT ?? 3100);
 const PLAN_PORT = PORT + 1;
 /** A third server in landing mode (SITE_MODE=landing), every flag off. */
 const LANDING_PORT = PORT + 2;
+/**
+ * A fourth: a landing build made with the proxy switched off
+ * (`npm run build:noproxy`, into .next-noproxy), so the route-level gate is
+ * tested on its own (tests/e2e/landing-noproxy.spec.ts).
+ */
+const NOPROXY_PORT = PORT + 3;
 
 // Every feature flag, and the site mode, is explicitly unset for the server
 // under test, so the suite proves the default-off behavior rather than
@@ -71,6 +77,13 @@ export default defineConfig({
       reuseExistingServer: false,
       timeout: 120_000,
       env: { ...serverEnv, SITE_MODE: "landing" },
+    },
+    {
+      command: `npx next start -p ${NOPROXY_PORT} -H 127.0.0.1`,
+      url: `http://127.0.0.1:${NOPROXY_PORT}/`,
+      reuseExistingServer: false,
+      timeout: 120_000,
+      env: { ...serverEnv, SITE_MODE: "landing", VT_TEST_BUILD_WITHOUT_PROXY: "1" },
     },
   ],
 });

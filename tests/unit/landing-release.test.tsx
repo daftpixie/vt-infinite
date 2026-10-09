@@ -67,6 +67,7 @@ describe("landing release gate (L3)", () => {
     expect(s["/"]).toContain("Heart. Mind. Hands.");
     expect(s["/"]).not.toContain('aria-label="Primary"');
     expect(s["/privacy"]).toContain("<h1>Privacy notice</h1>");
+    expect(s["/privacy"]).toContain("Version landing-1");
   });
 
   it("sees a placeholder wherever one renders, block or inline", () => {
@@ -81,11 +82,9 @@ describe("landing release gate (L3)", () => {
     expect(placeholderIds(html)).toEqual([id, id]);
   });
 
-  // The known gap today: the privacy notice (R14) is not yet written, so a
-  // landing build fails. When the notice replaces the placeholder this
-  // becomes {}.
-  it("finds exactly the outstanding gaps: the privacy notice", async () => {
-    expect(found(await landingSurfaces())).toEqual({ "/privacy": ["landingPrivacyNotice"] });
+  // The landing privacy notice ("landing-1") closed the last gap.
+  it("finds no outstanding gaps", async () => {
+    expect(found(await landingSurfaces())).toEqual({});
   });
 
   it.runIf(LANDING_HERE)("with SITE_MODE=landing, no placeholder renders on any landing route", async () => {
@@ -111,9 +110,15 @@ describe("the release check script", () => {
   });
 
   // Runs this file again with SITE_MODE=landing, so not from inside that run.
-  it.skipIf(LANDING_HERE)("with SITE_MODE=landing fails the build while a placeholder would render", () => {
+  it.skipIf(LANDING_HERE)("with SITE_MODE=landing passes now that no placeholder renders", () => {
     const r = run({ SITE_MODE: "landing" });
-    expect(r.status).toBe(1);
-    expect(r.stderr).toContain("release check: landing release: FAILED.");
+    expect(r.status, r.stderr).toBe(0);
+    expect(r.stdout).toContain("release check: landing release: passed.");
   }, 120_000);
+
+  it("refuses the test-only no-proxy build on Vercel", () => {
+    const r = run({ VT_TEST_BUILD_WITHOUT_PROXY: "1", VERCEL: "1" });
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain("must never be set on Vercel");
+  });
 });

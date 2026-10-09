@@ -12,6 +12,7 @@
     "dev": "next dev",
     "prebuild": "node scripts/check-release.mjs",
     "build": "next build",
+    "build:noproxy": "SITE_MODE=landing VT_TEST_BUILD_WITHOUT_PROXY=1 npm run build",
     "start": "next start",
     "lint": "eslint --max-warnings=0 .",
     "typecheck": "next typegen && tsc --noEmit",
@@ -20,7 +21,7 @@
     "guard": "node scripts/guard.mjs",
     "secrets": "secretlint --maskSecrets \"**/*\"",
     "ledger": "node scripts/ledger-release-check.mjs",
-    "verify": "npm run lint && npm run typecheck && npm run test && npm run guard && npm run secrets && npm run ledger && npm run build && npm run test:e2e",
+    "verify": "npm run lint && npm run typecheck && npm run test && npm run guard && npm run secrets && npm run ledger && npm run build && npm run build:noproxy && npm run test:e2e",
     "prepare": "husky",
     "refresh": "node scripts/refresh.mjs"
   },

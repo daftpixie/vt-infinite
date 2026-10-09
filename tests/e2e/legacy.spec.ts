@@ -9,6 +9,8 @@ test.describe("old URL table (PRD DN-6)", () => {
       const res = await request.get(from!, { maxRedirects: 0 });
       expect(res.status()).toBe(308);
       expect(res.headers()["location"]).toBe(to);
+      // Answered by the proxy (lib/access.ts) since 5L-2; the query is kept, as before.
+      expect((await request.get(`${from}?ref=x`, { maxRedirects: 0 })).headers()["location"]).toBe(`${to}?ref=x`);
     });
   }
 

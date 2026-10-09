@@ -9,6 +9,7 @@ import { fullSiteOnly } from "@/lib/mode-gate";
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  fullSiteOnly();
   await connection();
   const entry = findRecord((await params).slug);
   // The document title and meta description cannot carry the crisis block, so

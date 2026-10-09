@@ -34,8 +34,9 @@ export function LandingPage() {
         <BrandLockup />
       </h1>
 
-      <section className="acrostic" aria-labelledby="acrostic-heading">
-        <h2 id="acrostic-heading" className="visually-hidden">
+      {/* A div, not a labelled section: the hidden heading is the one announcement of "Heart. Mind. Hands.". */}
+      <div className="acrostic">
+        <h2 className="visually-hidden">
           {heading}
         </h2>
         {/* role="list" keeps list semantics in Safari, which drops them when list-style is none. */}
@@ -44,11 +45,13 @@ export function LandingPage() {
             <AcrosticColumn key={item.across} item={item} />
           ))}
         </ol>
-      </section>
+      </div>
 
-      <p className="motto">{LANDING.motto}</p>
+      <p className="motto" lang={LANDING.mottoLang}>
+        {LANDING.motto}
+      </p>
 
-      <ul className="landing-links">
+      <ul className="landing-links" role="list">
         {LANDING.links.map((l) => (
           <li key={l.href}>
             <ExternalLink href={l.href}>{l.label}</ExternalLink>

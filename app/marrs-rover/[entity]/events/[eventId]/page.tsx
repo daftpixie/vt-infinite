@@ -22,6 +22,7 @@ import { fullSiteOnly } from "@/lib/mode-gate";
 type Params = { entity: string; eventId: string };
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
+  fullSiteOnly();
   const { eventId } = await params;
   return roverMetadata(`Event ${eventId.slice(0, 8)}`, "One synthetic financial event, its purpose, approvals, corrections and inclusion proof.");
 }

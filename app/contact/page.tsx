@@ -4,7 +4,10 @@ import { PageShell } from "@/components/PageShell";
 import { Placeholder } from "@/components/Placeholder";
 import { fullSiteOnly } from "@/lib/mode-gate";
 
-export const metadata: Metadata = { title: "Contact" };
+export function generateMetadata(): Metadata {
+  fullSiteOnly();
+  return { title: "Contact" };
+}
 
 export default function ContactPage() {
   fullSiteOnly();

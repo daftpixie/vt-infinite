@@ -8,7 +8,10 @@ import { readAllPublications } from "@/lib/streams/service";
 import { buildWordsEntries } from "@/lib/words";
 import { fullSiteOnly } from "@/lib/mode-gate";
 
-export const metadata: Metadata = { title: "Words" };
+export function generateMetadata(): Metadata {
+  fullSiteOnly();
+  return { title: "Words" };
+}
 
 /**
  * Publication streams and approved local essays, newest first, with a

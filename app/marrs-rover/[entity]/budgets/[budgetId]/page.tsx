@@ -11,6 +11,7 @@ import { fullSiteOnly } from "@/lib/mode-gate";
 type Params = { entity: string; budgetId: string };
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
+  fullSiteOnly();
   const { budgetId } = await params;
   return roverMetadata(`Budget ${budgetId.slice(0, 64)}`, "One synthetic approved budget, its amendments and its variance.");
 }

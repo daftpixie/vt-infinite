@@ -6,7 +6,10 @@ import { Placeholder } from "@/components/Placeholder";
 import { isEnabled } from "@/lib/flags";
 import { fullSiteOnly } from "@/lib/mode-gate";
 
-export const metadata: Metadata = { title: "Agency" };
+export function generateMetadata(): Metadata {
+  fullSiteOnly();
+  return { title: "Agency" };
+}
 
 export default async function AgencyPage() {
   await connection();

@@ -44,8 +44,9 @@ npm run guard          # copy, claim, private-identifier and secret guards
 npm run secrets        # secretlint
 npm run ledger         # Marrs Rover: privacy scan, verifier accepts the synthetic bundle and rejects the tampered one, golden vectors
 npm run build          # production build
+npm run build:noproxy  # test-only landing build with the proxy off, into .next-noproxy
 npx playwright install chromium   # once
-npm run test:e2e       # builds must exist; starts `next start` on port 3100
+npm run test:e2e       # both builds must exist; starts `next start` on ports 3100 to 3103
 ```
 
 `npm run verify` runs all of them in order. On a machine with Chromium already installed, set `PW_CHROMIUM_EXECUTABLE` to its path instead of downloading one.
@@ -68,7 +69,9 @@ Server-side only. A flag is on only when its variable is exactly `true`; unset m
 
 ## Site mode
 
-`SITE_MODE` unset (or `full`) is the full build. `SITE_MODE=landing` is the landing release: `/`, `/privacy`, `/robots.txt`, `/sitemap.xml` and the favicon answer; every other route answers 404, both in `proxy.ts` and in the route itself, and the scheduled refresh does nothing. Retired paths still answer 410. Any other value is refused by the build and treated as `landing` at request time. Set it for the build and the runtime alike. A landing build fails while any placeholder would render on a landing route (`scripts/check-release.mjs`). See `docs/adr/0006-landing-mode.md`; the copy and links are in `content/landing.json`.
+`SITE_MODE` unset (or `full`) is the full build. `SITE_MODE=landing` is the landing release: `/`, `/privacy`, `/robots.txt`, `/sitemap.xml`, the favicon and the two font files answer; every other route answers 404, both in `proxy.ts` and in the route itself, and the scheduled refresh does nothing. Retired paths still answer 410; the old redirects answer 404. `/` and `/privacy` are indexable; everything else keeps `noindex`. Any other value is refused by the build and treated as `landing` at request time. Set it for the build and the runtime alike. A landing build fails while any placeholder would render on a landing route (`scripts/check-release.mjs`). See `docs/adr/0006-landing-mode.md` and `docs/adr/0007-landing-follow-ups.md`; the copy and links are in `content/landing.json`; the privacy notice is `components/landing/PrivacyNotice.tsx` (`docs/adr/0008-landing-privacy-notice.md`).
+
+`VT_TEST_BUILD_WITHOUT_PROXY=1` is test-only (`npm run build:noproxy`): it builds with the proxy switched off so the end-to-end suite can test the route-level gate alone. Its value is fixed into the build, and the release check refuses it on Vercel. Never set it in a deployment.
 
 Storage and upstream reads (server-side only):
 

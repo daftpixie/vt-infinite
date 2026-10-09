@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Placeholder } from "@/components/Placeholder";
@@ -5,7 +6,10 @@ import { periodPath, PlainMeaning, reviewPath, RoverShell, roverMetadata, StateF
 import { defaultSelection, entities, periodBundles, periods, publications } from "@/lib/marrs-rover/explorer";
 import { fullSiteOnly } from "@/lib/mode-gate";
 
-export const metadata = roverMetadata("Marrs Rover Block Explorer", "Overview of the synthetic demo publication.");
+export function generateMetadata(): Metadata {
+  fullSiteOnly();
+  return roverMetadata("Marrs Rover Block Explorer", "Overview of the synthetic demo publication.");
+}
 
 type Query = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";

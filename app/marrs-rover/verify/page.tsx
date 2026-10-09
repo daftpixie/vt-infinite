@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { filePath, Hash, periodPath, RoverShell, roverMetadata, Withheld } from "@/components/rover";
@@ -7,7 +8,10 @@ import { EXPECTED_VERIFIER_RUN } from "@/lib/marrs-rover/verifier-output";
 import { siteUrl } from "@/lib/site";
 import { fullSiteOnly } from "@/lib/mode-gate";
 
-export const metadata = roverMetadata("Verify a Marrs Rover publication", "How to check a synthetic demo publication yourself with the standalone verifier.");
+export function generateMetadata(): Metadata {
+  fullSiteOnly();
+  return roverMetadata("Verify a Marrs Rover publication", "How to check a synthetic demo publication yourself with the standalone verifier.");
+}
 
 /**
  * Verify (PRD MR-14, MR-34): how to download a bundle and check it with the

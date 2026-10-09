@@ -8,7 +8,10 @@ import { readRepos } from "@/lib/code/repos";
 import { formatDate } from "@/lib/content/dates";
 import { fullSiteOnly } from "@/lib/mode-gate";
 
-export const metadata: Metadata = { title: "Code" };
+export function generateMetadata(): Metadata {
+  fullSiteOnly();
+  return { title: "Code" };
+}
 
 /**
  * Approved public repositories only, each confirmed public at read time
