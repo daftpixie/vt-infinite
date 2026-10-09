@@ -1,0 +1,18 @@
+{
+  "note": "Landing release copy and links (SITE_MODE=landing). Checked by lib/landing.ts at build time. A publication's href stays on its substack.com address until its custom domain is verified in Substack; then replace href with the customDomain value.",
+  "acrostic": [
+    { "across": "Heart", "down": ["defines", "the", "purpose."] },
+    { "across": "Mind", "down": ["defines", "the", "method."] },
+    { "across": "Hands", "down": ["build", "the", "hope."] }
+  ],
+  "motto": "ad astra per aspera",
+  "links": [
+    { "label": "The Human Butterfly", "href": "https://everydecimal.substack.com", "customDomain": "https://www.thehumanbutterfly.dev" },
+    { "label": "Incentive Eyes", "href": "https://incentiveeyes.substack.com", "customDomain": "https://incentiveeyes.vt-infinite.com" },
+    { "label": "The VT Infinite Discord", "href": "https://discord.gg/zkdFVqG4Gz" }
+  ],
+  "signupClosed": "Updates sign-up opens soon",
+  "legalName": "VT Infinite, Inc.",
+  "contactEmail": "matthew@vt-infinite.com",
+  "privacyLabel": "Privacy notice"
+}

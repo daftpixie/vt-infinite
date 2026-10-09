@@ -6,6 +6,7 @@ import { PageShell } from "@/components/PageShell";
 import { Placeholder } from "@/components/Placeholder";
 import { readRepos } from "@/lib/code/repos";
 import { formatDate } from "@/lib/content/dates";
+import { fullSiteOnly } from "@/lib/mode-gate";
 
 export const metadata: Metadata = { title: "Code" };
 
@@ -15,6 +16,7 @@ export const metadata: Metadata = { title: "Code" };
  */
 export default async function CodePage() {
   await connection();
+  fullSiteOnly();
   const repos = await readRepos();
   return (
     <PageShell title="Code">

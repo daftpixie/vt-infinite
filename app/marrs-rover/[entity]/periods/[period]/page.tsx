@@ -29,6 +29,7 @@ import {
 } from "@/lib/marrs-rover/explorer";
 import { day, formatAmount, formatMovement, formatSigned } from "@/lib/marrs-rover/format";
 import type { LoadedBundle } from "@/lib/marrs-rover/types";
+import { fullSiteOnly } from "@/lib/mode-gate";
 
 type Params = { entity: string; period: string };
 type Query = Record<string, string | string[] | undefined>;
@@ -42,6 +43,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
 /** Reporting period (PRD MR-10, MR-11): balances, budgets, reconciliation, exceptions, corrections, register and files. */
 export default async function PeriodPage({ params, searchParams }: { params: Promise<Params>; searchParams: Promise<Query> }) {
   await connection();
+  fullSiteOnly();
   const { entity, period } = await params;
   // Real entities need their flag, and even then this stage serves only the demo.
   if (entity !== DEMO_ENTITY_ID && !isEnabled("marrsRoverRealData")) notFound();

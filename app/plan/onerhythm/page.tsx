@@ -6,6 +6,7 @@ import { Placeholder } from "@/components/Placeholder";
 import { PlanLive } from "@/components/PlanLive";
 import { isEnabled } from "@/lib/flags";
 import { isShown, readPlan } from "@/lib/plan/service";
+import { fullSiteOnly } from "@/lib/mode-gate";
 
 export const metadata: Metadata = { title: "OneRhythm plan" };
 
@@ -16,6 +17,7 @@ export const metadata: Metadata = { title: "OneRhythm plan" };
  */
 export default async function OneRhythmPlanPage() {
   await connection();
+  fullSiteOnly();
   if (!isEnabled("plan")) notFound();
   const state = await readPlan();
   if (!isShown(state)) notFound();

@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/check-plan-activation.mjs",
+    "prebuild": "node scripts/check-release.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint --max-warnings=0 .",

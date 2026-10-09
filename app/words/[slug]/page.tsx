@@ -5,6 +5,7 @@ import { EssayArticle } from "@/components/essay";
 import { findEssay } from "@/lib/content/essays";
 import { documentTitle, withoutCrisisBlock } from "@/lib/crisis";
 import { siteUrl } from "@/lib/site";
+import { fullSiteOnly } from "@/lib/mode-gate";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -25,6 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 /** Drafts and held pieces never render (W-2). */
 export default async function EssayPage({ params }: Props) {
   await connection();
+  fullSiteOnly();
   const essay = findEssay((await params).slug);
   if (!essay) notFound();
   return <EssayArticle essay={essay} />;

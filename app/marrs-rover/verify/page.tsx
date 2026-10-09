@@ -5,6 +5,7 @@ import { defaultSelection, periodBundles, publications } from "@/lib/marrs-rover
 import { VERIFIER_ARCHIVE_NAME, VERIFIER_ARCHIVE_PATH, verifierArchive } from "@/lib/marrs-rover/verifier-archive";
 import { EXPECTED_VERIFIER_RUN } from "@/lib/marrs-rover/verifier-output";
 import { siteUrl } from "@/lib/site";
+import { fullSiteOnly } from "@/lib/mode-gate";
 
 export const metadata = roverMetadata("Verify a Marrs Rover publication", "How to check a synthetic demo publication yourself with the standalone verifier.");
 
@@ -15,6 +16,7 @@ export const metadata = roverMetadata("Verify a Marrs Rover publication", "How t
  */
 export default async function VerifyPage() {
   await connection();
+  fullSiteOnly();
   const pubs = publications();
   const sel = defaultSelection(pubs);
   const b = sel ? periodBundles(pubs, sel.entityId, sel.periodId)[0] : undefined;

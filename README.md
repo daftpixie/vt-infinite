@@ -66,6 +66,10 @@ Server-side only. A flag is on only when its variable is exactly `true`; unset m
 
 `/admin` and `/api/admin` return 404 for every request until authentication and storage exist.
 
+## Site mode
+
+`SITE_MODE` unset (or `full`) is the full build. `SITE_MODE=landing` is the landing release: `/`, `/privacy`, `/robots.txt`, `/sitemap.xml` and the favicon answer; every other route answers 404, both in `proxy.ts` and in the route itself, and the scheduled refresh does nothing. Retired paths still answer 410. Any other value is refused by the build and treated as `landing` at request time. Set it for the build and the runtime alike. A landing build fails while any placeholder would render on a landing route (`scripts/check-release.mjs`). See `docs/adr/0006-landing-mode.md`; the copy and links are in `content/landing.json`.
+
 Storage and upstream reads (server-side only):
 
 | Variable | Meaning |

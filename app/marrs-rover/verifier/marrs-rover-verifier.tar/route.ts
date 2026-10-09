@@ -1,4 +1,5 @@
 import { VERIFIER_ARCHIVE_NAME, verifierArchive } from "@/lib/marrs-rover/verifier-archive";
+import { landingNotFound } from "@/lib/mode-gate";
 
 /**
  * The standalone verifier as a reproducible archive, at a fixed path
@@ -6,6 +7,8 @@ import { VERIFIER_ARCHIVE_NAME, verifierArchive } from "@/lib/marrs-rover/verifi
  * page, so a reader can check the file before running it.
  */
 export async function GET() {
+  const landing = landingNotFound();
+  if (landing) return landing;
   const { bytes } = verifierArchive();
   return new Response(new Uint8Array(bytes), {
     headers: {

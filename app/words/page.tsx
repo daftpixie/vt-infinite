@@ -6,6 +6,7 @@ import { StreamStatus, WordsList } from "@/components/words";
 import { publishedEssays } from "@/lib/content/essays";
 import { readAllPublications } from "@/lib/streams/service";
 import { buildWordsEntries } from "@/lib/words";
+import { fullSiteOnly } from "@/lib/mode-gate";
 
 export const metadata: Metadata = { title: "Words" };
 
@@ -15,6 +16,7 @@ export const metadata: Metadata = { title: "Words" };
  */
 export default async function WordsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await connection();
+  fullSiteOnly();
   const essays = publishedEssays();
   const streams = await readAllPublications();
   const all = buildWordsEntries(essays, streams);

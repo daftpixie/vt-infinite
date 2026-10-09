@@ -2,9 +2,12 @@ import { connection } from "next/server";
 import { publishedEssays } from "@/lib/content/essays";
 import { renderRss, rssResponse } from "@/lib/feeds/rss";
 import { siteUrl } from "@/lib/site";
+import { landingNotFound } from "@/lib/mode-gate";
 
 /** Published local essays only (PRD W-6). Stream posts are never presented as local articles. */
 export async function GET() {
+  const landing = landingNotFound();
+  if (landing) return landing;
   await connection();
   const base = siteUrl();
   const items = publishedEssays().map((e) => ({

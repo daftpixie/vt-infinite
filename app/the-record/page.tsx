@@ -3,11 +3,13 @@ import { connection } from "next/server";
 import { PageShell } from "@/components/PageShell";
 import { RecordList } from "@/components/record";
 import { publishedRecord } from "@/lib/content/record";
+import { fullSiteOnly } from "@/lib/mode-gate";
 
 export const metadata: Metadata = { title: "The Record" };
 
 export default async function RecordPage() {
   await connection();
+  fullSiteOnly();
   return (
     <PageShell title="The Record">
       <RecordList entries={publishedRecord()} />

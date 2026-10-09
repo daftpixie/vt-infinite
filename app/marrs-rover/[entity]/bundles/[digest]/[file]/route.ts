@@ -1,5 +1,6 @@
 import { DEMO_ENTITY_ID, isEnabled } from "@/lib/flags";
 import { bundleFileBytes, isDigest, listBundles } from "@/lib/marrs-rover/bundles";
+import { landingNotFound } from "@/lib/mode-gate";
 
 /** Text types only; every file in a bundle is UTF-8 text. */
 const TYPES: Record<string, string> = {
@@ -18,6 +19,8 @@ const TYPES: Record<string, string> = {
  * sealed with.
  */
 export async function GET(_req: Request, { params }: { params: Promise<{ entity: string; digest: string; file: string }> }) {
+  const landing = landingNotFound();
+  if (landing) return landing;
   const { entity, digest, file } = await params;
   if (entity !== DEMO_ENTITY_ID && !isEnabled("marrsRoverRealData")) return new Response(null, { status: 404 });
   if (!isDigest(digest)) return new Response(null, { status: 404 });

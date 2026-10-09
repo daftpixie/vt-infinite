@@ -4,11 +4,13 @@ import { MandelbrotFigure } from "@/components/figures/MandelbrotFigure";
 import { PageShell } from "@/components/PageShell";
 import { Placeholder } from "@/components/Placeholder";
 import { isEnabled } from "@/lib/flags";
+import { fullSiteOnly } from "@/lib/mode-gate";
 
 export const metadata: Metadata = { title: "Agency" };
 
 export default async function AgencyPage() {
   await connection();
+  fullSiteOnly();
   return (
     <PageShell title="Agency">
       <Placeholder id="agencyStory" />

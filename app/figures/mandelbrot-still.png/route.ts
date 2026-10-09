@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { isEnabled } from "@/lib/flags";
 import { MANDELBROT, renderFrame } from "@/lib/figures/mandelbrot";
 import { maskToPng } from "@/lib/figures/png";
+import { landingNotFound } from "@/lib/mode-gate";
 
 const WIDTH = 600;
 const HEIGHT = 400;
@@ -10,6 +11,8 @@ let cached: Buffer | null = null;
 
 /** The no-JavaScript still for the Mandelbrot figure. Held behind its flag (P7). */
 export async function GET() {
+  const landing = landingNotFound();
+  if (landing) return landing;
   await connection();
   if (!isEnabled("mandelbrot")) notFound();
   cached ??= maskToPng(renderFrame(WIDTH, HEIGHT, MANDELBROT.start), WIDTH, HEIGHT);
