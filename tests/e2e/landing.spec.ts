@@ -216,7 +216,7 @@ test.describe("the landing page", () => {
   });
 });
 
-type Layout = { lefts: number[]; tops: number[]; heights: number[]; lineHeight: number; fontSize: number; scroll: number; client: number };
+type Layout = { lefts: number[]; tops: number[]; heights: number[]; lineHeight: number; fontSize: number; scroll: number; client: number; why: string };
 
 async function layout(page: Page): Promise<Layout> {
   // Measure the layout a reader settles on: with the web font, not the fallback it replaces.
@@ -230,6 +230,17 @@ async function layout(page: Page): Promise<Layout> {
       heights: r.map((x) => Math.round(x.height)),
       lineHeight: parseFloat(getComputedStyle(items[0]!).lineHeight),
       fontSize: parseFloat(getComputedStyle(items[0]!).fontSize),
+      why: (() => {
+        // What the row-or-stack decision saw, for a failure message.
+        const ol = document.querySelector<HTMLElement>(".acrostic-list")!;
+        const probe = document.createElement("span");
+        probe.style.cssText = "display:inline-block;width:30ch";
+        ol.append(probe);
+        const ch30 = probe.getBoundingClientRect().width;
+        probe.remove();
+        const cs = getComputedStyle(ol);
+        return `inner ${window.innerWidth}, client ${document.documentElement.clientWidth}, container ${document.querySelector(".acrostic")!.clientWidth}, list ${ol.clientWidth}, 30ch ${ch30}, gap ${cs.columnGap}, font ${cs.fontSize} ${document.fonts.check('1rem "JetBrains Mono"') ? "web font" : "fallback"}`;
+      })(),
       scroll: document.documentElement.scrollWidth,
       client: document.documentElement.clientWidth,
     };
@@ -237,7 +248,7 @@ async function layout(page: Page): Promise<Layout> {
 }
 
 function expectRow(l: Layout) {
-  expect(new Set(l.tops).size, "one row: every column starts on the same line").toBe(1);
+  expect(new Set(l.tops).size, `one row: every column starts on the same line (${l.why})`).toBe(1);
   expect(l.lefts[0]! < l.lefts[1]! && l.lefts[1]! < l.lefts[2]!).toBe(true);
 }
 
@@ -416,7 +427,7 @@ test.describe("text size and spacing", () => {
     await page.evaluate(async () => void (await document.fonts.load(`1rem "JetBrains Mono"`)));
     await page.addStyleTag({ content: "* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; } p { margin-bottom: 2em !important; }" });
     const boxes = await page.locator(".acrostic-list > li .acrostic-text").evaluateAll((els) => els.map((el) => ({ left: el.getBoundingClientRect().left, right: el.getBoundingClientRect().right, top: el.getBoundingClientRect().top, item: el.parentElement!.getBoundingClientRect().right })));
-    expect(new Set(boxes.map((b) => Math.round(b.top))).size).toBe(1);
+    expect(new Set(boxes.map((b) => Math.round(b.top))).size, `one row (${(await layout(page)).why})`).toBe(1);
     for (const b of boxes) expect(b.right, "the text stays inside its column").toBeLessThanOrEqual(b.item + 0.5);
     for (let i = 1; i < boxes.length; i++) expect(boxes[i]!.left).toBeGreaterThanOrEqual(boxes[i - 1]!.right);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
