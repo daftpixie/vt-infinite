@@ -10,6 +10,7 @@ import { fullSiteOnly } from "@/lib/mode-gate";
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  fullSiteOnly();
   await connection();
   const essay = findEssay((await params).slug);
   if (!essay) return {};

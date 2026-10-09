@@ -8,7 +8,10 @@ import { isEnabled } from "@/lib/flags";
 import { isShown, readPlan } from "@/lib/plan/service";
 import { fullSiteOnly } from "@/lib/mode-gate";
 
-export const metadata: Metadata = { title: "OneRhythm plan" };
+export function generateMetadata(): Metadata {
+  fullSiteOnly();
+  return { title: "OneRhythm plan" };
+}
 
 /**
  * Read-only projection of the approved public plan (PRD §04, A-1 to A-10).

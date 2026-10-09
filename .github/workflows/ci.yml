@@ -82,6 +82,10 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Also proves the landing release builds: its release check runs first.
+      - name: Build the landing release with the proxy off (test only, for the route-level gate)
+        run: npm run build:noproxy
+
       # A package mirror can stall this step for the whole job (it once hung
       # for 20 minutes). Each attempt gets 5 minutes; a failed or timed-out
       # first attempt gets one retry.

@@ -23,7 +23,7 @@ export function SiteFooter() {
           <h2 id="footer-more" className="label">
             More
           </h2>
-          <ul className="footer-links">
+          <ul className="footer-links" role="list">
             <li>
               <Link href="/marrs-rover">Marrs Rover</Link>
             </li>

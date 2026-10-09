@@ -3,7 +3,10 @@ import { PageShell } from "@/components/PageShell";
 import { Placeholder } from "@/components/Placeholder";
 import { fullSiteOnly } from "@/lib/mode-gate";
 
-export const metadata: Metadata = { title: "Terms" };
+export function generateMetadata(): Metadata {
+  fullSiteOnly();
+  return { title: "Terms" };
+}
 
 export default function TermsPage() {
   fullSiteOnly();

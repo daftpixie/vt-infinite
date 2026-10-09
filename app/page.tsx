@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { LorenzFigure } from "@/components/figures/LorenzFigure";
@@ -18,6 +19,11 @@ const MASTHEAD = "We see the problem. We go to where it is.";
 const STANDFIRST = "Intelligence, conducted — in service of hard problems and the people the tools forgot.";
 const MISSION =
   "VT Infinite builds tools, research, and communities that put verifiable capability in the hands of people existing systems overlook. We design for the full variation of human minds and bring human judgment and machine intelligence into working relationship to expand agency, never replace it.";
+
+/** The landing page is indexable once it is live; the full build keeps the layout's noindex until its own cutover. */
+export function generateMetadata(): Metadata {
+  return isLanding() ? { robots: { index: true, follow: true } } : {};
+}
 
 export default async function HomePage() {
   await connection();

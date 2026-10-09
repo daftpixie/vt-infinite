@@ -1,9 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Placeholder } from "@/components/Placeholder";
 import { RoverShell, roverMetadata } from "@/components/rover";
 import { fullSiteOnly } from "@/lib/mode-gate";
 
-export const metadata = roverMetadata("Marrs Rover method", "Definitions, the proof format and the limits of what a proof shows.");
+export function generateMetadata(): Metadata {
+  fullSiteOnly();
+  return roverMetadata("Marrs Rover method", "Definitions, the proof format and the limits of what a proof shows.");
+}
 
 const TREE = `leaf   = SHA256(0x00 || canonical event bytes)
 parent = SHA256(0x01 || left || right)

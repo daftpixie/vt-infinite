@@ -6,6 +6,7 @@
     { "across": "Hands", "down": ["build", "the", "hope."] }
   ],
   "motto": "ad astra per aspera",
+  "mottoLang": "la",
   "links": [
     { "label": "The Human Butterfly", "href": "https://everydecimal.substack.com", "customDomain": "https://www.thehumanbutterfly.dev" },
     { "label": "Incentive Eyes", "href": "https://incentiveeyes.substack.com", "customDomain": "https://incentiveeyes.vt-infinite.com" },

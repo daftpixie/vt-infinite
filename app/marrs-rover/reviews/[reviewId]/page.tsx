@@ -10,6 +10,7 @@ import { fullSiteOnly } from "@/lib/mode-gate";
 type Params = { reviewId: string };
 
 export async function generateMetadata(): Promise<Metadata> {
+  fullSiteOnly();
   return roverMetadata("Independent review", "The independent review status of one synthetic publication.");
 }
 

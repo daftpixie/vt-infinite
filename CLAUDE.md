@@ -12,7 +12,7 @@ Never commit the PRD or brand reference, copy files from where they are kept, na
 
 ## Stage
 
-Stages 1 to 4b and the stage 4 follow-ups are merged. Stage 5L, the landing release, is in progress: part A (landing mode and page, ADR 0006), then part B (the email list), then part C (the cutover runbook), each after Matthew merges the one before. Do not cut over until Matthew says so.
+Stages 1 to 4b, the stage 4 follow-ups and stage 5L part A (landing mode and page, ADR 0006) are merged. Stage 5L-2 re-orders the rest so the landing release can go live before the email list: the part A follow-ups and the landing privacy notice "landing-1" (ADRs 0007, 0008), then the cutover runbook (`docs/ops/cutover.md`), then the email list (R14) behind its flag, closed until counsel has reviewed notice "email-1". Do not cut over until Matthew says so.
 
 ## Working here
 
