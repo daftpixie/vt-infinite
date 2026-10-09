@@ -6,6 +6,8 @@
 //   landing     SITE_MODE=landing runs the landing release gate
 //               (tests/unit/landing-release.test.tsx): no placeholder may
 //               render on any route the landing release serves.
+//   no proxy    VT_TEST_BUILD_WITHOUT_PROXY (a test-only build with
+//               proxy.ts switched off, next.config.ts) fails on Vercel.
 //   plan        PLAN_ENABLED=true runs the plan activation gate
 //               (tests/unit/plan-activation.test.tsx): no placeholder on
 //               /plan/onerhythm or in Home's plan block. docs/ops/plan.md,
@@ -27,6 +29,11 @@ function gate(name, testFile, hint) {
   } else {
     console.log(`release check: ${name}: passed.`);
   }
+}
+
+if (process.env.VT_TEST_BUILD_WITHOUT_PROXY && process.env.VERCEL) {
+  console.error("release check: VT_TEST_BUILD_WITHOUT_PROXY switches the proxy off for tests and must never be set on Vercel. FAILED.");
+  failed = true;
 }
 
 if (!KNOWN_MODES.includes(mode)) {

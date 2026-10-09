@@ -183,6 +183,8 @@ main { padding-bottom: var(--s16); }
 
 .theme-switch { display: flex; flex-wrap: wrap; gap: var(--s2); border: 0; padding: 0; margin: 0; }
 .theme-switch legend { padding: 0; margin-bottom: var(--s2); }
+/* The legend's label style, at body size: never below 16 px. */
+.theme-switch legend.label { font-size: var(--step-0); line-height: var(--lead-0); }
 .button {
   font: inherit; color: var(--figure); background: var(--ground);
   border: var(--rule) solid var(--edge); padding: 0 var(--s3); cursor: pointer; border-radius: 0;
@@ -260,22 +262,37 @@ tbody th { font-weight: 400; color: var(--text); }
 /* Landing release (SITE_MODE=landing): the mark, the acrostic, the motto. Quiet, black and white. */
 .landing { padding-top: var(--s12); }
 .landing-mark { margin: 0 0 var(--s12); }
-.landing-lockup { width: 15rem; max-width: 100%; color: var(--figure); }
+.landing-lockup { display: block; width: 15rem; max-width: 100%; color: var(--figure); }
 .landing-lockup svg { display: block; width: 100%; height: auto; }
 /*
  * Three columns on one baseline grid: every line shares one size and
  * leading, and stacked blocks are one blank line apart. The columns sit in
- * a row or stack whole, never two and one:
- * below --acrostic-threshold (set from the words, lib/landing.ts) each
- * item's basis jumps to the full width.
+ * a row or stack whole, never two and one: below --acrostic-threshold (set
+ * from the words, lib/landing.ts: each column its longest word plus 2ch,
+ * plus the gaps) each item's basis jumps to the full width.
+ *
+ * The size steps with the width of .acrostic (a container query). Its
+ * breakpoints are in rem, which a container query takes from the root, so
+ * they move with the reader's text size as the threshold does. Body size
+ * (16 px at default text size, never less) keeps the row down to a 360 px
+ * viewport; only below that, or when enlarged text cannot fit a row, the
+ * columns stack, and stacked they take the next size up.
  */
+.acrostic { container: acrostic / inline-size; }
 .acrostic-list {
+  --acrostic-gap: var(--s4);
   list-style: none; margin: 0; padding: 0;
-  display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--lead-2) var(--s8);
+  display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--lead-0) var(--acrostic-gap);
   max-width: var(--acrostic-threshold);
-  font-size: var(--step-2); line-height: var(--lead-2); color: var(--figure);
+  font-size: var(--step-0); line-height: var(--lead-0); color: var(--figure);
 }
-@media (min-width: 48rem) {
+@container acrostic (max-width: 19.99rem) {
+  .acrostic-list { font-size: var(--step-2); line-height: var(--lead-2); row-gap: var(--lead-2); }
+}
+@container acrostic (min-width: 33rem) {
+  .acrostic-list { --acrostic-gap: var(--s8); font-size: var(--step-2); line-height: var(--lead-2); row-gap: var(--lead-2); }
+}
+@container acrostic (min-width: 42rem) {
   .acrostic-list { font-size: var(--step-3); line-height: var(--lead-3); row-gap: var(--lead-3); }
 }
 .acrostic-item { flex-grow: 1; flex-basis: calc((var(--acrostic-threshold) - 100%) * 999); min-width: 0; }

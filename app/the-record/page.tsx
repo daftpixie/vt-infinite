@@ -5,7 +5,10 @@ import { RecordList } from "@/components/record";
 import { publishedRecord } from "@/lib/content/record";
 import { fullSiteOnly } from "@/lib/mode-gate";
 
-export const metadata: Metadata = { title: "The Record" };
+export function generateMetadata(): Metadata {
+  fullSiteOnly();
+  return { title: "The Record" };
+}
 
 export default async function RecordPage() {
   await connection();

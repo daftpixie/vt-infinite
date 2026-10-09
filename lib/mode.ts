@@ -36,3 +36,11 @@ export const LANDING_PAGES = ["/", "/privacy"] as const;
  * so the small mark (the favicon) is the only file served from public/brand.
  */
 export const LANDING_PATHS: readonly string[] = [...LANDING_PAGES, "/robots.txt", "/sitemap.xml", "/brand/vt-infinite-mark-small.svg"];
+
+/**
+ * The font files app/globals.css (and the proxy's own 404 and 410 pages)
+ * load. The only other files served from public/ in landing mode;
+ * everything else there, the font licence included, answers 404.
+ * tests/unit/landing-gate.test.ts checks this list against the stylesheet.
+ */
+export const LANDING_FONTS: readonly string[] = ["/fonts/JetBrainsMono-wght.woff2", "/fonts/JetBrainsMono-Italic-wght.woff2"];

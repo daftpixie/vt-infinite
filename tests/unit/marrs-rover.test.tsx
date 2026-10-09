@@ -198,7 +198,7 @@ describe("pages render from the fixture with the demo label in body and metadata
   const pages: Array<[string, () => Promise<{ html: string; metadata: { description?: string | null; title?: unknown } }>]> = [
     ["overview", async () => {
       const m = await import("@/app/marrs-rover/page");
-      return { html: renderToStaticMarkup(await m.default({ searchParams: Promise.resolve({}) })), metadata: m.metadata };
+      return { html: renderToStaticMarkup(await m.default({ searchParams: Promise.resolve({}) })), metadata: m.generateMetadata() };
     }],
     ["period", async () => {
       const m = await import("@/app/marrs-rover/[entity]/periods/[period]/page");
@@ -221,11 +221,11 @@ describe("pages render from the fixture with the demo label in body and metadata
     }],
     ["verify", async () => {
       const m = await import("@/app/marrs-rover/verify/page");
-      return { html: renderToStaticMarkup(await m.default()), metadata: m.metadata };
+      return { html: renderToStaticMarkup(await m.default()), metadata: m.generateMetadata() };
     }],
     ["method", async () => {
       const m = await import("@/app/marrs-rover/method/page");
-      return { html: renderToStaticMarkup(m.default()), metadata: m.metadata };
+      return { html: renderToStaticMarkup(m.default()), metadata: m.generateMetadata() };
     }],
   ];
 

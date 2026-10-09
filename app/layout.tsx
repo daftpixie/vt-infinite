@@ -12,7 +12,8 @@ export function generateMetadata(): Metadata {
   return {
     metadataBase: new URL(siteUrl()),
     title: { default: SITE_NAME, template: `%s · ${SITE_FURNITURE}` },
-    // Unreleased: keep every route out of search indexes until cutover.
+    // Keep every route out of search indexes until cutover. In landing mode,
+    // `/` and `/privacy` override this; every 404 and 410 keeps it.
     robots: { index: false, follow: false },
     // The landing release uses the approved small mark (public/brand) as its favicon.
     ...(isLanding() ? { icons: { icon: { url: "/brand/vt-infinite-mark-small.svg", type: "image/svg+xml" } } } : {}),

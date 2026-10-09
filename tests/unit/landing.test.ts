@@ -4,7 +4,7 @@ import raw from "@/content/landing.json" with { type: "json" };
 import { decide } from "@/lib/access";
 import { FLAGS } from "@/lib/flags";
 import { acrosticHeading, acrosticSentence, acrosticThreshold, LANDING, parseLanding } from "@/lib/landing";
-import { isLanding, LANDING_PATHS, siteMode, siteModeValueIsValid } from "@/lib/mode";
+import { isLanding, LANDING_FONTS, LANDING_PATHS, siteMode, siteModeValueIsValid } from "@/lib/mode";
 import { ROUTES } from "@/lib/routes";
 
 const LANDING_ENV = { SITE_MODE: "landing" };
@@ -44,6 +44,7 @@ describe("landing copy (amendment A1.3), verbatim from content/landing.json", ()
 
   it("carries the motto, the footer and the links Matthew chose", () => {
     expect(LANDING.motto).toBe("ad astra per aspera");
+    expect(LANDING.mottoLang).toBe("la");
     expect(LANDING.legalName).toBe("VT Infinite, Inc.");
     expect(LANDING.contactEmail).toBe("matthew@vt-infinite.com");
     expect(LANDING.signupClosed).toBe("Updates sign-up opens soon");
@@ -61,8 +62,9 @@ describe("landing copy (amendment A1.3), verbatim from content/landing.json", ()
     expect(parseLanding(switched).links[0]!.href).toBe("https://www.thehumanbutterfly.dev");
   });
 
-  it("sets the stacking threshold from the longest word", () => {
-    expect(acrosticThreshold(LANDING.acrostic)).toBe("calc(27ch + 4rem)");
+  it("sets the stacking threshold from the longest word, plus 2ch a column for text spacing", () => {
+    // "purpose." is the longest: 8 + 2 = 10ch a column.
+    expect(acrosticThreshold(LANDING.acrostic)).toBe("calc(30ch + 2 * var(--acrostic-gap))");
   });
 });
 
@@ -83,6 +85,7 @@ describe("landing configuration is validated", () => {
     ["two words in one line", (c: typeof raw) => void (c.acrostic[0]!.down = ["defines the", "purpose."])],
     ["markup in a word", (c: typeof raw) => void (c.acrostic[0]!.down = ["<b>defines</b>", "the", "purpose."])],
     ["a bad contact address", (c: typeof raw) => void (c.contactEmail = "matthew")],
+    ["a motto language that is not a language tag", (c: typeof raw) => void (c.mottoLang = "Latin")],
     ["an unknown key", (c: typeof raw) => void ((c as Record<string, unknown>).extra = "x")],
   ])("rejects %s", (_name, mutate) => {
     expect(bad(mutate)).toThrow();
@@ -118,9 +121,29 @@ describe("landing mode access (proxy decision)", () => {
     expect(decide("/phial", LANDING_ENV)).toEqual({ action: "gone" });
   });
 
+  it("answers 404 for the old redirects, whose pages are not in the landing release", () => {
+    for (const p of ["/origin", "/partners", "/origin/", "/PARTNERS"]) expect(decide(p, LANDING_ENV), p).toEqual({ action: "deny", reason: "landing" });
+  });
+
+  it("passes the font files the stylesheet loads, and nothing else in public/fonts", () => {
+    for (const p of LANDING_FONTS) expect(decide(p, LANDING_ENV), p).toEqual({ action: "pass" });
+    for (const p of ["/fonts/OFL.txt", "/fonts/", "/fonts/other.woff2", "/favicon.ico", "/_next/image"]) {
+      expect(decide(p, LANDING_ENV), p).toEqual({ action: "deny", reason: "landing" });
+    }
+  });
+
+  it("lists exactly the font files app/globals.css and the proxy's own pages load", () => {
+    const urls = (file: string) => [...readFileSync(file, "utf8").matchAll(/url\(["']?(\/fonts\/[^"')]+)/g)].map((m) => m[1]);
+    expect([...new Set(urls("app/globals.css"))].sort()).toEqual([...LANDING_FONTS].sort());
+    for (const u of urls("lib/gone.ts")) expect(LANDING_FONTS).toContain(u);
+  });
+
   it("leaves full mode unchanged", () => {
     expect(decide("/words", {})).toEqual({ action: "pass" });
     expect(decide("/privacy", {})).toEqual({ action: "pass" }); // the page itself answers 404 outside landing mode
+    expect(decide("/fonts/OFL.txt", {})).toEqual({ action: "pass" });
+    expect(decide("/origin", {})).toEqual({ action: "redirect", to: "/agency" });
+    expect(decide("/partners/", {})).toEqual({ action: "redirect", to: "/contact" });
   });
 });
 

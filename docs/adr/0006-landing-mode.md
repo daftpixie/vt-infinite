@@ -1,6 +1,6 @@
 # ADR 0006: Landing mode
 
-- Status: proposed (stage 5L, part A pull request)
+- Status: accepted; amended by [ADR 0007](0007-landing-follow-ups.md) (stage 5L-2), which answers the open questions below
 - Date: 2026-10-08
 - Decider: Matthew J Adams
 
@@ -24,7 +24,7 @@ The first public release of vt-infinite.com is a single landing page, a privacy 
 - A landing build fails today, by design: the privacy notice at `/privacy` is a placeholder until part B supplies the versioned notice. `tests/unit/landing-release.test.tsx` pins that this is the only gap.
 - The email form is not built yet; the page shows "Updates sign-up opens soon", the wording for the closed form.
 
-## Open questions
+## Open questions (answered in ADR 0007)
 
 - **Indexing.** The root layout's `noindex` ("until cutover") is unchanged in both modes. Should the landing page be indexable once it is on vt-infinite.com?
 - **Redirects.** Should `/origin` and `/partners` keep redirecting (308) to pages that answer 404 in landing mode, or answer 410 until the full site opens?

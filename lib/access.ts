@@ -1,11 +1,12 @@
 import legacy from "@/content/legacy/urls.json" with { type: "json" };
 import { DEMO_ENTITY_ID, isEnabled, type Env, type Flag } from "./flags";
-import { isLanding, LANDING_PATHS } from "./mode";
+import { isLanding, LANDING_FONTS, LANDING_PATHS } from "./mode";
 
 export type Decision =
   | { action: "pass" }
   | { action: "deny"; reason: "admin" | "flag" | "landing"; flag?: Flag }
-  | { action: "gone" };
+  | { action: "gone" }
+  | { action: "redirect"; to: string };
 
 /** Path prefixes held behind a feature flag. A prefix matches itself and its children. */
 export const GATED_PREFIXES: ReadonlyArray<{ prefix: string; flag: Flag }> = [
@@ -50,22 +51,31 @@ function realRoverFlag(path: string): boolean {
   return false;
 }
 
+/** Landing paths and font files, as normalise() leaves them. */
+const LANDING_ALLOWED = new Set([...LANDING_PATHS, ...LANDING_FONTS].map((p) => p.toLowerCase()));
+
+const REDIRECTS: Readonly<Record<string, string>> = legacy.redirects;
+
 /**
  * Decide what the edge does with a request before any page renders.
  * Admin is denied outright until stage 6. Flagged features are denied
- * unless their flag is on. Retired legacy paths are gone (410).
+ * unless their flag is on. Old URLs with a replacement redirect (308);
+ * retired legacy paths are gone (410).
  *
- * In landing mode (lib/mode.ts) only the landing paths pass. The old-URL
- * table still applies: retired paths stay 410, and the redirects in
- * next.config.ts run before this.
+ * In landing mode (lib/mode.ts) only the landing paths and the font files
+ * pass. Retired paths stay 410; the redirects answer 404, since the pages
+ * they lead to are not part of the landing release.
  */
 export function decide(pathname: string, env: Env = process.env): Decision {
   const path = normalise(pathname);
 
   if (isLanding(env)) {
     if (isGone(path)) return { action: "gone" };
-    return LANDING_PATHS.includes(path) ? { action: "pass" } : { action: "deny", reason: "landing" };
+    return LANDING_ALLOWED.has(path) ? { action: "pass" } : { action: "deny", reason: "landing" };
   }
+
+  const to = Object.hasOwn(REDIRECTS, path) ? REDIRECTS[path] : undefined;
+  if (to) return { action: "redirect", to };
 
   if (under(path, "/admin") || under(path, "/api/admin")) {
     return { action: "deny", reason: "admin" };

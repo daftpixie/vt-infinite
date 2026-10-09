@@ -3,7 +3,10 @@ import { PageShell } from "@/components/PageShell";
 import { Placeholder } from "@/components/Placeholder";
 import { fullSiteOnly } from "@/lib/mode-gate";
 
-export const metadata: Metadata = { title: "Proposed corporate governance" };
+export function generateMetadata(): Metadata {
+  fullSiteOnly();
+  return { title: "Proposed corporate governance" };
+}
 
 /**
  * GOV-1 to GOV-3: informational only. No participation, voting, wallet or

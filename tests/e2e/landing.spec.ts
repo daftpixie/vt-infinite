@@ -1,8 +1,10 @@
+import { readdirSync } from "node:fs";
+import { join, relative, sep } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { runRules } from "@/guards/rules.mjs";
 import { LANDING } from "@/lib/landing";
-import { LANDING_PATHS } from "@/lib/mode";
+import { LANDING_FONTS, LANDING_PATHS } from "@/lib/mode";
 import { ROUTES } from "@/lib/routes";
 import { pageText } from "./helpers";
 
@@ -33,26 +35,62 @@ test.describe("landing mode: only the landing release answers (exhaustive over l
     expect((await request.get("/api/anything")).status()).toBe(404);
   });
 
-  test("the 404 page links only to the landing page", async ({ page }) => {
+  test("the 404 page links only to the landing page and the contact address", async ({ page }) => {
     const res = await page.goto("/words");
     expect(res?.status()).toBe(404);
     await expect(page.locator("h1")).toHaveText("Not found");
     const hrefs = await page.locator("a").evaluateAll((as) => as.map((a) => a.getAttribute("href")));
-    expect(hrefs).toEqual(["#main", "/"]);
+    expect(hrefs).toEqual(["#main", "/", `mailto:${LANDING.contactEmail}`]);
   });
 
-  test("the old-URL table still applies: /phial is 410, linking only to the landing page", async ({ page, request }) => {
+  test("the old-URL table still applies: /phial is 410, linking only to the landing page and the contact address", async ({ page, request }) => {
     expect((await request.get("/phial", { maxRedirects: 0 })).status()).toBe(410);
     await page.goto("/phial");
     await expect(page.locator("h1")).toHaveText("This page is not available");
     const hrefs = await page.locator("a").evaluateAll((as) => as.map((a) => a.getAttribute("href")));
-    expect(hrefs).toEqual(["#main", "/"]);
+    expect(hrefs).toEqual(["#main", "/", `mailto:${LANDING.contactEmail}`]);
   });
 
-  test("redirects in the old-URL table are unchanged", async ({ request }) => {
-    const res = await request.get("/origin", { maxRedirects: 0 });
-    expect(res.status()).toBe(308);
-    expect(res.headers()["location"]).toBe("/agency");
+  test("the old redirects answer 404: the pages they lead to are not in the landing release", async ({ request }) => {
+    for (const path of ["/origin", "/partners"]) {
+      const res = await request.get(path, { maxRedirects: 0 });
+      expect(res.status(), path).toBe(404);
+      expect(res.headers()["location"], path).toBeUndefined();
+    }
+  });
+
+  test("only / and /privacy are indexable; every 404 and 410 keeps noindex", async ({ page }) => {
+    for (const [path, robots] of [
+      ["/", "index, follow"],
+      ["/privacy", "index, follow"],
+      ["/words", "noindex"],
+      ["/does-not-exist", "noindex"],
+      ["/phial", "noindex"],
+    ] as const) {
+      await page.goto(path);
+      const content = await page.locator('meta[name="robots"]').evaluateAll((ms) => ms.map((m) => m.getAttribute("content")));
+      if (robots === "noindex") {
+        expect(content.length, path).toBeGreaterThan(0);
+        for (const c of content) expect(c, path).toMatch(/noindex/);
+      } else {
+        expect(content, path).toEqual([robots]);
+      }
+    }
+  });
+
+  test("every file in public/ answers only if it is a landing path or a font the stylesheet loads", async ({ request }) => {
+    const walk = (dir: string): string[] =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)]));
+    const files = walk("public").map((f) => `/${relative("public", f).split(sep).join("/")}`);
+    expect(files).toContain("/fonts/OFL.txt");
+    const allowed = new Set([...LANDING_PATHS, ...LANDING_FONTS]);
+    for (const f of files) {
+      const res = await request.get(f, { maxRedirects: 0 });
+      expect(res.status(), f).toBe(allowed.has(f) ? 200 : 404);
+    }
+    for (const f of ["/favicon.ico", "/_next/image?url=%2Fbrand%2Fvt-infinite-mark.svg&w=64&q=75"]) {
+      expect((await request.get(f, { maxRedirects: 0 })).status(), f).toBe(404);
+    }
   });
 
   test("robots.txt and the sitemap list only the landing release's pages", async ({ request }) => {
@@ -70,29 +108,36 @@ test.describe("the landing page", () => {
       - main:
         - heading "VT Infinite" [level=1]:
           - img "VT Infinite"
-        - region "Heart. Mind. Hands.":
-          - heading "Heart. Mind. Hands." [level=2]
-          - list:
-            - listitem: Heart defines the purpose.
-            - listitem: Mind defines the method.
-            - listitem: Hands build the hope.
+        - heading "Heart. Mind. Hands." [level=2]
+        - list:
+          - listitem: Heart defines the purpose.
+          - listitem: Mind defines the method.
+          - listitem: Hands build the hope.
         - paragraph: ad astra per aspera
         - list:
           - listitem:
-            - link "The Human Butterfly ↗ (opens another site)":
+            - link "The Human Butterfly (opens another site)":
               - /url: https://everydecimal.substack.com
           - listitem:
-            - link "Incentive Eyes ↗ (opens another site)":
+            - link "Incentive Eyes (opens another site)":
               - /url: https://incentiveeyes.substack.com
           - listitem:
-            - link "The VT Infinite Discord ↗ (opens another site)":
+            - link "The VT Infinite Discord (opens another site)":
               - /url: https://discord.gg/zkdFVqG4Gz
         - paragraph: Updates sign-up opens soon
     `);
+    // The heading is announced once: no labelled region repeats it.
+    await expect(page.getByRole("region")).toHaveCount(0);
+    await expect(page.getByText(LANDING.motto, { exact: true })).toHaveAttribute("lang", "la");
+    // The lockup wrapper inside h1 is phrasing content.
+    expect(await page.locator("h1 > *").evaluateAll((els) => els.map((e) => e.tagName))).toEqual(["SPAN"]);
     await expect(page.locator("footer")).toMatchAriaSnapshot(`
       - contentinfo:
         - paragraph: VT Infinite, Inc.
         - list:
+          - listitem:
+            - link "Home":
+              - /url: /
           - listitem:
             - link "Privacy notice":
               - /url: /privacy
@@ -171,7 +216,7 @@ test.describe("the landing page", () => {
   });
 });
 
-type Layout = { lefts: number[]; tops: number[]; heights: number[]; lineHeight: number; scroll: number; client: number };
+type Layout = { lefts: number[]; tops: number[]; heights: number[]; lineHeight: number; fontSize: number; scroll: number; client: number };
 
 async function layout(page: Page): Promise<Layout> {
   return page.evaluate(() => {
@@ -182,6 +227,7 @@ async function layout(page: Page): Promise<Layout> {
       tops: r.map((x) => Math.round(x.top)),
       heights: r.map((x) => Math.round(x.height)),
       lineHeight: parseFloat(getComputedStyle(items[0]!).lineHeight),
+      fontSize: parseFloat(getComputedStyle(items[0]!).fontSize),
       scroll: document.documentElement.scrollWidth,
       client: document.documentElement.clientWidth,
     };
@@ -199,12 +245,18 @@ function expectStacked(l: Layout) {
 }
 
 test.describe("acrostic layout", () => {
+  // Matthew: the acrostic reads across on phones, down to a 360 px
+  // viewport at default text size; it stacks only below that, or when
+  // enlarged text cannot fit a row.
   for (const [width, textSize, expected] of [
     [1280, "100%", "row"],
     [768, "100%", "row"],
+    [390, "100%", "row"],
+    [360, "100%", "row"],
     [320, "100%", "stacked"],
     [1280, "200%", "row"],
     [640, "200%", "stacked"],
+    [390, "200%", "stacked"],
     [320, "200%", "stacked"],
   ] as const) {
     test(`${width} px at ${textSize} text: ${expected}, four lines a column, on one grid, no horizontal scroll`, async ({ page }) => {
@@ -216,6 +268,8 @@ test.describe("acrostic layout", () => {
       else expectStacked(l);
       // Every column is exactly four lines of one leading: the shared baseline grid.
       for (const h of l.heights) expect(h).toBe(Math.round(4 * l.lineHeight));
+      // Never below 16 px, and the size follows the reader's text setting.
+      expect(l.fontSize).toBeGreaterThanOrEqual(textSize === "200%" ? 32 : 16);
       expect(l.scroll, "no horizontal scroll").toBeLessThanOrEqual(l.client);
     });
   }
@@ -268,6 +322,7 @@ test.describe("keyboard and targets", () => {
       "The Human Butterfly ↗ (opens another site)",
       "Incentive Eyes ↗ (opens another site)",
       "The VT Infinite Discord ↗ (opens another site)",
+      "Home",
       "Privacy notice",
       "matthew@vt-infinite.com",
       "Dark",
@@ -294,7 +349,7 @@ test.describe("keyboard and targets", () => {
         return { text: el.textContent?.trim(), w: r.width, h: r.height };
       }),
     );
-    expect(boxes.length).toBe(8);
+    expect(boxes.length).toBe(9);
     for (const b of boxes) {
       expect(b.h, b.text).toBeGreaterThanOrEqual(44);
       expect(b.w, b.text).toBeGreaterThanOrEqual(44);
@@ -311,4 +366,56 @@ test.describe("rendered copy passes every guard (landing)", () => {
       expect(runRules(`${await page.title()}\n${text}`, { target: path })).toEqual([]);
     });
   }
+});
+
+test.describe("the privacy notice (landing-1)", () => {
+  test("states its version, links Vercel's notice and gives the contact address", async ({ page }) => {
+    const res = await page.goto("/privacy");
+    expect(res?.status()).toBe(200);
+    await expect(page.locator("h1")).toHaveText("Privacy notice");
+    await expect(page.locator("main")).toContainText("Version landing-1");
+    await expect(page.locator("main").getByRole("link", { name: "Vercel’s privacy notice (opens another site)" })).toHaveAttribute("href", "https://vercel.com/legal/privacy-notice");
+    await expect(page.locator("main").getByRole("link", { name: LANDING.contactEmail })).toHaveAttribute("href", `mailto:${LANDING.contactEmail}`);
+    await expect(page.locator("main")).not.toContainText(/draft/i);
+  });
+
+  test("what it says matches what the site does: no cookies, nothing from other origins, no forms", async ({ page, context }) => {
+    const origins = new Set<string>();
+    page.on("request", (r) => origins.add(new URL(r.url()).origin));
+    for (const path of ["/", "/privacy"]) {
+      await page.goto(path);
+      await page.waitForLoadState("networkidle");
+      await expect(page.locator("form, input, textarea, select")).toHaveCount(0);
+    }
+    expect([...origins]).toEqual([LANDING_URL]);
+    expect(await context.cookies()).toEqual([]);
+    // The theme choice is the one thing kept, in the browser's own storage.
+    await page.getByRole("button", { name: "Light" }).click();
+    expect(await page.evaluate(() => Object.keys(localStorage))).toEqual(["vt-theme"]);
+    expect(await context.cookies()).toEqual([]);
+  });
+
+  test("asks the browser to send other sites only the origin", async ({ request }) => {
+    expect((await request.get("/privacy")).headers()["referrer-policy"]).toBe("strict-origin-when-cross-origin");
+  });
+});
+
+test.describe("text size and spacing", () => {
+  test("the footer's Theme legend is at least 16 px", async ({ page }) => {
+    await page.goto("/");
+    const legend = page.locator("footer legend");
+    await expect(legend).toBeVisible();
+    expect(await legend.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(16);
+  });
+
+  test("at 360 px with WCAG 1.4.12 text spacing the row holds, columns do not overlap and nothing scrolls sideways", async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 900 });
+    await page.goto("/");
+    await page.addStyleTag({ content: "* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; } p { margin-bottom: 2em !important; }" });
+    const boxes = await page.locator(".acrostic-list > li .acrostic-text").evaluateAll((els) => els.map((el) => ({ left: el.getBoundingClientRect().left, right: el.getBoundingClientRect().right, top: el.getBoundingClientRect().top, item: el.parentElement!.getBoundingClientRect().right })));
+    expect(new Set(boxes.map((b) => Math.round(b.top))).size).toBe(1);
+    for (const b of boxes) expect(b.right, "the text stays inside its column").toBeLessThanOrEqual(b.item + 0.5);
+    for (let i = 1; i < boxes.length; i++) expect(boxes[i]!.left).toBeGreaterThanOrEqual(boxes[i - 1]!.right);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  });
 });

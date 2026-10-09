@@ -28,6 +28,8 @@ const LandingSchema = z
       )
       .min(1),
     motto: z.string().min(1),
+    /** The motto's language, as a BCP 47 tag (SC 3.1.2): "la" for Latin. */
+    mottoLang: z.string().regex(/^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/, "a BCP 47 language tag"),
     links: z.array(z.object({ label: z.string().min(1), href: httpsUrl, customDomain: httpsUrl.optional() }).strict()).min(1),
     signupClosed: z.string().min(1),
     legalName: z.string().min(1),
@@ -56,12 +58,16 @@ export function acrosticHeading(items: readonly AcrosticItem[]): string {
   return items.map((i) => `${i.across}.`).join(" ");
 }
 
+/** Room each column keeps beyond its longest word, for text spacing (SC 1.4.12). */
+export const ACROSTIC_HEADROOM_CH = 2;
+
 /**
  * The width below which the columns stack (globals.css, .acrostic-list):
- * every column one character wider than the longest word, plus the 2rem
- * gaps. In ch and rem, so it scales with enlarged text.
+ * every column its longest word plus ACROSTIC_HEADROOM_CH, plus the gaps,
+ * whose width the stylesheet sets. In ch, so it scales with the list's
+ * own size and with enlarged text.
  */
 export function acrosticThreshold(items: readonly AcrosticItem[]): string {
   const longest = Math.max(...items.flatMap((i) => [`${i.across}.`, ...i.down]).map((w) => w.length));
-  return `calc(${items.length * (longest + 1)}ch + ${(items.length - 1) * 2}rem)`;
+  return `calc(${items.length * (longest + ACROSTIC_HEADROOM_CH)}ch + ${items.length - 1} * var(--acrostic-gap))`;
 }

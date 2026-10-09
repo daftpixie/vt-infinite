@@ -11,7 +11,11 @@ export function lockupSvg(): string {
   return cached;
 }
 
-/** The mark paints with currentColor, so it takes the figure color and inverts with the theme. */
+/**
+ * The mark paints with currentColor, so it takes the figure color and
+ * inverts with the theme. A span (display: block in CSS), since it sits
+ * inside the page's h1, which takes phrasing content only.
+ */
 export function BrandLockup() {
-  return <div className="landing-lockup" dangerouslySetInnerHTML={{ __html: lockupSvg() }} />;
+  return <span className="landing-lockup" dangerouslySetInnerHTML={{ __html: lockupSvg() }} />;
 }

@@ -36,6 +36,7 @@ type Query = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
+  fullSiteOnly();
   const { period } = await params;
   return roverMetadata(`Period ${period.slice(0, 16)}`, "Balances, register, restrictions and status for one synthetic reporting period.");
 }
