@@ -58,16 +58,25 @@ export function acrosticHeading(items: readonly AcrosticItem[]): string {
   return items.map((i) => `${i.across}.`).join(" ");
 }
 
-/** Room each column keeps beyond its longest word, for text spacing (SC 1.4.12). */
-export const ACROSTIC_HEADROOM_CH = 2;
+/** Room each column keeps beyond its longest word, in characters, for text spacing (SC 1.4.12). */
+export const ACROSTIC_HEADROOM = 2;
+
+/**
+ * JetBrains Mono's advance: every glyph is 600 of 1000 units wide
+ * (public/fonts/JetBrainsMono-wght.woff2, hmtx). The threshold uses it in
+ * em rather than the ch unit, which browsers may round (Chromium 153 makes
+ * 1ch 10 px at 16 px, not 9.6 px), so the row holds wherever it fits.
+ */
+export const ACROSTIC_ADVANCE_EM = 0.6;
 
 /**
  * The width below which the columns stack (globals.css, .acrostic-list):
- * every column its longest word plus ACROSTIC_HEADROOM_CH, plus the gaps,
- * whose width the stylesheet sets. In ch, so it scales with the list's
- * own size and with enlarged text.
+ * every column its longest word plus ACROSTIC_HEADROOM characters, plus
+ * the gaps, whose width the stylesheet sets. In em, so it scales with the
+ * list's own size and with enlarged text.
  */
 export function acrosticThreshold(items: readonly AcrosticItem[]): string {
   const longest = Math.max(...items.flatMap((i) => [`${i.across}.`, ...i.down]).map((w) => w.length));
-  return `calc(${items.length * (longest + ACROSTIC_HEADROOM_CH)}ch + ${items.length - 1} * var(--acrostic-gap))`;
+  const em = Math.round(items.length * (longest + ACROSTIC_HEADROOM) * ACROSTIC_ADVANCE_EM * 1000) / 1000;
+  return `calc(${em}em + ${items.length - 1} * var(--acrostic-gap))`;
 }

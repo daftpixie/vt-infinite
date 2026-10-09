@@ -62,9 +62,9 @@ describe("landing copy (amendment A1.3), verbatim from content/landing.json", ()
     expect(parseLanding(switched).links[0]!.href).toBe("https://www.thehumanbutterfly.dev");
   });
 
-  it("sets the stacking threshold from the longest word, plus 2ch a column for text spacing", () => {
-    // "purpose." is the longest: 8 + 2 = 10ch a column.
-    expect(acrosticThreshold(LANDING.acrostic)).toBe("calc(30ch + 2 * var(--acrostic-gap))");
+  it("sets the stacking threshold from the longest word, plus 2 characters a column for text spacing", () => {
+    // "purpose." is the longest: 8 + 2 = 10 characters of 0.6em, so 6em a column.
+    expect(acrosticThreshold(LANDING.acrostic)).toBe("calc(18em + 2 * var(--acrostic-gap))");
   });
 });
 
