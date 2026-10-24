@@ -239,9 +239,11 @@ describe("projection (A-5, A-6)", () => {
   it("generates public keys that are random, stable across reads and not derived from provider IDs", async () => {
     const first = await project();
     const keys1 = first.p.initiatives.flatMap((i) => [i.key, ...i.steps.map((s) => s.key)]);
+    // The fixture's provider IDs. A digit pattern would also match random key text (CI, PR #22).
+    const GIDS = ["9001", "9101", "9102", "9103", "9104", "9150", "9201", "9202", "9203", "9204", "9205", "9206", "9207", "9208"];
     for (const k of keys1) {
       expect(k).toMatch(/^s[A-Za-z0-9]{12}$/);
-      expect(k).not.toMatch(/9\d{3}/);
+      for (const gid of GIDS) expect(k).not.toContain(gid);
     }
     expect(new Set(keys1).size).toBe(keys1.length);
     const second = projectPlan(await readPlanSource("9001", { token: "t", fetchImpl: asana().fetchImpl }), {

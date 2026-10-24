@@ -10,6 +10,8 @@
  */
 export type SiteMode = "full" | "landing";
 
+import { isEnabled, type Flag } from "./flags";
+
 type Env = Readonly<Record<string, string | undefined>>;
 
 const KNOWN = new Set(["", "full", "landing"]);
@@ -31,10 +33,30 @@ export function isLanding(env: Env = process.env): boolean {
 export const LANDING_PAGES = ["/", "/privacy"] as const;
 
 /**
- * Landing paths that answer only while their feature flag is on; otherwise
- * the route itself answers 404 (ADR 0009). The proxy passes them either way.
+ * Spotify's official full logo, black and white (public/brand/third-party/spotify,
+ * ADR 0009, "Logo"). Byte for byte as Spotify supplies it.
  */
-export const LANDING_FLAGGED_PATHS: readonly string[] = ["/api/now-playing"];
+export const SPOTIFY_LOGOS = {
+  black: "/brand/third-party/spotify/Full_Logo_Black_RGB.svg",
+  white: "/brand/third-party/spotify/Full_Logo_White_RGB.svg",
+} as const;
+
+/**
+ * Landing paths that answer only while their feature flag is on (ADR 0009).
+ * Off, the proxy denies them, the route or a landing build answers 404 too,
+ * and nothing else under public/brand/third-party is ever served.
+ */
+export const LANDING_FLAGGED: ReadonlyArray<{ path: string; flag: Flag }> = [
+  { path: "/api/now-playing", flag: "nowPlaying" },
+  { path: SPOTIFY_LOGOS.black, flag: "nowPlaying" },
+  { path: SPOTIFY_LOGOS.white, flag: "nowPlaying" },
+];
+export const LANDING_FLAGGED_PATHS: readonly string[] = LANDING_FLAGGED.map((f) => f.path);
+
+/** The flagged landing paths whose flag is on now. */
+export function openFlaggedPaths(env: Env = process.env): string[] {
+  return LANDING_FLAGGED.filter((f) => isEnabled(f.flag, env)).map((f) => f.path);
+}
 
 /**
  * Every path that answers in landing mode. Paths are compared after

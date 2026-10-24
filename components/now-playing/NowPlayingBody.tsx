@@ -1,7 +1,7 @@
 import { CrisisSupport } from "@/components/CrisisSupport";
 import { ExternalLink } from "@/components/ExternalLink";
-import { Placeholder } from "@/components/Placeholder";
 import { mentionsSuicide } from "@/lib/crisis";
+import { SPOTIFY_LOGOS } from "@/lib/mode";
 import { shownNames, type Link, type NowPlayingView } from "@/lib/now-playing/projection";
 import { ageText, labelText, NOW_PLAYING_EMOJI, STATE_TEXT } from "@/lib/now-playing/view";
 
@@ -11,12 +11,30 @@ function Name({ item }: { item: Link }) {
 }
 
 /**
+ * Spotify's official full logo, from the site's own origin, byte for byte as
+ * supplied. Both variants are in the page and CSS shows one: white on the
+ * dark theme, black on the light, following the theme switch and the
+ * system setting with no flash, since the theme is set before first paint.
+ * The hidden one is display: none, so a screen reader hears "Spotify" once.
+ * Width and clear space are set in app/globals.css.
+ */
+function SpotifyLogo() {
+  return (
+    <p className="spotify-logo">
+      {/* eslint-disable-next-line @next/next/no-img-element -- the official files are served as they are, never optimised */}
+      <img className="spotify-logo-white" src={SPOTIFY_LOGOS.white} alt="Spotify" width={120} height={33} />
+      {/* eslint-disable-next-line @next/next/no-img-element -- as above */}
+      <img className="spotify-logo-black" src={SPOTIFY_LOGOS.black} alt="Spotify" width={120} height={33} />
+    </p>
+  );
+}
+
+/**
  * "Now playing" as it renders: on the server in full, and again in the
  * browser after each poll. The label is Matthew's, verbatim, with the emoji
  * hidden from screen readers. Every state is a sentence, not a color.
- * Spotify's metadata links back to Spotify; the logo its guidelines ask for
- * is a placeholder until Matthew supplies the official asset (ADR 0009), so
- * the release check holds the feature until then.
+ * Spotify's metadata links back to Spotify, and Spotify's official full
+ * logo attributes it (ADR 0009, "Logo").
  */
 export function NowPlayingBody({ view, checkedAt, servedAt }: { view: NowPlayingView; checkedAt: number | null; servedAt: number }) {
   const track = (view.state === "playing" || view.state === "paused") && view.track ? view.track : null;
@@ -54,7 +72,7 @@ export function NowPlayingBody({ view, checkedAt, servedAt }: { view: NowPlaying
               </>
             ) : null}
           </dl>
-          <Placeholder id="spotifyLogo" />
+          <SpotifyLogo />
         </>
       ) : null}
       {age ? <p className="now-playing-age">{age}</p> : null}

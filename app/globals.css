@@ -313,6 +313,25 @@ tbody th { font-weight: 400; color: var(--text); }
 .now-playing-track dt { color: var(--muted); }
 .now-playing-track dd { margin: 0; overflow-wrap: anywhere; }
 .now-playing-age { color: var(--muted); }
+/*
+ * Spotify's official full logo (ADR 0009, "Logo"). 7.5rem wide, never below
+ * Spotify's 70 px minimum (120 px at default text size). Clear space: half
+ * the icon's height on every side. The icon is 218.82 units tall in a file
+ * 823.46 units wide, so half its height is 0.1329 of the logo's width (15.9 px at
+ * 120 px); the padding of 1rem (16 px) is measured from the image's edges,
+ * which already sit outside the artwork, and never less than the 9.3 px
+ * the 70 px minimum needs. The two variants swap with the
+ * theme, like every other figure-and-ground pair.
+ */
+.spotify-logo { margin: 0 0 var(--s4); padding: max(var(--s4), 9.5px); max-width: none; line-height: 0; }
+.spotify-logo img { display: block; width: 7.5rem; min-width: 70px; height: auto; }
+.spotify-logo .spotify-logo-black { display: none; }
+:root[data-theme="light"] .spotify-logo .spotify-logo-white { display: none; }
+:root[data-theme="light"] .spotify-logo .spotify-logo-black { display: block; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .spotify-logo .spotify-logo-white { display: none; }
+  :root:not([data-theme]) .spotify-logo .spotify-logo-black { display: block; }
+}
 .landing-footer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s4) var(--s8); }
 .landing-footer > p { margin: 0; }
 .landing-footer .footer-links { display: flex; flex-wrap: wrap; gap: 0 var(--s6); }
