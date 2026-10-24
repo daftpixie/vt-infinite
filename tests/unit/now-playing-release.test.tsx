@@ -13,8 +13,8 @@ import { ALBUM_URL, ARTIST_URL, TRACK_URL } from "./now-playing-synthetic";
  * - /privacy serves notice "landing-2", with its Spotify sentences, and
  * - no placeholder renders in the component, in any state.
  *
- * CI runs with the flag off and checks that the gate sees what it must:
- * today the Spotify logo is still a placeholder, so a flag-on build fails.
+ * CI runs with the flag off and checks that the gate sees what it must.
+ * The official Spotify logo closed the last gap (ADR 0009, "Logo").
  */
 vi.mock("next/server", async (orig) => ({ ...(await orig<object>()), connection: async () => {} }));
 
@@ -64,8 +64,8 @@ describe("now-playing release gate (N10)", () => {
     expect(html).toContain("Track links go to Spotify.");
   });
 
-  it("sees a placeholder in the states that show Spotify's metadata: the logo is not supplied yet", () => {
-    expect(gaps()).toEqual({ playing: ["spotifyLogo"], paused: ["spotifyLogo"] });
+  it("finds no outstanding gaps: the official logo replaced the placeholder", () => {
+    expect(gaps()).toEqual({});
   });
 
   it.runIf(NOW_PLAYING_HERE)("with NOW_PLAYING_ENABLED=true, no placeholder renders in any state", () => {
@@ -84,11 +84,12 @@ describe("the release check script", () => {
   });
 
   // Runs this file again with the flag on, so not from inside that run.
-  it.skipIf(NOW_PLAYING_HERE)("with NOW_PLAYING_ENABLED=true refuses the build while the logo is a placeholder", () => {
-    const r = run({ NOW_PLAYING_ENABLED: "true" });
-    expect(r.status).toBe(1);
-    expect(r.stderr).toContain("release check: now playing: FAILED.");
-  }, 120_000);
+  it.skipIf(NOW_PLAYING_HERE || process.env.SITE_MODE === "landing")("with NOW_PLAYING_ENABLED=true and SITE_MODE=landing passes now that no placeholder renders", () => {
+    const r = run({ NOW_PLAYING_ENABLED: "true", SITE_MODE: "landing" });
+    expect(r.status, r.stderr).toBe(0);
+    expect(r.stdout).toContain("release check: landing release: passed.");
+    expect(r.stdout).toContain("release check: now playing: passed.");
+  }, 240_000);
 
   it("refuses the test-only synthetic Spotify on Vercel", () => {
     const r = run({ NOW_PLAYING_FIXTURE: "playing", VERCEL: "1" });

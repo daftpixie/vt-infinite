@@ -1,7 +1,7 @@
 import { readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import type { NextConfig } from "next";
-import { LANDING_FONTS, LANDING_PATHS } from "./lib/mode";
+import { LANDING_FLAGGED_PATHS, LANDING_FONTS, LANDING_PATHS, openFlaggedPaths } from "./lib/mode";
 import { securityHeaders } from "./lib/security-headers";
 
 function publicFiles(dir = "public"): string[] {
@@ -17,7 +17,9 @@ function publicFiles(dir = "public"): string[] {
  */
 function landingHiddenFiles(): string[] {
   if (process.env.SITE_MODE !== "landing") return [];
-  const allowed = new Set([...LANDING_PATHS, ...LANDING_FONTS]);
+  // A file behind a flag (the Spotify logos, ADR 0009) is served only by a build made with that flag on.
+  const open = openFlaggedPaths();
+  const allowed = new Set([...LANDING_PATHS.filter((p) => !LANDING_FLAGGED_PATHS.includes(p) || open.includes(p)), ...LANDING_FONTS]);
   return publicFiles().filter((f) => !allowed.has(f));
 }
 

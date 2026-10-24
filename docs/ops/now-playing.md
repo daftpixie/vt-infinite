@@ -74,12 +74,12 @@ Redeploy Production. Then:
 - `/api/now-playing` answers 404.
 - `/privacy` says `Version landing-1`.
 
-## 6. Before switching on: the Spotify logo
+## 6. The Spotify logo (done)
 
-Spotify's design guidelines ask for its logo beside its content. The site does not draw it; it waits for the official file, from Spotify's own design resources. Until that file is in the repository, the component shows a placeholder where the logo goes, and the release check refuses any build with `NOW_PLAYING_ENABLED=true`. Supply the file to a build session; a pull request adds it and removes the `spotifyLogo` placeholder. After it is merged, on your machine on `main`:
+Done. Spotify's official full logo, black and white, which you supplied on 24 Oct 2026, is in `public/brand/third-party/spotify/` and shows beside the track (ADR 0009, "Logo"). The release check no longer holds the feature. To confirm on your machine, on `main`:
 
 ```
-NOW_PLAYING_ENABLED=true node scripts/check-release.mjs
+NOW_PLAYING_ENABLED=true SITE_MODE=landing node scripts/check-release.mjs
 ```
 
 It must end with `release check: now playing: passed.`
@@ -89,7 +89,7 @@ It must end with `release check: now playing: passed.`
 Add `NOW_PLAYING_ENABLED` = `true` for Production and redeploy. Then:
 
 - The build log shows `release check: now playing: passed.` If it shows `FAILED`, the deployment did not build; nothing changed on the live site.
-- `/` shows "What is Matty vibing to?" below the links, with one of: Playing, Paused, Nothing playing, Listening to a podcast. Play something and reload after 30 seconds; it follows.
+- `/` shows "What is Matty vibing to?" below the links, with one of: Playing, Paused, Nothing playing, Listening to a podcast. Play something and reload after 30 seconds; it follows. While a track shows, Spotify's logo sits below it: white on the dark theme, black on the light.
 - `/privacy` says `Version landing-2` and has a short Spotify section.
 - `/api/now-playing` answers JSON.
 - In the runtime logs (Vercel → Logs), there is **no** `Spotify reconnect needed`, no `credentials are not set`, and **no** `Runtime Cache unavailable in this environment`. That last line would mean the shared cache is not in use, so the 30-second bound would hold per instance only; switch off and report it.

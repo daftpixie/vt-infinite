@@ -84,7 +84,8 @@ test.describe("landing mode: only the landing release answers (exhaustive over l
       readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)]));
     const files = walk("public").map((f) => `/${relative("public", f).split(sep).join("/")}`);
     expect(files).toContain("/fonts/OFL.txt");
-    const allowed = new Set([...LANDING_PATHS, ...LANDING_FONTS]);
+    // The flag-off server: files behind a flag (the Spotify logos, ADR 0009) answer 404 here.
+    const allowed = new Set([...LANDING_PATHS.filter((p) => !LANDING_FLAGGED_PATHS.includes(p)), ...LANDING_FONTS]);
     for (const f of files) {
       const res = await request.get(f, { maxRedirects: 0 });
       expect(res.status(), f).toBe(allowed.has(f) ? 200 : 404);

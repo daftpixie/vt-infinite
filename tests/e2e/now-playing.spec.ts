@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { runRules } from "@/guards/rules.mjs";
+import { SPOTIFY_LOGOS } from "@/lib/mode";
 import { NOW_PLAYING_API, STATE_TEXT } from "@/lib/now-playing/view";
 import { pageText } from "./helpers";
 
@@ -63,7 +64,8 @@ test.describe("the landing page with now playing on", () => {
           - definition:
             - link "Synthetic Album (opens another site)":
               - /url: https://open.spotify.com/album/SyntheticAlbumId000001
-          - paragraph: /Placeholder/
+          - paragraph:
+            - img "Spotify"
         - paragraph: Updates sign-up opens soon
     `);
   });
@@ -151,7 +153,10 @@ test.describe("the landing page with now playing on", () => {
     for (const u of polls) expect(new URL(u).origin).toBe(ON_URL);
   });
 
-  test("every browser request goes to the site's own origin, while polling too, and sets no cookies", async ({ page, context }) => {
+  for (const scheme of ["dark", "light"] as const) {
+  test(`every browser request goes to the site's own origin, while polling too, and sets no cookies (${scheme} theme)`, async ({ browser }) => {
+    const context = await browser.newContext({ colorScheme: scheme, baseURL: ON_URL });
+    const page = await context.newPage();
     const origins = new Set<string>();
     page.on("request", (r) => origins.add(new URL(r.url()).origin));
     await page.clock.install();
@@ -164,8 +169,12 @@ test.describe("the landing page with now playing on", () => {
     await page.waitForLoadState("networkidle");
     expect([...origins]).toEqual([ON_URL]);
     expect(await context.cookies()).toEqual([]);
-    await expect(page.locator(".now-playing img, .now-playing svg, .now-playing iframe, iframe, embed, object")).toHaveCount(0);
+    // The only images are Spotify's two logo files, from the site's own origin; nothing is embedded.
+    expect(await page.locator(".now-playing img").evaluateAll((els) => els.map((e) => (e as HTMLImageElement).src))).toEqual([ON_URL + SPOTIFY_LOGOS.white, ON_URL + SPOTIFY_LOGOS.black]);
+    await expect(page.locator(".now-playing svg, iframe, embed, object")).toHaveCount(0);
+    await context.close();
   });
+  }
 
   test("keeps the CSP unchanged", async ({ request }) => {
     const on = (await request.get(`${ON_URL}/`)).headers()["content-security-policy"];

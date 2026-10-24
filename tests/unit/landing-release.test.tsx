@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Placeholder } from "@/components/Placeholder";
 import { gonePageHtml, landingNotFoundHtml } from "@/lib/gone";
 import { PLACEHOLDERS, type PlaceholderId } from "@/lib/placeholders";
+import { privacyNoticeVersion } from "@/lib/privacy";
 import { LANDING_PAGES_200 } from "@/lib/routes";
 
 /**
@@ -67,7 +68,8 @@ describe("landing release gate (L3)", () => {
     expect(s["/"]).toContain("Heart. Mind. Hands.");
     expect(s["/"]).not.toContain('aria-label="Primary"');
     expect(s["/privacy"]).toContain("<h1>Privacy notice</h1>");
-    expect(s["/privacy"]).toContain("Version landing-1");
+    // "landing-2" while now playing is on in this environment, "landing-1" otherwise (ADR 0009).
+    expect(s["/privacy"]).toContain(`Version ${privacyNoticeVersion()}`);
   });
 
   it("sees a placeholder wherever one renders, block or inline", () => {
@@ -94,7 +96,7 @@ describe("landing release gate (L3)", () => {
 
 describe("the release check script", () => {
   const run = (env: Record<string, string>) =>
-    spawnSync(process.execPath, ["scripts/check-release.mjs"], { env: { ...process.env, PLAN_ENABLED: "", SITE_MODE: "", ...env }, encoding: "utf8" });
+    spawnSync(process.execPath, ["scripts/check-release.mjs"], { env: { ...process.env, PLAN_ENABLED: "", NOW_PLAYING_ENABLED: "", SITE_MODE: "", ...env }, encoding: "utf8" });
 
   it("in full mode does nothing for the landing release", () => {
     const r = run({});

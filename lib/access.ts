@@ -1,6 +1,6 @@
 import legacy from "@/content/legacy/urls.json" with { type: "json" };
 import { DEMO_ENTITY_ID, isEnabled, type Env, type Flag } from "./flags";
-import { isLanding, LANDING_FONTS, LANDING_PATHS } from "./mode";
+import { isLanding, LANDING_FLAGGED_PATHS, LANDING_FONTS, LANDING_PATHS, openFlaggedPaths, SPOTIFY_LOGOS } from "./mode";
 
 export type Decision =
   | { action: "pass" }
@@ -21,6 +21,8 @@ export const GATED_PREFIXES: ReadonlyArray<{ prefix: string; flag: Flag }> = [
   { prefix: "/api/governance/live", flag: "governanceLive" },
   { prefix: "/figures/mandelbrot", flag: "mandelbrot" },
   { prefix: "/api/now-playing", flag: "nowPlaying" },
+  { prefix: SPOTIFY_LOGOS.black.toLowerCase(), flag: "nowPlaying" },
+  { prefix: SPOTIFY_LOGOS.white.toLowerCase(), flag: "nowPlaying" },
 ];
 
 /** Marrs Rover child segments that are not entity IDs. */
@@ -54,6 +56,8 @@ function realRoverFlag(path: string): boolean {
 
 /** Landing paths and font files, as normalise() leaves them. */
 const LANDING_ALLOWED = new Set([...LANDING_PATHS, ...LANDING_FONTS].map((p) => p.toLowerCase()));
+/** Landing paths held behind a flag: denied here while it is off. */
+const LANDING_FLAGGED_LOWER = new Set(LANDING_FLAGGED_PATHS.map((p) => p.toLowerCase()));
 
 const REDIRECTS: Readonly<Record<string, string>> = legacy.redirects;
 
@@ -72,6 +76,7 @@ export function decide(pathname: string, env: Env = process.env): Decision {
 
   if (isLanding(env)) {
     if (isGone(path)) return { action: "gone" };
+    if (LANDING_FLAGGED_LOWER.has(path) && !openFlaggedPaths(env).some((p) => p.toLowerCase() === path)) return { action: "deny", reason: "landing" };
     return LANDING_ALLOWED.has(path) ? { action: "pass" } : { action: "deny", reason: "landing" };
   }
 

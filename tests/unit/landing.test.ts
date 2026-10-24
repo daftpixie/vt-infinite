@@ -4,7 +4,7 @@ import raw from "@/content/landing.json" with { type: "json" };
 import { decide } from "@/lib/access";
 import { FLAGS } from "@/lib/flags";
 import { acrosticHeading, acrosticSentence, acrosticThreshold, LANDING, parseLanding } from "@/lib/landing";
-import { isLanding, LANDING_FLAGGED_PATHS, LANDING_FONTS, LANDING_PATHS, siteMode, siteModeValueIsValid } from "@/lib/mode";
+import { isLanding, LANDING_FLAGGED, LANDING_FLAGGED_PATHS, LANDING_FONTS, LANDING_PATHS, siteMode, siteModeValueIsValid, SPOTIFY_LOGOS } from "@/lib/mode";
 import { ROUTES } from "@/lib/routes";
 
 const LANDING_ENV = { SITE_MODE: "landing" };
@@ -93,10 +93,26 @@ describe("landing configuration is validated", () => {
 });
 
 describe("landing mode access (proxy decision)", () => {
-  it("passes exactly the landing paths, with flags off or on", () => {
-    for (const env of [LANDING_ENV, { ...ALL_ON, ...LANDING_ENV }]) {
-      for (const p of LANDING_PATHS) expect(decide(p, env), p).toEqual({ action: "pass" });
+  it("passes exactly the landing paths with every flag on; with flags off, those behind a flag are denied", () => {
+    for (const p of LANDING_PATHS) expect(decide(p, { ...ALL_ON, ...LANDING_ENV }), p).toEqual({ action: "pass" });
+    for (const p of LANDING_PATHS) expect(decide(p, LANDING_ENV), p).toEqual(LANDING_FLAGGED_PATHS.includes(p) ? { action: "deny", reason: "landing" } : { action: "pass" });
+  });
+
+  it("holds now playing's API and Spotify's two logo files behind NOW_PLAYING_ENABLED, and nothing else under third-party", () => {
+    expect(LANDING_FLAGGED).toEqual([
+      { path: "/api/now-playing", flag: "nowPlaying" },
+      { path: "/brand/third-party/spotify/Full_Logo_Black_RGB.svg", flag: "nowPlaying" },
+      { path: "/brand/third-party/spotify/Full_Logo_White_RGB.svg", flag: "nowPlaying" },
+    ]);
+    const on = { ...LANDING_ENV, NOW_PLAYING_ENABLED: "true" };
+    for (const p of ["/brand/third-party", "/brand/third-party/spotify", "/brand/third-party/spotify/", "/brand/third-party/spotify/Full_Logo_Green_RGB.svg", "/brand/third-party/spotify/x.svg"]) {
+      expect(decide(p, on), p).toEqual({ action: "deny", reason: "landing" });
     }
+    expect(decide(SPOTIFY_LOGOS.white, on)).toEqual({ action: "pass" });
+    expect(decide(SPOTIFY_LOGOS.white, { ...LANDING_ENV, NOW_PLAYING_ENABLED: "TRUE" })).toEqual({ action: "deny", reason: "landing" });
+    // Full build: the logos are gated like any flagged feature.
+    expect(decide(SPOTIFY_LOGOS.black, {})).toEqual({ action: "deny", reason: "flag", flag: "nowPlaying" });
+    expect(decide(SPOTIFY_LOGOS.black, { NOW_PLAYING_ENABLED: "true" })).toEqual({ action: "pass" });
   });
 
   it("agrees with lib/routes.ts: the landing column's 200s, with the flagged landing routes, are the landing paths", () => {

@@ -515,10 +515,23 @@ describe("rendering (N7, N9)", () => {
     expect(render(view)).toContain(`data-state="${state}">${text}</p>`);
   });
 
-  it("links the track, artists and album back to Spotify, and shows no image", () => {
+  it("links the track, artists and album back to Spotify, and shows no image but Spotify's logo", () => {
     const html = render({ state: "playing", track });
     for (const href of [TRACK_URL, ARTIST_URL, ALBUM_URL]) expect(html).toContain(`href="${href}"`);
-    expect(html).not.toMatch(/<img|<svg|<iframe|<script/);
+    expect(html).not.toMatch(/<svg|<iframe|<script/);
+    expect([...html.matchAll(/<img [^>]*>/g)].map((m) => m[0])).toEqual([
+      '<img class="spotify-logo-white" src="/brand/third-party/spotify/Full_Logo_White_RGB.svg" alt="Spotify" width="120" height="33"/>',
+      '<img class="spotify-logo-black" src="/brand/third-party/spotify/Full_Logo_Black_RGB.svg" alt="Spotify" width="120" height="33"/>',
+    ]);
+  });
+
+  it("attributes with the logo in every state that shows Spotify content, and only there", () => {
+    const withLogo = (v: NowPlayingView) => render(v).includes('class="spotify-logo"');
+    expect(withLogo({ state: "playing", track })).toBe(true);
+    expect(withLogo({ state: "paused", track })).toBe(true);
+    for (const v of [{ state: "playing", track: null }, { state: "podcast" }, { state: "nothing" }, { state: "not-sharing" }, { state: "unreachable" }] as NowPlayingView[]) {
+      expect(withLogo(v), v.state).toBe(false);
+    }
   });
 
   it("escapes names and shows them as supplied", () => {
