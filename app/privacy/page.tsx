@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { PrivacyNotice } from "@/components/landing/PrivacyNotice";
 import { LANDING } from "@/lib/landing";
 import { landingOnly } from "@/lib/mode-gate";
+import { privacyNoticeVersion } from "@/lib/privacy";
 
 /** Indexable in landing mode only; the full build answers 404 here. */
 export function generateMetadata(): Metadata {
@@ -17,7 +18,7 @@ export default async function PrivacyPage() {
   return (
     <div className="wrap">
       <h1>{LANDING.privacyLabel}</h1>
-      <PrivacyNotice />
+      <PrivacyNotice version={privacyNoticeVersion()} />
     </div>
   );
 }

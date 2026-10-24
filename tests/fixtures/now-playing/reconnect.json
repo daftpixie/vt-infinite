@@ -1,0 +1,12 @@
+{
+  "token": {
+    "status": 400,
+    "body": {
+      "error": "invalid_grant",
+      "error_description": "Refresh token revoked"
+    }
+  },
+  "read": {
+    "status": 500
+  }
+}

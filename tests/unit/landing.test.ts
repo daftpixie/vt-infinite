@@ -4,7 +4,7 @@ import raw from "@/content/landing.json" with { type: "json" };
 import { decide } from "@/lib/access";
 import { FLAGS } from "@/lib/flags";
 import { acrosticHeading, acrosticSentence, acrosticThreshold, LANDING, parseLanding } from "@/lib/landing";
-import { isLanding, LANDING_FONTS, LANDING_PATHS, siteMode, siteModeValueIsValid } from "@/lib/mode";
+import { isLanding, LANDING_FLAGGED_PATHS, LANDING_FONTS, LANDING_PATHS, siteMode, siteModeValueIsValid } from "@/lib/mode";
 import { ROUTES } from "@/lib/routes";
 
 const LANDING_ENV = { SITE_MODE: "landing" };
@@ -99,12 +99,14 @@ describe("landing mode access (proxy decision)", () => {
     }
   });
 
-  it("agrees with lib/routes.ts: the landing column's 200s are the landing paths", () => {
-    expect(ROUTES.filter((r) => r.landing === 200).map((r) => r.path).sort()).toEqual([...LANDING_PATHS].sort());
+  it("agrees with lib/routes.ts: the landing column's 200s, with the flagged landing routes, are the landing paths", () => {
+    const flagged = ROUTES.filter((r) => LANDING_FLAGGED_PATHS.includes(r.path));
+    expect(flagged.map((r) => [r.path, r.landing, Boolean(r.flag)])).toEqual(LANDING_FLAGGED_PATHS.map((p) => [p, 404, true]));
+    expect([...ROUTES.filter((r) => r.landing === 200), ...flagged].map((r) => r.path).sort()).toEqual([...LANDING_PATHS].sort());
   });
 
   it("denies every other route in lib/routes.ts, even with every flag on", () => {
-    for (const r of ROUTES.filter((x) => x.landing === 404)) {
+    for (const r of ROUTES.filter((x) => x.landing === 404 && !LANDING_FLAGGED_PATHS.includes(x.path))) {
       expect(decide(r.path, { ...ALL_ON, ...LANDING_ENV }), r.path).toEqual({ action: "deny", reason: "landing" });
     }
   });

@@ -3,6 +3,8 @@
  * the landing release's routes. Tests read this table; app/ (or public/)
  * must implement each entry.
  */
+import type { Flag } from "./flags";
+
 export type RouteSpec = {
   path: string;
   /** File under app/ (or public/) that implements the route. */
@@ -11,6 +13,8 @@ export type RouteSpec = {
   status: 200 | 404;
   /** Expected status with SITE_MODE=landing and every feature flag off. Only the landing release answers 200. */
   landing: 200 | 404;
+  /** For a landing route held behind a flag (LANDING_FLAGGED_PATHS): 200 in both modes once this flag is on. */
+  flag?: Flag;
   kind: "page" | "feed" | "asset";
 };
 
@@ -57,6 +61,8 @@ export const ROUTES: readonly RouteSpec[] = [
   { path: "/api/cron/refresh", file: "app/api/cron/refresh/route.ts", status: 404, landing: 404, kind: "feed" },
   { path: "/api/plan/onerhythm", file: "app/api/plan/onerhythm/route.ts", status: 404, landing: 404, kind: "feed" },
   { path: "/figures/mandelbrot-still.png", file: "app/figures/mandelbrot-still.png/route.ts", status: 404, landing: 404, kind: "feed" },
+  // "Now playing" (ADR 0009): part of both releases, 404 in both until NOW_PLAYING_ENABLED is "true".
+  { path: "/api/now-playing", file: "app/api/now-playing/route.ts", status: 404, landing: 404, kind: "feed", flag: "nowPlaying" },
   // Landing release (SITE_MODE=landing): the privacy notice and robots exist only there.
   { path: "/privacy", file: "app/privacy/page.tsx", status: 404, landing: 200, kind: "page" },
   { path: "/robots.txt", file: "app/robots.txt/route.ts", status: 404, landing: 200, kind: "feed" },

@@ -13,6 +13,8 @@ export const FLAGS = {
   marrsRoverRealData: "MARRS_ROVER_REAL_DATA_ENABLED",
   /** Mandelbrot figure on Agency, held until Matthew accepts its kernel (PRD P7). */
   mandelbrot: "MANDELBROT_ENABLED",
+  /** Spotify "now playing" on `/` and /vibes (PRD S-1 to S-8; ADR 0009). */
+  nowPlaying: "NOW_PLAYING_ENABLED",
 } as const;
 
 export type Flag = keyof typeof FLAGS;

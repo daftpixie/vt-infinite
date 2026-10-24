@@ -304,6 +304,15 @@ tbody th { font-weight: 400; color: var(--text); }
 .landing-links { list-style: none; margin: var(--s12) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 var(--s6); }
 .landing-links a { display: inline-flex; align-items: center; min-height: 2.75rem; }
 .landing-signup { margin: var(--s8) 0 0; }
+/* "Now playing" (ADR 0009): below the links, above the sign-up line. States are words; nothing moves. */
+.now-playing { margin: var(--s12) 0 0; max-width: var(--measure); }
+.now-playing + .landing-signup { margin-top: var(--s8); }
+.now-playing-label { font-size: var(--step-1); line-height: var(--lead-1); margin: 0 0 var(--s4); }
+.now-playing-state { font-weight: 700; color: var(--figure); margin: 0 0 var(--s4); }
+.now-playing-track { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--s1) var(--s4); margin: 0 0 var(--s4); }
+.now-playing-track dt { color: var(--muted); }
+.now-playing-track dd { margin: 0; overflow-wrap: anywhere; }
+.now-playing-age { color: var(--muted); }
 .landing-footer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s4) var(--s8); }
 .landing-footer > p { margin: 0; }
 .landing-footer .footer-links { display: flex; flex-wrap: wrap; gap: 0 var(--s6); }

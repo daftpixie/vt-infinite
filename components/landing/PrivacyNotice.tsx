@@ -1,17 +1,19 @@
 import { ExternalLink } from "@/components/ExternalLink";
 import { LANDING } from "@/lib/landing";
-import { PRIVACY_NOTICE_VERSION, VERCEL_PRIVACY_URL } from "@/lib/privacy";
+import { type PrivacyNoticeVersion, VERCEL_PRIVACY_URL } from "@/lib/privacy";
 
 /**
- * Privacy notice "landing-1": what the landing release actually does.
- * Every sentence that states a fact is listed with its source in
- * docs/adr/0008-landing-privacy-notice.md. Change the version when the
- * site changes what it does.
+ * Privacy notice "landing-1", or "landing-2" while "now playing" is on:
+ * what the landing release actually does. Every sentence that states a
+ * fact is listed with its source in docs/adr/0008-landing-privacy-notice.md
+ * ("landing-1") and docs/adr/0009-now-playing.md (what "landing-2" adds).
+ * Change the version when the site changes what it does.
  */
-export function PrivacyNotice() {
+export function PrivacyNotice({ version }: { version: PrivacyNoticeVersion }) {
+  const nowPlaying = version === "landing-2";
   return (
     <>
-      <p>Version {PRIVACY_NOTICE_VERSION}</p>
+      <p>Version {version}</p>
 
       <h2>What this site collects</h2>
       <p>This site does not collect anything about you. It has no sign-up form, no comments and no accounts.</p>
@@ -27,8 +29,19 @@ export function PrivacyNotice() {
         To learn how Vercel handles this information, read <ExternalLink href={VERCEL_PRIVACY_URL}>Vercel&rsquo;s privacy notice</ExternalLink>.
       </p>
 
+      {nowPlaying ? (
+        <>
+          <h2>Spotify</h2>
+          <p>The home page shows what Matthew is playing on Spotify. This site asks Spotify for it. Your browser does not contact Spotify.</p>
+        </>
+      ) : null}
+
       <h2>Links to other sites</h2>
-      <p>The links to our publications go to Substack. The Discord link goes to Discord. When you follow one, you leave this site, and that service&rsquo;s own privacy rules apply.</p>
+      {nowPlaying ? (
+        <p>The links to our publications go to Substack. The Discord link goes to Discord. Track links go to Spotify. When you follow one, you leave this site, and that service&rsquo;s own privacy rules apply.</p>
+      ) : (
+        <p>The links to our publications go to Substack. The Discord link goes to Discord. When you follow one, you leave this site, and that service&rsquo;s own privacy rules apply.</p>
+      )}
       <p>This site asks your browser to tell them only that you came from vt-infinite.com, not which page.</p>
 
       <h2>Email updates</h2>

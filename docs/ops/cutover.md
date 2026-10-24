@@ -234,7 +234,7 @@ Expect `content="index, follow"` for `/` and `/privacy`, and `noindex` for `/wor
 curl -s "https://$HOST/privacy" | grep -o 'Version landing-1'
 ```
 
-Expect `Version landing-1`.
+Expect `Version landing-1`. If "now playing" is switched on (`NOW_PLAYING_ENABLED=true`, docs/ops/now-playing.md), expect `Version landing-2` instead: grep for `Version landing-2`.
 
 **In a browser:** open `/`, follow each of the three links, the footer's Privacy notice and Home links, and a mistyped address. Switch the theme. Check on a phone that the three columns read across.
 

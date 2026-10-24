@@ -4,7 +4,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { runRules } from "@/guards/rules.mjs";
 import { LANDING } from "@/lib/landing";
-import { LANDING_FONTS, LANDING_PATHS } from "@/lib/mode";
+import { LANDING_FLAGGED_PATHS, LANDING_FONTS, LANDING_PATHS } from "@/lib/mode";
 import { ROUTES } from "@/lib/routes";
 import { pageText } from "./helpers";
 
@@ -24,8 +24,9 @@ test.describe("landing mode: only the landing release answers (exhaustive over l
     });
   }
 
-  test("the 200s are exactly the landing paths", () => {
-    expect(ROUTES.filter((r) => r.landing === 200).map((r) => r.path).sort()).toEqual([...LANDING_PATHS].sort());
+  test("the 200s, with the landing routes held behind a flag, are exactly the landing paths", () => {
+    const flagged = ROUTES.filter((r) => r.flag && LANDING_FLAGGED_PATHS.includes(r.path));
+    expect([...ROUTES.filter((r) => r.landing === 200), ...flagged].map((r) => r.path).sort()).toEqual([...LANDING_PATHS].sort());
   });
 
   test("other methods and APIs answer 404 too", async ({ request }) => {
