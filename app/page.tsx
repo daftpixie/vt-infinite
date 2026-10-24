@@ -9,6 +9,7 @@ import { Unreleased } from "@/components/Unreleased";
 import { StreamStatus, WordsList } from "@/components/words";
 import { publishedEssays } from "@/lib/content/essays";
 import { isLanding } from "@/lib/mode";
+import { landingNowPlaying } from "@/lib/now-playing/page";
 import { readPlan } from "@/lib/plan/service";
 import { FOOTER_LINES } from "@/lib/site";
 import { readAllPublications } from "@/lib/streams/service";
@@ -27,8 +28,9 @@ export function generateMetadata(): Metadata {
 
 export default async function HomePage() {
   await connection();
-  // The landing release (SITE_MODE=landing) reads nothing upstream and shows only its own page.
-  if (isLanding()) return <LandingPage />;
+  // The landing release (SITE_MODE=landing) shows only its own page. It reads nothing upstream unless
+  // NOW_PLAYING_ENABLED is "true", and then only the shared "now playing" projection (ADR 0009).
+  if (isLanding()) return <LandingPage nowPlaying={await landingNowPlaying()} />;
   // Home and the plan page share one snapshot (PRD §05); off or withdrawn, only the placeholder shows.
   const [streams, plan] = await Promise.all([readAllPublications(), readPlan()]);
   const latest = latestForHome(buildWordsEntries(publishedEssays(), streams));

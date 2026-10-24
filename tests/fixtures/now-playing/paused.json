@@ -1,0 +1,54 @@
+{
+  "token": {
+    "status": 200,
+    "body": {
+      "access_token": "synthetic-access-token",
+      "token_type": "Bearer",
+      "scope": "user-read-currently-playing",
+      "expires_in": 3600
+    }
+  },
+  "read": {
+    "status": 200,
+    "body": {
+      "is_playing": false,
+      "currently_playing_type": "track",
+      "progress_ms": 61234,
+      "device": {
+        "name": "Synthetic Device"
+      },
+      "item": {
+        "type": "track",
+        "name": "Synthetic Track",
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/SyntheticTrackId000001"
+        },
+        "artists": [
+          {
+            "name": "Synthetic Artist",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/SyntheticArtistId00001"
+            }
+          },
+          {
+            "name": "Second Synthetic Artist",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/SyntheticArtistId00002"
+            }
+          }
+        ],
+        "album": {
+          "name": "Synthetic Album",
+          "images": [
+            {
+              "url": "https://i.scdn.co/image/synthetic"
+            }
+          ],
+          "external_urls": {
+            "spotify": "https://open.spotify.com/album/SyntheticAlbumId000001"
+          }
+        }
+      }
+    }
+  }
+}

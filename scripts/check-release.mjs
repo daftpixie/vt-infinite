@@ -12,8 +12,14 @@
 //               (tests/unit/plan-activation.test.tsx): no placeholder on
 //               /plan/onerhythm or in Home's plan block. docs/ops/plan.md,
 //               "Activation order".
+//   now playing NOW_PLAYING_ENABLED=true runs the now-playing gate
+//               (tests/unit/now-playing-release.test.tsx): the privacy
+//               notice is "landing-2" and no placeholder renders in the
+//               component, in any state. NOW_PLAYING_FIXTURE (a test-only
+//               synthetic Spotify, lib/now-playing/fixture.ts) fails on
+//               Vercel. ADR 0009; docs/ops/now-playing.md.
 //
-// With SITE_MODE unset and the plan off it checks nothing else.
+// With SITE_MODE unset and every gated feature off it checks nothing else.
 import { spawnSync } from "node:child_process";
 
 const KNOWN_MODES = ["", "full", "landing"];
@@ -36,6 +42,11 @@ if (process.env.VT_TEST_BUILD_WITHOUT_PROXY && process.env.VERCEL) {
   failed = true;
 }
 
+if (process.env.NOW_PLAYING_FIXTURE && process.env.VERCEL) {
+  console.error("release check: NOW_PLAYING_FIXTURE is a test-only synthetic Spotify and must never be set on Vercel. FAILED.");
+  failed = true;
+}
+
 if (!KNOWN_MODES.includes(mode)) {
   console.error(`release check: SITE_MODE must be unset, "full" or "landing" (got a value of ${mode.length} characters). FAILED.`);
   failed = true;
@@ -49,6 +60,16 @@ if (process.env.PLAN_ENABLED !== "true") {
   console.log("release check: PLAN_ENABLED is not on; nothing to check.");
 } else {
   gate("plan activation", "tests/unit/plan-activation.test.tsx", "Supply the approved plan description (P11) in a pull request before turning PLAN_ENABLED on (docs/ops/plan.md).");
+}
+
+if (process.env.NOW_PLAYING_ENABLED !== "true") {
+  console.log("release check: NOW_PLAYING_ENABLED is not on; nothing to check for now playing.");
+} else {
+  gate(
+    "now playing",
+    "tests/unit/now-playing-release.test.tsx",
+    'Serve privacy notice "landing-2" and supply every missing item (lib/placeholders.ts; the Spotify logo is one) in a pull request before turning NOW_PLAYING_ENABLED on (docs/ops/now-playing.md).',
+  );
 }
 
 process.exit(failed ? 1 : 0);

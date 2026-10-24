@@ -31,11 +31,17 @@ export function isLanding(env: Env = process.env): boolean {
 export const LANDING_PAGES = ["/", "/privacy"] as const;
 
 /**
+ * Landing paths that answer only while their feature flag is on; otherwise
+ * the route itself answers 404 (ADR 0009). The proxy passes them either way.
+ */
+export const LANDING_FLAGGED_PATHS: readonly string[] = ["/api/now-playing"];
+
+/**
  * Every path that answers in landing mode. Paths are compared after
  * lib/access.ts normalises them. The stacked lockup is inlined into `/`,
  * so the small mark (the favicon) is the only file served from public/brand.
  */
-export const LANDING_PATHS: readonly string[] = [...LANDING_PAGES, "/robots.txt", "/sitemap.xml", "/brand/vt-infinite-mark-small.svg"];
+export const LANDING_PATHS: readonly string[] = [...LANDING_PAGES, "/robots.txt", "/sitemap.xml", "/brand/vt-infinite-mark-small.svg", ...LANDING_FLAGGED_PATHS];
 
 /**
  * The font files app/globals.css (and the proxy's own 404 and 410 pages)

@@ -4,7 +4,7 @@ import { FLAGS, isEnabled, type Flag } from "@/lib/flags";
 const ALL = Object.keys(FLAGS) as Flag[];
 
 describe("feature flags", () => {
-  it("covers every flag the kickoff names, plus the Mandelbrot hold (P7)", () => {
+  it("covers every flag the kickoff names, plus the Mandelbrot hold (P7) and now playing (ADR 0009)", () => {
     expect(Object.values(FLAGS).sort()).toEqual(
       [
         "COMMENTS_ENABLED",
@@ -12,6 +12,7 @@ describe("feature flags", () => {
         "GOVERNANCE_LIVE_ENABLED",
         "MANDELBROT_ENABLED",
         "MARRS_ROVER_REAL_DATA_ENABLED",
+        "NOW_PLAYING_ENABLED",
         "PLAN_ENABLED",
         "PLAYLIST_ENABLED",
       ].sort(),

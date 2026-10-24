@@ -1,0 +1,14 @@
+{
+  "token": {
+    "status": 200,
+    "body": {
+      "access_token": "synthetic-access-token",
+      "token_type": "Bearer",
+      "scope": "user-read-currently-playing",
+      "expires_in": 3600
+    }
+  },
+  "read": {
+    "status": 204
+  }
+}

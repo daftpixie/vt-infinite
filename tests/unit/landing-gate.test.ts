@@ -14,9 +14,11 @@ const routeFiles = execFileSync("git", ["ls-files", "--cached", "--others", "--e
 
 /** Routes that serve the landing release, and so check the mode themselves. */
 const LANDING_ROUTES: Record<string, RegExp> = {
-  "app/page.tsx": /if \(isLanding\(\)\) return <LandingPage \/>;/,
+  "app/page.tsx": /if \(isLanding\(\)\) return <LandingPage nowPlaying=\{await landingNowPlaying\(\)\} \/>;/,
   "app/privacy/page.tsx": /^export default async function PrivacyPage\(\) \{\n  await connection\(\);\n  landingOnly\(\);\n[\s\S]*^export function generateMetadata\(\): Metadata \{\n  landingOnly\(\);\n|^export function generateMetadata\(\): Metadata \{\n  landingOnly\(\);\n[\s\S]*^export default async function PrivacyPage\(\) \{\n  await connection\(\);\n  landingOnly\(\);\n/m,
   "app/robots.txt/route.ts": /if \(!isLanding\(\)\) return new Response\(null, \{ status: 404 \}\);/,
+  // Both releases (ADR 0009): its first check is the flag, so it is 404 in either mode until NOW_PLAYING_ENABLED is on.
+  "app/api/now-playing/route.ts": /^export async function GET\(\) \{\n  await connection\(\);\n  if \(!nowPlayingEnabled\(\)\) return notFound\(\);\n/m,
 };
 
 /** Routes that answer 404 to everything, in every mode, until stage 6. */

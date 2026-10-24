@@ -1,6 +1,6 @@
 # ADR 0008: Landing privacy notice ("landing-1")
 
-- Status: proposed (stage 5L-2, pull request 1)
+- Status: proposed (stage 5L-2, pull request 1); version "landing-2", served only while "now playing" is on, is in [ADR 0009](0009-now-playing.md)
 - Date: 2026-10-09
 - Decider: Matthew J Adams
 

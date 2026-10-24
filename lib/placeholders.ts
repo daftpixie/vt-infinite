@@ -15,6 +15,7 @@ export const PLACEHOLDERS = {
   governanceReviewed: { what: "last-reviewed date from the approved governance record", owner: "Matthew J Adams" },
   codeRepos: { what: "approved public repositories with dated status and evidence (G-1)", owner: "Matthew J Adams" },
   vibesNowPlaying: { what: "now playing, once the founder Spotify authorization clears (S-1)", owner: "Matthew J Adams" },
+  spotifyLogo: { what: "Spotify's official monochrome logo for attribution, from Spotify's own asset files (S-5)", owner: "Matthew J Adams" },
   agencyStory: { what: "Matthew's account, the meaning of the name and mark, and his principles", owner: "Matthew J Adams" },
   mandelbrotFigure: { what: "computed Mandelbrot figure, built and held until Matthew approves its kernel (P7)", owner: "Matthew J Adams" },
   roverIntro: { what: "Marrs Rover introduction in future or demo wording", owner: "Matthew J Adams" },

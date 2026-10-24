@@ -1,6 +1,6 @@
 # ADR 0006: Landing mode
 
-- Status: accepted; amended by [ADR 0007](0007-landing-follow-ups.md) (stage 5L-2), which answers the open questions below
+- Status: accepted; amended by [ADR 0007](0007-landing-follow-ups.md) (stage 5L-2), which answers the open questions below, and by [ADR 0009](0009-now-playing.md) (stage 5L-3): with `NOW_PLAYING_ENABLED=true` the landing page reads the shared "now playing" projection, and `/api/now-playing` joins the allowed paths
 - Date: 2026-10-08
 - Decider: Matthew J Adams
 

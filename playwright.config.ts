@@ -12,6 +12,13 @@ const LANDING_PORT = PORT + 2;
  * tested on its own (tests/e2e/landing-noproxy.spec.ts).
  */
 const NOPROXY_PORT = PORT + 3;
+/**
+ * Two with "now playing" on (ADR 0009), landing and full, each answering
+ * from a synthetic Spotify (tests/fixtures/now-playing, lib/now-playing/fixture.ts):
+ * no credential is real and nothing leaves the machine.
+ */
+const NOW_PLAYING_PORT = PORT + 4;
+const NOW_PLAYING_FULL_PORT = PORT + 5;
 
 // Every feature flag, and the site mode, is explicitly unset for the server
 // under test, so the suite proves the default-off behavior rather than
@@ -28,6 +35,16 @@ const serverEnv: Record<string, string> = {
   ALLOW_CONTENT_FIXTURES: "true",
   SNAPSHOT_DIR: "tests/fixtures/snapshots",
   UPSTREAM_REFRESH: "off",
+};
+
+/** Synthetic values only: the fixture transport answers instead of Spotify, and refuses to run on Vercel. */
+const nowPlayingEnv: Record<string, string> = {
+  NOW_PLAYING_ENABLED: "true",
+  NOW_PLAYING_FIXTURE: "playing",
+  SPOTIFY_CLIENT_ID: "synthetic-client-id",
+  SPOTIFY_CLIENT_SECRET: "synthetic-client-secret",
+  SPOTIFY_REFRESH_TOKEN: "synthetic-refresh-token",
+  SPOTIFY_AUTHORIZED_AT: "2026-10-24",
 };
 
 export default defineConfig({
@@ -84,6 +101,20 @@ export default defineConfig({
       reuseExistingServer: false,
       timeout: 120_000,
       env: { ...serverEnv, SITE_MODE: "landing", VT_TEST_BUILD_WITHOUT_PROXY: "1" },
+    },
+    {
+      command: `npx next start -p ${NOW_PLAYING_PORT} -H 127.0.0.1`,
+      url: `http://127.0.0.1:${NOW_PLAYING_PORT}/`,
+      reuseExistingServer: false,
+      timeout: 120_000,
+      env: { ...serverEnv, ...nowPlayingEnv, SITE_MODE: "landing" },
+    },
+    {
+      command: `npx next start -p ${NOW_PLAYING_FULL_PORT} -H 127.0.0.1`,
+      url: `http://127.0.0.1:${NOW_PLAYING_FULL_PORT}/`,
+      reuseExistingServer: false,
+      timeout: 120_000,
+      env: { ...serverEnv, ...nowPlayingEnv },
     },
   ],
 });

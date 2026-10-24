@@ -26,6 +26,7 @@
     "refresh": "node scripts/refresh.mjs"
   },
   "dependencies": {
+    "@vercel/functions": "3.9.11",
     "ajv": "8.20.0",
     "canonicalize": "5.1.0",
     "fast-xml-parser": "5.11.2",
