@@ -32,6 +32,9 @@ export function isLanding(env: Env = process.env): boolean {
 /** The landing release's pages, in sitemap order. */
 export const LANDING_PAGES = ["/", "/privacy"] as const;
 
+/** The social share image (ADR 0010): always served, so crawlers can fetch it. */
+export const SHARE_IMAGE_PATH = "/brand/vt-infinite-share.png";
+
 /**
  * Spotify's official full logo, black and white (public/brand/third-party/spotify,
  * ADR 0009, "Logo"). Byte for byte as Spotify supplies it.
@@ -63,7 +66,7 @@ export function openFlaggedPaths(env: Env = process.env): string[] {
  * lib/access.ts normalises them. The stacked lockup is inlined into `/`,
  * so the small mark (the favicon) is the only file served from public/brand.
  */
-export const LANDING_PATHS: readonly string[] = [...LANDING_PAGES, "/robots.txt", "/sitemap.xml", "/brand/vt-infinite-mark-small.svg", ...LANDING_FLAGGED_PATHS];
+export const LANDING_PATHS: readonly string[] = [...LANDING_PAGES, "/robots.txt", "/sitemap.xml", "/brand/vt-infinite-mark-small.svg", SHARE_IMAGE_PATH, ...LANDING_FLAGGED_PATHS];
 
 /**
  * The font files app/globals.css (and the proxy's own 404 and 410 pages)

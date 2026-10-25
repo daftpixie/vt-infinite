@@ -1,5 +1,7 @@
 export const SITE_NAME = "VT Infinite";
 export const SITE_FURNITURE = "VT ∞";
+/** The approved standfirst (brand reference v1.1 §03, D1; PRD §05). Home's standfirst and the share description (ADR 0010). */
+export const STANDFIRST = "Intelligence, conducted — in service of hard problems and the people the tools forgot.";
 
 export function siteUrl(env: Readonly<Record<string, string | undefined>> = process.env): string {
   return (env.SITE_URL ?? "https://vt-infinite.com").replace(/\/+$/, "");

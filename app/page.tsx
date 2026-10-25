@@ -11,19 +11,22 @@ import { publishedEssays } from "@/lib/content/essays";
 import { isLanding } from "@/lib/mode";
 import { landingNowPlaying } from "@/lib/now-playing/page";
 import { readPlan } from "@/lib/plan/service";
-import { FOOTER_LINES } from "@/lib/site";
+import { FOOTER_LINES, SITE_NAME, STANDFIRST } from "@/lib/site";
+import { landingShareMetadata } from "@/lib/social";
 import { readAllPublications } from "@/lib/streams/service";
 import { buildWordsEntries, latestForHome } from "@/lib/words";
 
 // Approved lines: brand reference v1.1 §03 (D1) and PRD §05.
 const MASTHEAD = "We see the problem. We go to where it is.";
-const STANDFIRST = "Intelligence, conducted — in service of hard problems and the people the tools forgot.";
 const MISSION =
   "VT Infinite builds tools, research, and communities that put verifiable capability in the hands of people existing systems overlook. We design for the full variation of human minds and bring human judgment and machine intelligence into working relationship to expand agency, never replace it.";
 
-/** The landing page is indexable once it is live; the full build keeps the layout's noindex until its own cutover. */
+/**
+ * The landing page is indexable once it is live, with its share previews
+ * (ADR 0010); the full build keeps the layout's noindex until its own cutover.
+ */
 export function generateMetadata(): Metadata {
-  return isLanding() ? { robots: { index: true, follow: true } } : {};
+  return isLanding() ? { robots: { index: true, follow: true }, ...landingShareMetadata("/", SITE_NAME) } : {};
 }
 
 export default async function HomePage() {

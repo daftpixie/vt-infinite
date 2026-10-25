@@ -107,7 +107,8 @@ export default defineConfig({
       url: `http://127.0.0.1:${NOW_PLAYING_PORT}/`,
       reuseExistingServer: false,
       timeout: 120_000,
-      env: { ...serverEnv, ...nowPlayingEnv, SITE_MODE: "landing" },
+      // Also the canonical host Matthew sets in production (ADR 0010, D4), so the share tags are tested with it.
+      env: { ...serverEnv, ...nowPlayingEnv, SITE_MODE: "landing", SITE_URL: "https://www.vt-infinite.com" },
     },
     {
       command: `npx next start -p ${NOW_PLAYING_FULL_PORT} -H 127.0.0.1`,
