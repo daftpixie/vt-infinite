@@ -71,6 +71,8 @@ export const ROUTES: readonly RouteSpec[] = [
   { path: "/robots.txt", file: "app/robots.txt/route.ts", status: 404, landing: 200, kind: "feed" },
   // The approved mark (public/brand). The landing page inlines the stacked lockup, so only the favicon is served there.
   { path: "/brand/vt-infinite-mark-small.svg", file: "public/brand/vt-infinite-mark-small.svg", status: 200, landing: 200, kind: "asset" },
+  // The social share image (ADR 0010), rendered once from the stacked lockup and committed.
+  { path: "/brand/vt-infinite-share.png", file: "public/brand/vt-infinite-share.png", status: 200, landing: 200, kind: "asset" },
   { path: "/brand/vt-infinite-mark.svg", file: "public/brand/vt-infinite-mark.svg", status: 200, landing: 404, kind: "asset" },
   { path: "/brand/vt-infinite-lockup-stacked.svg", file: "public/brand/vt-infinite-lockup-stacked.svg", status: 200, landing: 404, kind: "asset" },
   { path: "/brand/vt-infinite-lockup-horizontal.svg", file: "public/brand/vt-infinite-lockup-horizontal.svg", status: 200, landing: 404, kind: "asset" },

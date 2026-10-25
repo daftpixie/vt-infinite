@@ -4,11 +4,13 @@ import { PrivacyNotice } from "@/components/landing/PrivacyNotice";
 import { LANDING } from "@/lib/landing";
 import { landingOnly } from "@/lib/mode-gate";
 import { privacyNoticeVersion } from "@/lib/privacy";
+import { SITE_FURNITURE } from "@/lib/site";
+import { landingShareMetadata } from "@/lib/social";
 
 /** Indexable in landing mode only; the full build answers 404 here. */
 export function generateMetadata(): Metadata {
   landingOnly();
-  return { title: LANDING.privacyLabel, robots: { index: true, follow: true } };
+  return { title: LANDING.privacyLabel, robots: { index: true, follow: true }, ...landingShareMetadata("/privacy", `${LANDING.privacyLabel} · ${SITE_FURNITURE}`) };
 }
 
 /** The landing release's privacy notice. It exists only in landing mode. */

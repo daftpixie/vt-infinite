@@ -12,7 +12,7 @@ Never commit the PRD or brand reference, copy files from where they are kept, na
 
 ## Stage
 
-Stages 1 to 4b, the stage 4 follow-ups and stage 5L part A (landing mode and page, ADR 0006) are merged. Stage 5L-2 re-orders the rest so the landing release can go live before the email list: the part A follow-ups and the landing privacy notice "landing-1" (ADRs 0007, 0008), then the cutover runbook (`docs/ops/cutover.md`), then the email list (R14) behind its flag, closed until counsel has reviewed notice "email-1". Stage 5L-3 adds Spotify "now playing" to the landing page behind `NOW_PLAYING_ENABLED` (ADR 0009, `docs/ops/now-playing.md`), attributed with Spotify's official logo (`public/brand/third-party/spotify`, served byte for byte and only while the flag is on). Do not cut over until Matthew says so.
+Stages 1 to 4b, the stage 4 follow-ups and stage 5L part A (landing mode and page, ADR 0006) are merged. Stage 5L-2 re-orders the rest so the landing release can go live before the email list: the part A follow-ups and the landing privacy notice "landing-1" (ADRs 0007, 0008), then the cutover runbook (`docs/ops/cutover.md`), then the email list (R14) behind its flag, closed until counsel has reviewed notice "email-1". Stage 5L-3 adds Spotify "now playing" to the landing page behind `NOW_PLAYING_ENABLED` (ADR 0009, `docs/ops/now-playing.md`), attributed with Spotify's official logo (`public/brand/third-party/spotify`, served byte for byte and only while the flag is on). `/` and `/privacy` carry social share previews (ADR 0010, `docs/ops/social-previews.md`); the share image is committed, rendered by `scripts/render-share-image.mjs`. Do not cut over until Matthew says so.
 
 ## Working here
 

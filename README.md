@@ -98,7 +98,7 @@ Essays and Record entries are reviewed files under `content/essays/<slug>/index.
 
 Publication streams are allowlisted in `content/streams.json`. Pages only read persisted snapshots. Providers are contacted only by `/api/cron/refresh`, which Vercel Cron calls every fifteen minutes (`vercel.json`); feeds keep a fifteen-minute floor with backoff, repositories refresh at most hourly, the OneRhythm plan at most once a minute while enabled, and a failed refresh never replaces the last good read. Locally, `CRON_SECRET=<value> npm run refresh` triggers the same route on a running server.
 
-Other environment variables: `SITE_URL` (defaults to `https://vt-infinite.com`), and in CI the `PRIVATE_IDENTIFIERS` Actions secret: comma-separated values the guard must never find, matched regardless of case, punctuation, hyphens and underscores. CI fails if the secret is empty, except on pull requests from forks, which cannot read secrets and get a warning instead. Configuration values that are private live only in the host's environment, never in this repository.
+Other environment variables: `SITE_URL` (defaults to `https://www.vt-infinite.com`, the canonical host, ADR 0010), and in CI the `PRIVATE_IDENTIFIERS` Actions secret: comma-separated values the guard must never find, matched regardless of case, punctuation, hyphens and underscores. CI fails if the secret is empty, except on pull requests from forks, which cannot read secrets and get a warning instead. Configuration values that are private live only in the host's environment, never in this repository.
 
 ## Licenses
 

@@ -73,7 +73,7 @@ Sources: https://vercel.com/docs/deployment-protection/methods-to-protect-deploy
 1. Vercel → the project → **Settings** → **Environment Variables**.
 2. Add `SITE_MODE` = `landing` for **Production** only. Preview stays as it is.
 3. Check that **Production** has no feature-flag variable set to `true` (`README.md`, "Feature flags"), and that `VT_TEST_BUILD_WITHOUT_PROXY` is **not** set in any environment. (The build fails if it is.)
-4. Leave `SITE_URL` unset or `https://vt-infinite.com`; the sitemap and robots.txt use it.
+4. Leave `SITE_URL` unset; the sitemap and robots.txt use it. (Since ADR 0010, 25 Oct 2026, it defaults to `https://www.vt-infinite.com`, the host production redirects the apex to. Before that the default was the apex: docs/ops/social-previews.md, step 1.)
 5. **Deployments** → the latest production deployment → **Redeploy**. Vercel applies the variable to both the build and the runtime.
 6. Open the build log. Expect:
 
@@ -116,7 +116,7 @@ Do not leave the rehearsal domain attached: it serves the same pages as the real
 
 Source for the record types and values: https://vercel.com/docs/domains/set-up-custom-domain (apex: an **A** record, example `76.76.21.21`; subdomain: a **CNAME**, example `cname.vercel-dns-0.com`). Vercel's domain panel shows the exact values for this project; use those, and stop if they differ from what you expect without explanation.
 
-1. Vercel → **Settings** → **Domains**: add `vt-infinite.com`, then `www.vt-infinite.com`. Make `vt-infinite.com` the primary, with `www.vt-infinite.com` redirecting to it. (The sitemap and robots.txt name `https://vt-infinite.com`.)
+1. Vercel → **Settings** → **Domains**: add `vt-infinite.com`, then `www.vt-infinite.com`. Make `vt-infinite.com` the primary, with `www.vt-infinite.com` redirecting to it. As of 25 Oct 2026 production does the reverse: the apex redirects to `www`, which ADR 0010 takes as the canonical host, and the sitemap and robots.txt name `https://www.vt-infinite.com`.
 2. Vercel lists the records each needs. Copy them.
 3. Optional, before touching DNS: check that Vercel already serves a certificate for the domain (source: https://vercel.com/docs/domains/pre-generating-ssl-certs):
 
@@ -209,14 +209,14 @@ Allow: /$
 Allow: /privacy
 Disallow: /
 
-Sitemap: https://vt-infinite.com/sitemap.xml
+Sitemap: https://www.vt-infinite.com/sitemap.xml
 ```
 
 ```sh
 curl -s "https://$HOST/sitemap.xml" | grep -o '<loc>[^<]*</loc>'
 ```
 
-Expect `<loc>https://vt-infinite.com</loc>` and `<loc>https://vt-infinite.com/privacy</loc>`, nothing else.
+Expect `<loc>https://www.vt-infinite.com</loc>` and `<loc>https://www.vt-infinite.com/privacy</loc>`, nothing else. (Before ADR 0010 these named the apex.)
 
 **Indexing:**
 
