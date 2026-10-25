@@ -5,6 +5,12 @@
 //
 //   node scripts/render-share-image.mjs            write the PNG
 //   node scripts/render-share-image.mjs --check    render to memory and compare with the committed file
+//   node scripts/render-share-image.mjs --out P    write the render to P instead (the end-to-end suite checks it)
+//
+// Chromium's anti-aliasing differs between machines, so a render on another
+// machine may differ in bytes (--check then says DIFFERENT). The committed
+// file is the reference; tests check every render against the specification
+// in tests/share-image-checks.ts.
 //
 // It uses the Chromium that the end-to-end suite already installs
 // (@playwright/test, a dev dependency). The lockup SVG is read and placed in
@@ -76,6 +82,9 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     console.log(`share image: rendered ${sha256(png)}, committed ${sha256(committed)}: ${same ? "identical" : "DIFFERENT"}`);
     process.exit(same ? 0 : 1);
   }
-  writeFileSync(join(ROOT, OUT), png);
-  console.log(`share image: wrote ${OUT} (${png.length} bytes, sha256 ${sha256(png)})`);
+  const i = process.argv.indexOf("--out");
+  const target = i > 0 ? process.argv[i + 1] : join(ROOT, OUT);
+  if (!target) throw new Error("--out needs a path");
+  writeFileSync(target, png);
+  console.log(`share image: wrote ${target} (${png.length} bytes, sha256 ${sha256(png)})`);
 }

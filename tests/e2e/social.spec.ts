@@ -1,8 +1,11 @@
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { SITE_NAME, STANDFIRST } from "@/lib/site";
 import { SHARE_IMAGE, X_HANDLE } from "@/lib/social";
+import { MAX_OFFSET, shareImageFacts, SPEC } from "../share-image-checks";
 
 /**
  * Social share previews (ADR 0010) on the landing release: the flag-off
@@ -88,8 +91,13 @@ for (const server of SERVERS) {
   });
 }
 
-test("re-rendering the image with scripts/render-share-image.mjs gives the committed bytes", () => {
-  const r = spawnSync(process.execPath, ["scripts/render-share-image.mjs", "--check"], { encoding: "utf8", env: process.env });
+test("a fresh render by scripts/render-share-image.mjs meets the same specification as the committed image", () => {
+  // Chromium's anti-aliasing differs between machines, so the bytes may differ; the specification may not (ADR 0010).
+  const out = join(mkdtempSync(join(tmpdir(), "share-")), "share.png");
+  const r = spawnSync(process.execPath, ["scripts/render-share-image.mjs", "--out", out], { encoding: "utf8", env: process.env });
   expect(r.status, `${r.stdout}${r.stderr}`).toBe(0);
-  expect(r.stdout).toContain("identical");
+  const facts = shareImageFacts(readFileSync(out));
+  expect(facts).toMatchObject(SPEC);
+  expect(facts.horizontalOffset).toBeLessThanOrEqual(MAX_OFFSET.horizontal);
+  expect(facts.verticalOffset).toBeLessThanOrEqual(MAX_OFFSET.vertical);
 });

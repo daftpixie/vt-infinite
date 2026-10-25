@@ -48,9 +48,13 @@ The hosts above assume `SITE_URL` is set (D4). Next.js's Metadata API renders th
   - The lockup SVG is read and placed as it is, never edited.
   - The motto is the landing page's: JetBrains Mono from `public/fonts`, embedded in the render, regular weight, #909090, no ligatures, no tracking. It keeps the page's ratio of 20 px type to a 240 px lockup, at 1.6 times (384 px lockup, 32 px motto), with the page's 3rem space step between them.
   - The script refuses to write the file if the font did not load.
-- **Tests:**
-  - The end-to-end suite runs the script again (`--check`) and requires identical bytes. Two renders in the build session gave the same bytes.
-  - `tests/unit/share-image.test.ts` checks the hash, the size (under 300 KB), the dimensions, and the colours: every pixel is a gray, the ground and corners are black, the mark reaches white, and the motto reaches exactly #909090 and no brighter.
+- **Byte stability:** rendering is not byte-identical across machines. Two renders in the build session gave the committed bytes, but CI's Chromium rendered `e81447cb713a7b219fd56baa4184b76ff00b12a6cb498e5bb9b3883784d8e14b` from the same script (PR #23, first CI run), because anti-aliasing differs. The committed file is the reference, and `--check` reports whether a local render matches it.
+- **Tests:** the specification is checked from the pixels (`tests/share-image-checks.ts`):
+  - a 1200 × 630, 8-bit PNG, every pixel a gray;
+  - a black ground and corners, the mark reaching white, and the motto below it reaching exactly #909090 and no brighter;
+  - centred across within 1 px, and down within 16 px (the layout centres line boxes, and the motto has no capitals).
+
+  `tests/unit/share-image.test.ts` applies it to the committed file and also checks its hash and size (under 300 KB). The end-to-end suite renders the image afresh with the script (`--out`) and applies the same checks to that render.
 - **Served:** in `LANDING_PATHS` and in `lib/routes.ts` with `landing: 200`, always on, not behind a flag. It answers 200 `image/png` to a request with no cookies, with the same security headers as every page. The CSP is unchanged.
 
 ## Updating the image
