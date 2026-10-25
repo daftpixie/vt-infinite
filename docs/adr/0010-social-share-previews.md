@@ -12,12 +12,12 @@ The landing release is live, and `/` and `/privacy` are indexable (ADR 0007). Th
 
 - **D1 Description**, verbatim: "Intelligence, conducted — in service of hard problems and the people the tools forgot." This is the approved standfirst (brand reference v1.1 §03, D1; PRD §05). It now lives in one place, `STANDFIRST` in `lib/site.ts`, which Home uses too.
 - **D2 Share image:** 1200 × 630 PNG, made from the approved stacked lockup (`public/brand/vt-infinite-lockup-stacked.svg`). It is centred, white on black, with the motto "ad astra per aspera" below it in the site's font and the motto's treatment. No other text or mark: no Spotify logo, no track data, no emoji.
-  - The brand reference (§08, "Shared assets") limits small text on an image that must sit on either ground, naming a social card, to #757575 or #767676. D2 asks for the motto's own treatment, which on the dark theme is #909090, at 6.58:1 on black. The card is opaque black, so its text never sits on another ground, and D2 governs. The image follows D2; this is noted for Matthew.
+  - The brand reference (§08, "Shared assets") limits small text on an image that must sit on either ground, naming a social card, to #757575 or #767676. D2 asks for the motto's own treatment, which on the dark theme is #909090, at 6.58:1 on black. The card is opaque black, so its text never sits on another ground, and D2 governs. Asked, Matthew kept #909090 (25 Oct 2026).
 - **D3 X handle:** `@MattyJAdams`, as `twitter:site` and `twitter:creator`.
 - **D4 Canonical host:** `https://www.vt-infinite.com`, which the apex redirects to today. Domains and redirects are unchanged.
-  - Every absolute URL is built from `metadataBase`, which is `siteUrl()`. That reads `SITE_URL` and defaults to `https://vt-infinite.com`. So the tags name the www host once Matthew sets `SITE_URL=https://www.vt-infinite.com` in Production. No build session sets it (docs/ops/social-previews.md, step 1).
-  - On the landing release, that variable also changes the `Sitemap:` line of `/robots.txt` and the `<loc>` entries of `/sitemap.xml`, both to the www host. On the full site, still off, it would also change the feed links, the essays' fallback canonical links and the download commands on the Marrs Rover verify page. Nothing else reads it.
-  - The end-to-end suite tests the tags with both values.
+  - Every absolute URL is built from `metadataBase`, which is `siteUrl()`. At Matthew's choice (25 Oct 2026), its default is now `https://www.vt-infinite.com` (`CANONICAL_ORIGIN` in `lib/site.ts`), so production is right without setting anything. `SITE_URL` still overrides it. If Production has `SITE_URL=https://vt-infinite.com`, which the cutover runbook allowed, Matthew deletes or changes it (docs/ops/social-previews.md, step 1).
+  - On the landing release, the same host names the `Sitemap:` line of `/robots.txt` and the `<loc>` entries of `/sitemap.xml`; both moved from the apex to www with this change. On the full site, still off, it also names the feed links, the essays' fallback canonical links and the download commands on the Marrs Rover verify page. Nothing else reads it.
+  - The end-to-end suite tests the tags with `SITE_URL` unset (the default) and set.
 
 ## Tags
 
@@ -38,7 +38,7 @@ The landing release is live, and `/` and `/privacy` are indexable (ADR 0007). Th
 | `twitter:card` | `summary_large_image` | the same |
 | `twitter:site`, `twitter:creator` | `@MattyJAdams` | the same |
 
-The hosts above assume `SITE_URL` is set (D4). Next.js's Metadata API renders the tags, with relative URLs made absolute against `metadataBase` (`node_modules/next/dist/docs/01-app/03-api-reference/04-functions/generate-metadata.md`). The `opengraph-image` file convention is not used: it would apply to the full site too, and the image is a fixed file.
+The hosts above are the default (D4). Next.js's Metadata API renders the tags, with relative URLs made absolute against `metadataBase` (`node_modules/next/dist/docs/01-app/03-api-reference/04-functions/generate-metadata.md`). The `opengraph-image` file convention is not used: it would apply to the full site too, and the image is a fixed file.
 
 ## The image
 
@@ -71,4 +71,4 @@ No notice change is needed, and "landing-2" (and "landing-1") stay as they are. 
 ## Consequences
 
 - Shared links to `/` and `/privacy` show a title, the standfirst and the image.
-- Until `SITE_URL` is set, the tags name `https://vt-infinite.com`, which redirects to `www`.
+- The robots.txt `Sitemap:` line and the sitemap's `<loc>` entries name `https://www.vt-infinite.com`, not the apex.

@@ -97,9 +97,9 @@ test.describe("landing mode: only the landing release answers (exhaustive over l
 
   test("robots.txt and the sitemap list only the landing release's pages", async ({ request }) => {
     const robots = await (await request.get("/robots.txt")).text();
-    expect(robots).toBe("User-agent: *\nAllow: /$\nAllow: /privacy\nDisallow: /\n\nSitemap: https://vt-infinite.com/sitemap.xml\n");
+    expect(robots).toBe("User-agent: *\nAllow: /$\nAllow: /privacy\nDisallow: /\n\nSitemap: https://www.vt-infinite.com/sitemap.xml\n");
     const sitemap = await (await request.get("/sitemap.xml")).text();
-    expect([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1])).toEqual(["https://vt-infinite.com", "https://vt-infinite.com/privacy"]);
+    expect([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1])).toEqual(["https://www.vt-infinite.com", "https://www.vt-infinite.com/privacy"]);
   });
 });
 

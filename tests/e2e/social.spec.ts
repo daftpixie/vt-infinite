@@ -9,13 +9,13 @@ import { MAX_OFFSET, shareImageFacts, SPEC } from "../share-image-checks";
 
 /**
  * Social share previews (ADR 0010) on the landing release: the flag-off
- * landing server (SITE_URL unset, so the default host) and the flag-on one,
- * which runs with SITE_URL=https://www.vt-infinite.com as production will.
+ * landing server, with SITE_URL unset (the default, the canonical host),
+ * and the flag-on one, with SITE_URL=https://www.vt-infinite.com set.
  */
 const BASE = Number(process.env.E2E_PORT ?? 3100);
 const SERVERS = [
-  { name: "now playing off, default host", url: `http://127.0.0.1:${BASE + 2}`, origin: "https://vt-infinite.com" },
-  { name: "now playing on, canonical host", url: `http://127.0.0.1:${BASE + 4}`, origin: "https://www.vt-infinite.com" },
+  { name: "now playing off, SITE_URL unset (the default)", url: `http://127.0.0.1:${BASE + 2}`, origin: "https://www.vt-infinite.com" },
+  { name: "now playing on, SITE_URL set", url: `http://127.0.0.1:${BASE + 4}`, origin: "https://www.vt-infinite.com" },
 ] as const;
 
 const PAGES = [

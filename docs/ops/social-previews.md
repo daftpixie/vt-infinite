@@ -1,27 +1,28 @@
-# Social share previews: switch on the canonical host, check, re-scrape
+# Social share previews: canonical host, check, re-scrape
 
 `/` and `/privacy` carry a description, a canonical link, Open Graph tags and X card tags, with a share image at `/brand/vt-infinite-share.png` (ADR 0010). This guide names variables only. Matthew runs every step.
 
-## 1. Canonical host (once)
+## 1. Canonical host
 
-Every absolute URL in the tags is built from `SITE_URL`. Until it is set, they use the default host, `https://vt-infinite.com`, which production redirects to `www`. Scrapers follow the redirect, but the canonical link and `og:url` should name the host that answers.
+Every absolute URL in the tags is built from `siteUrl()`. It defaults to `https://www.vt-infinite.com`, the host production redirects the apex to (Matthew, 25 Oct 2026), so nothing needs setting. `SITE_URL` overrides the default.
 
-1. Vercel → the project → **Settings** → **Environment Variables**: add `SITE_URL` = `https://www.vt-infinite.com` for **Production** only.
-2. **Redeploy** Production.
-3. Check:
+1. In Vercel → the project → **Settings** → **Environment Variables**, check `SITE_URL` in **Production**:
+   - unset: nothing to do;
+   - `https://www.vt-infinite.com`: nothing to do;
+   - `https://vt-infinite.com` (the cutover runbook allowed it): delete it, or change it to `https://www.vt-infinite.com`, then **Redeploy** Production.
+2. After the deploy that carries ADR 0010, check:
 
    ```sh
    curl -s https://www.vt-infinite.com/ | grep -oE '<(link rel="canonical"|meta (property|name)="(og|twitter):(url|image)")[^>]*>'
+   curl -s https://www.vt-infinite.com/robots.txt | grep Sitemap
    ```
 
-   Expect `https://www.vt-infinite.com` in the canonical link and `og:url`, and `https://www.vt-infinite.com/brand/vt-infinite-share.png` in `og:image` and `twitter:image`.
+   Expect:
+   - `https://www.vt-infinite.com` in the canonical link and `og:url`;
+   - `https://www.vt-infinite.com/brand/vt-infinite-share.png` in `og:image` and `twitter:image`;
+   - `Sitemap: https://www.vt-infinite.com/sitemap.xml`.
 
-Setting `SITE_URL` also changes, on the landing release:
-
-- the `Sitemap:` line of `/robots.txt`, to `https://www.vt-infinite.com/sitemap.xml`;
-- every `<loc>` in `/sitemap.xml`, to `https://www.vt-infinite.com` and `https://www.vt-infinite.com/privacy`.
-
-On the full site, still off, it would also change the feed links, the essays' fallback canonical links and the download commands on the Marrs Rover verify page. Nothing else reads it.
+The same host also names, on the landing release, every `<loc>` in `/sitemap.xml`: `https://www.vt-infinite.com` and `https://www.vt-infinite.com/privacy`. On the full site, still off, it also names the feed links, the essays' fallback canonical links and the download commands on the Marrs Rover verify page. Nothing else reads it.
 
 ## 2. Check the previews after a deploy
 
