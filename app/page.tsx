@@ -33,8 +33,8 @@ export function generateMetadata(): Metadata {
 
 export default async function HomePage() {
   await connection();
-  // The landing release (SITE_MODE=landing) shows only its own page. It reads nothing upstream unless
-  // NOW_PLAYING_ENABLED is "true", and then only the shared "now playing" projection (ADR 0009).
+  // The landing release reads only its separately enabled now-playing and pulse projections.
+  // Both default off; neither integration exposes unrelated full-site routes.
   if (isLanding()) {
     const [nowPlaying, pulse] = await Promise.all([landingNowPlaying(), readPulse()]);
     return <LandingPage nowPlaying={nowPlaying} pulse={pulse} />;

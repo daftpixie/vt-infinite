@@ -22,7 +22,7 @@ Existing project → Settings → Environment Variables. Add the exact names bel
 
 | Name | Value | Type |
 | --- | --- | --- |
-| `PLAUSIBLE_SCRIPT_SRC` | The exact site-specific HTTPS URL supplied privately in the handoff; validated `plausible.io/js/pa-….js` path | Config |
+| `PLAUSIBLE_SCRIPT_SRC` | The exact public site-specific HTTPS URL supplied in the handoff; validated `plausible.io/js/pa-….js` path | Config |
 | `PLAUSIBLE_SITE_ID` | Exact identifier confirmed in Plausible | Config |
 | `PLAUSIBLE_API_KEY` | Separate team-scoped Stats API credential | Secret |
 | `PLAUSIBLE_ENABLED` | `false` in this PR; only `true` after the provider hold is resolved and reviewed | Config |

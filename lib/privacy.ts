@@ -7,9 +7,9 @@ import { collectionEnabled, publicPulseEnabled } from "./pulse/config";
  * fixed once published; a change in what the site does gets a new version
  * (docs/adr/0008-landing-privacy-notice.md).
  *
- * "landing-2" adds "now playing" (docs/adr/0009-now-playing.md). It is served
- * only while NOW_PLAYING_ENABLED is "true", and "landing-1", unchanged,
- * otherwise, so the notice always matches what the page does.
+ * Historical landing-1/landing-2 remain unchanged. ADR 0011 introduces the
+ * landing-signal variants, encoding now-playing, actual collection and
+ * publication independently so the notice matches this deployment.
  */
 export const PRIVACY_NOTICE_VERSIONS = ["landing-1", "landing-2", "landing-signal-1", "landing-signal-2", "landing-signal-3", "landing-signal-4", "landing-signal-5", "landing-signal-6", "landing-signal-7", "landing-signal-8"] as const;
 export type PrivacyNoticeVersion = (typeof PRIVACY_NOTICE_VERSIONS)[number];

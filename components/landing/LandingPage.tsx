@@ -32,8 +32,8 @@ function AcrosticColumn({ item }: { item: AcrosticItem }) {
 /**
  * The landing release's page at `/` (SITE_MODE=landing). Copy and links come
  * from content/landing.json. "Now playing" sits below the links and above
- * the sign-up line, only when NOW_PLAYING_ENABLED is on (ADR 0009); without
- * it the page is exactly as before.
+ * the sign-up line, only when NOW_PLAYING_ENABLED is on (ADR 0009). The
+ * independently gated compact Signal follows it (ADR 0011).
  */
 export function LandingPage({ nowPlaying, pulse }: { nowPlaying?: NowPlayingResult; pulse?: PulseResult | null } = {}) {
   const heading = acrosticHeading(LANDING.acrostic);
