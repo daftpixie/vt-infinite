@@ -1,5 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import Script from "next/script";
+import { PlausibleCollection } from "@/components/pulse/PlausibleCollection";
+import { plausibleBootstrap } from "@/lib/pulse/collection";
+import { collectionEnabled, scriptSource } from "@/lib/pulse/config";
+import { publicMeasurementPaths } from "@/lib/pulse/public-paths";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
@@ -25,12 +30,17 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  const src = collectionEnabled() ? scriptSource() : null;
+  const paths = src ? publicMeasurementPaths() : [];
+  const init = src ? <Script id="plausible-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: plausibleBootstrap(paths) }} /> : null;
+  const collector = src ? <PlausibleCollection src={src} paths={paths} /> : null;
   // The landing release has no header or primary navigation: every other page answers 404 there.
   if (isLanding()) {
     return (
       <html lang="en" suppressHydrationWarning>
         <head>
           <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+          {init}
           {/* The acrostic's row-or-stack threshold is in ch of this font; load it early so the fallback shows as briefly as possible. */}
           <link rel="preload" href={LANDING_FONTS[0]} as="font" type="font/woff2" crossOrigin="anonymous" />
         </head>
@@ -42,6 +52,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             {children}
           </main>
           <LandingFooter />
+          {collector}
         </body>
       </html>
     );
@@ -50,6 +61,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+        {init}
       </head>
       <body>
         <a className="skip-link" href="#main">
@@ -65,6 +77,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
         <SiteFooter />
+        {collector}
       </body>
     </html>
   );

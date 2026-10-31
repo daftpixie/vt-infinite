@@ -15,6 +15,8 @@ export const FLAGS = {
   mandelbrot: "MANDELBROT_ENABLED",
   /** Spotify "now playing" on `/` and /vibes (PRD S-1 to S-8; ADR 0009). */
   nowPlaying: "NOW_PLAYING_ENABLED",
+  /** Publication only; collection is independently controlled (ADR 0011). */
+  publicPulse: "PUBLIC_PULSE_ENABLED",
 } as const;
 
 export type Flag = keyof typeof FLAGS;

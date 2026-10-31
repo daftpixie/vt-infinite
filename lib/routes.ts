@@ -66,6 +66,7 @@ export const ROUTES: readonly RouteSpec[] = [
   // Spotify's official logo (ADR 0009, "Logo"): 404 in both modes until NOW_PLAYING_ENABLED is "true".
   { path: "/brand/third-party/spotify/Full_Logo_Black_RGB.svg", file: "public/brand/third-party/spotify/Full_Logo_Black_RGB.svg", status: 404, landing: 404, kind: "asset", flag: "nowPlaying" },
   { path: "/brand/third-party/spotify/Full_Logo_White_RGB.svg", file: "public/brand/third-party/spotify/Full_Logo_White_RGB.svg", status: 404, landing: 404, kind: "asset", flag: "nowPlaying" },
+  { path: "/api/pulse", file: "app/api/pulse/route.ts", status: 404, landing: 404, kind: "feed", flag: "publicPulse" },
   // Landing release (SITE_MODE=landing): the privacy notice and robots exist only there.
   { path: "/privacy", file: "app/privacy/page.tsx", status: 404, landing: 200, kind: "page" },
   { path: "/robots.txt", file: "app/robots.txt/route.ts", status: 404, landing: 200, kind: "feed" },

@@ -3,6 +3,9 @@ import canonicalize from "canonicalize";
 import postgres from "postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PostgresSnapshotStore, sqlClientFrom } from "@/lib/storage/postgres";
+import { leaseStore } from "@/lib/pulse/store";
+import { validHistory } from "@/lib/pulse/validation";
+import { syntheticPulse } from "../pulse-synthetic";
 
 /**
  * Runs against a disposable local Postgres only, named by
@@ -18,21 +21,56 @@ const canonical = (v: unknown) => canonicalize(v) as string;
 
 describe.skipIf(!url)("postgres store against a local Postgres", () => {
   let sql: postgres.Sql;
-  const keys = ["test:object", "test:legacy", "test:roundtrip"];
+  const pulseKey = `pulse:v1:${"c".repeat(32)}:recent`;
+  const keys = ["test:object", "test:legacy", "test:roundtrip", "test:pulse"];
 
   beforeAll(async () => {
     sql = postgres(url as string, { prepare: false, max: 1, onnotice: () => {} });
     await sql.unsafe(readFileSync("db/migrations/0001_public_snapshots.sql", "utf8"));
+    await sql.unsafe(readFileSync("db/migrations/0002_pulse_refresh_leases.sql", "utf8"));
+    await sql`delete from site.pulse_refresh_leases where key = ${pulseKey}`;
     await sql`delete from site.public_snapshots where key = any(${keys})`;
   });
 
   afterAll(async () => {
+    await sql`delete from site.pulse_refresh_leases where key = ${pulseKey}`;
     await sql`delete from site.public_snapshots where key = any(${keys})`;
     await sql.end();
   });
 
   const typeOf = async (key: string) =>
     (await sql`select jsonb_typeof(data) as t from site.public_snapshots where key = ${key}`)[0]?.t;
+
+  it("coalesces 32 concurrent refresh leases through independent database connections", async () => {
+    const pool = postgres(url as string, { prepare: false, max: 8, onnotice: () => {} });
+    try {
+      const leases = leaseStore(sqlClientFrom(pool));
+      const now = Date.UTC(2026, 9, 31, 12);
+      const winners = await Promise.all(Array.from({ length: 32 }, (_, i) => leases.claim(pulseKey, `synthetic-${i}`, now, now + 60_000)));
+      expect(winners.filter(Boolean)).toHaveLength(1);
+      expect(await leases.claim(pulseKey, "next-reader", now + 59_999, now + 120_000)).toBe(false);
+      expect(await leases.claim(pulseKey, "next-reader", now + 60_000, now + 120_000)).toBe(true);
+      await leases.defer(pulseKey, "previous-owner", now + 900_000);
+      expect(await leases.claim(pulseKey, "final-reader", now + 120_000, now + 180_000)).toBe(true);
+      await leases.defer(pulseKey, "final-reader", now + 900_000);
+      expect(await leases.claim(pulseKey, "blocked-reader", now + 180_000, now + 240_000)).toBe(false);
+    } finally { await pool.end(); }
+  });
+
+  it("preserves a last-good pulse projection across adapter restarts", async () => {
+    const history = syntheticPulse().history.data!;
+    await new PostgresSnapshotStore(sqlClientFrom(sql)).put("test:pulse", { schemaVersion: 1, fetchedAt: history.readAt, data: history });
+    const restarted = new PostgresSnapshotStore(sqlClientFrom(sql));
+    expect(validHistory((await restarted.get("test:pulse"))?.data)).toEqual(history);
+  });
+
+  it("keeps the lease table inaccessible to the page-reader role", async () => {
+    const connection = await sql.reserve();
+    try {
+      await connection`set role site_reader`;
+      await expect(connection`select * from site.pulse_refresh_leases`).rejects.toMatchObject({ code: "42501" });
+    } finally { await connection`reset role`; connection.release(); }
+  });
 
   it("writes data as a JSON object that SQL can query", async () => {
     const store = new PostgresSnapshotStore(sqlClientFrom(sql));

@@ -171,6 +171,16 @@ export const HASHED_PHRASES = HASHED;
 
 export const RULES = [
   {
+    id: "analytics-boundary",
+    scope: "repo",
+    description: "ADR 0011 permits only the bounded Plausible integration; no public credential, legacy snippet or additional analytics vendor.",
+    check: (t) => [
+      ...regexFindings(t, /NEXT_PUBLIC_PLAUSIBLE_API_KEY/g, "The Stats API credential is server-only."),
+      ...regexFindings(t, /https:\/\/(?:www\.)?(?:google-analytics\.com|googletagmanager\.com|cdn\.segment\.com|static\.hotjar\.com|connect\.facebook\.net)\b/gi, "Unapproved analytics or profiling provider."),
+      ...regexFindings(t, /data-domain\s*=\s*["'][^"']+["']/gi, "Use the environment-configured site-specific Plausible script, never a legacy data-domain snippet."),
+    ],
+  },
+  {
     id: "byline",
     scope: "repo",
     description: "The byline is Matthew J Adams, with no period (PRD Q-3).",

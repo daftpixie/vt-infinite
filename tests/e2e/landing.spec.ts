@@ -383,12 +383,12 @@ test.describe("rendered copy passes every guard (landing)", () => {
   }
 });
 
-test.describe("the privacy notice (landing-1)", () => {
+test.describe("the privacy notice (landing-signal-1)", () => {
   test("states its version, links Vercel's notice and gives the contact address", async ({ page }) => {
     const res = await page.goto("/privacy");
     expect(res?.status()).toBe(200);
     await expect(page.locator("h1")).toHaveText("Privacy notice");
-    await expect(page.locator("main")).toContainText("Version landing-1");
+    await expect(page.locator("main")).toContainText("Version landing-signal-1");
     await expect(page.locator("main").getByRole("link", { name: "Vercel’s privacy notice (opens another site)" })).toHaveAttribute("href", "https://vercel.com/legal/privacy-notice");
     await expect(page.locator("main").getByRole("link", { name: LANDING.contactEmail })).toHaveAttribute("href", `mailto:${LANDING.contactEmail}`);
     await expect(page.locator("main")).not.toContainText(/draft/i);

@@ -194,3 +194,12 @@ describe("guard exceptions", () => {
     expect(exceptionCovers({ ...base, targetPrefix: "" }, "a.json")).toBe(false);
   });
 });
+
+describe("bounded analytics exception (ADR 0011)", () => {
+  it.each(["NEXT_PUBLIC_PLAUSIBLE_API_KEY", "https://googletagmanager.com/script.js", 'data-domain="synthetic.example"'])("rejects %s", (text) => {
+    expect(rules(text, ["repo"])).toContain("analytics-boundary");
+  });
+  it("permits the approved environment variable names and host/path family", () => {
+    expect(rules("PLAUSIBLE_API_KEY PLAUSIBLE_SCRIPT_SRC https://plausible.io/js/pa-syntheticInstallOnly.js", ["repo"])).toEqual([]);
+  });
+});

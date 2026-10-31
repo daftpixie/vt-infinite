@@ -25,7 +25,7 @@ Black and white, square corners, no gradients or shadows. Self-hosted JetBrains 
 
 ## Integrations
 - Third-party content is fetched server-side from an allowlist, validated, reduced to approved public fields and persisted. A deployment or outage never erases the last good read. Stale data is labeled.
-- There is no audience analytics, advertising pixel or off-site tracking.
+- Matthew's 31 October 2026 instruction permits bounded Plausible cookieless pageview measurement and publication of selected aggregates for The Signal (ADR 0011), superseding the earlier audience-analytics prohibition for this feature. Daily site/device-specific visitor/session distinction is permitted; persistent identification, cookies, advertising pixels, cross-site tracking and behavioral profiling remain prohibited. Collection is held closed pending verification of pageview-only behavior in the supplied script.
 - Spotify "now playing" uses the founder's authorization only. A plan projection shows only approved titles, states and dates.
 
 ## Participation

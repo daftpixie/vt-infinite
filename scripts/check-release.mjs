@@ -14,7 +14,7 @@
 //               "Activation order".
 //   now playing NOW_PLAYING_ENABLED=true runs the now-playing gate
 //               (tests/unit/now-playing-release.test.tsx): the privacy
-//               notice is "landing-2" and no placeholder renders in the
+//               notice includes the enabled Spotify section and no placeholder renders in the
 //               component, in any state. NOW_PLAYING_FIXTURE (a test-only
 //               synthetic Spotify, lib/now-playing/fixture.ts) fails on
 //               Vercel. ADR 0009; docs/ops/now-playing.md.
@@ -47,6 +47,11 @@ if (process.env.NOW_PLAYING_FIXTURE && process.env.VERCEL) {
   failed = true;
 }
 
+if (process.env.PLAUSIBLE_ENABLED === "true" && process.env.VERCEL_ENV === "production") {
+  console.error("release check: Plausible collection is held: the supplied script sends engagement outside transformRequest. A provider fix and pageview-only transport verification are required (ADR 0011). FAILED.");
+  failed = true;
+}
+
 if (!KNOWN_MODES.includes(mode)) {
   console.error(`release check: SITE_MODE must be unset, "full" or "landing" (got a value of ${mode.length} characters). FAILED.`);
   failed = true;
@@ -68,7 +73,7 @@ if (process.env.NOW_PLAYING_ENABLED !== "true") {
   gate(
     "now playing",
     "tests/unit/now-playing-release.test.tsx",
-    'Serve privacy notice "landing-2" and supply every missing item (lib/placeholders.ts; the Spotify logo is one) in a pull request before turning NOW_PLAYING_ENABLED on (docs/ops/now-playing.md).',
+    'Serve the matching versioned privacy notice and supply every missing item (lib/placeholders.ts; the Spotify logo is one) in a pull request before turning NOW_PLAYING_ENABLED on (docs/ops/now-playing.md).',
   );
 }
 

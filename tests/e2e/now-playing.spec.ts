@@ -219,14 +219,14 @@ test.describe("the landing page with now playing on", () => {
   });
 });
 
-test.describe("the privacy notice with now playing on (landing-2)", () => {
-  test("serves landing-2 with its Spotify sentences; the flag-off server still serves landing-1", async ({ page }) => {
+test.describe("the privacy notice with now playing on (landing-signal-2)", () => {
+  test("serves landing-signal-2 with its Spotify sentences; the flag-off server still serves landing-signal-1", async ({ page }) => {
     await page.goto("/privacy");
-    await expect(page.locator("main")).toContainText("Version landing-2");
+    await expect(page.locator("main")).toContainText("Version landing-signal-2");
     await expect(page.locator("main")).toContainText("The home page shows what Matthew is playing on Spotify. This site asks Spotify for it. Your browser does not contact Spotify.");
     await expect(page.locator("main")).toContainText("Track links go to Spotify.");
     await page.goto(`${OFF_URL}/privacy`);
-    await expect(page.locator("main")).toContainText("Version landing-1");
+    await expect(page.locator("main")).toContainText("Version landing-signal-1");
     await expect(page.locator("main")).not.toContainText("Spotify");
   });
 });
@@ -251,7 +251,7 @@ for (const scheme of ["dark", "light"] as const) {
     test.use({ colorScheme: scheme });
     for (const [name, url] of [
       ["/ (landing)", `${ON_URL}/`],
-      ["/privacy (landing-2)", `${ON_URL}/privacy`],
+      ["/privacy (landing-signal-2)", `${ON_URL}/privacy`],
       ["/vibes (full)", `${FULL_ON_URL}/vibes`],
     ] as const) {
       test(`axe: no serious or critical issues on ${name}`, async ({ page }) => {
