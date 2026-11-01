@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { startPlanPolling } from "@/lib/plan/poller";
-import { HISTORY_FRESH_MS, HOUR_MS, PULSE_API, RECENT_FRESH_MS, restalePulse, tracePoints, type PulseResult } from "@/lib/pulse/model";
-import { formatDateTime } from "@/lib/content/dates";
+import { HISTORY_FRESH_MS, HOUR_MS, PULSE_API, RECENT_FRESH_MS, restalePulse, trafficWavePath, type PulseResult } from "@/lib/pulse/model";
+import { formatDate } from "@/lib/content/dates";
 
-function Stamp({ at, timezone }: { at: string; timezone: string }) {
-  return <time dateTime={at}>{formatDateTime(at, timezone)}</time>;
+function Stamp({ at, timezone, compact = false }: { at: string; timezone: string; compact?: boolean }) {
+  const clock = new Intl.DateTimeFormat("en-GB", { timeZone: timezone, hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23", timeZoneName: "short" }).format(new Date(at));
+  return <time dateTime={at}>{compact ? "" : `${formatDate(at, timezone)}, `}{clock}</time>;
 }
 
 const hydratedSubscribe = () => () => {};
@@ -67,63 +68,64 @@ export function SitePulse({ initial, variant }: { initial: PulseResult; variant:
         <h2 id="signal-heading">The Signal</h2>
         <p className="label">Data status: {result.status}</p>
       </div>
-      <p className="pulse-intro">Aggregate pageviews from Plausible.</p>
       <div className="pulse-bpm">
-        <p><strong>{recent ? number(recent.bpm) : "Unavailable"}</strong>{recent ? " BPM" : ""}</p>
-        <p>{result.definitions.bpm}</p>
-        {recent ? <p className="pulse-meta">Reporting window: <Stamp at={recent.start} timezone={timezone} /> to <Stamp at={recent.end} timezone={timezone} />. Recent data: {result.recent.status}. Last successful update: <Stamp at={recent.readAt} timezone={timezone} />.</p> : <p>Recent pageviews unavailable. Last successful update: none available.</p>}
+        <p className="pulse-rate"><strong>{recent ? number(recent.bpm) : "Unavailable"}</strong>{recent ? " BPM" : ""}</p>
+        <p>BPM — Beats per minute. A five-minute average: pageviews in the preceding 5 minutes ÷ 5.</p>
       </div>
-
       <figure className="pulse-trace">
-        <figcaption>{result.definitions.rhythm}</figcaption>
-        {history ? (
-          <>
-            <div className="pulse-trace-frame" data-sweeping={running && !reduced ? "true" : "false"}>
-              <svg viewBox="0 0 720 120" role="img" aria-labelledby="pulse-trace-title pulse-trace-description">
-                <title id="pulse-trace-title">EKG-inspired traffic trace</title>
-                <desc id="pulse-trace-description">{history.total} pageviews across 24 consecutive 1-hour buckets. Highest bucket: {history.peak} pageviews. Original counts are in the table below. The line joins bucket totals and shows no individual event times.</desc>
-                <line x1="0" x2="720" y1="108" y2="108" className="pulse-axis-line" />
-                <polyline points={tracePoints(history.buckets)} fill="none" stroke="currentColor" strokeWidth="2" />
-                {history.buckets.map((b, i) => <circle key={b.start} cx={(i + 0.5) / 24 * 720} cy={108 - b.pageviews / Math.max(1, history.peak) * 96} r="2" fill="currentColor" />)}
-                <line className="pulse-sweep" x1="0" x2="0" y1="8" y2="112" stroke="currentColor" strokeWidth="1" aria-hidden="true" />
-              </svg>
-            </div>
-            <div className="pulse-time-axis" aria-label="Trace time axis"><Stamp at={history.start} timezone={timezone} /><span>→</span><Stamp at={history.end} timezone={timezone} /></div>
-            <div className="figure-controls" hidden={!ready}>
-              <button className="button" type="button" disabled={reduced} aria-pressed={running} onClick={() => setRunning((on) => !on)}>{running ? "Pause sweep" : "Start sweep"}</button>
-              <span>{reduced ? "Reduced motion: still trace." : "Sweep highlights the recorded trace; it does not show live events."}</span>
-            </div>
-            <p className="pulse-meta">Trace data: {result.history.status}. Last successful update: <Stamp at={history.readAt} timezone={timezone} />.</p>
-            <details className="pulse-details" open={expanded || undefined}>
-              <summary>Read the original hourly counts</summary>
-              <p>Each point is one observed bucket total. Points are equally spaced in elapsed time. Height = count ÷ displayed peak × available height, from a zero baseline. Lines connect totals; no event times or medical classifications are inferred.</p>
-              <p>Windows include their start and exclude their end. Recent counts refresh about every {ages.recent} seconds; history and sources about every {ages.history / 60} minutes. Last successful timestamps stay unchanged when data is stale.</p>
-              <table className="pulse-counts">
-                <caption>Rhythm strip counts · {timezone} · 1-hour buckets</caption>
-                <thead><tr><th scope="col">Hour beginning</th><th scope="col">Pageviews</th></tr></thead>
-                <tbody>{history.buckets.map((b) => <tr key={b.start}><th scope="row"><Stamp at={b.start} timezone={timezone} /></th><td>{number(b.pageviews)}</td></tr>)}</tbody>
-              </table>
-            </details>
-          </>
-        ) : <p>Rhythm strip unavailable. No traffic trace or zero count can be inferred. Last successful update: none available.</p>}
+        <figcaption>Stylized EKG-inspired traffic trace · 1 motif per 1-hour bucket</figcaption>
+        {history ? <>
+          <div className="pulse-trace-frame" data-sweeping={running && !reduced ? "true" : "false"}>
+            <svg viewBox="0 0 720 144" role="img" aria-labelledby="pulse-trace-title pulse-trace-description">
+              <title id="pulse-trace-title">EKG-inspired traffic trace</title>
+              <desc id="pulse-trace-description">{history.total} pageviews in 24 consecutive 1-hour buckets. One stylized motif per bucket; amplitude follows its count. Zero traffic stays flat. Glyph shapes and positions are schematic, with no individual arrival times or physiological meaning. Original counts are in the disclosure below.</desc>
+              <line x1="0" x2="720" y1="93.6" y2="93.6" className="pulse-axis-line" />
+              <path d={trafficWavePath(history.buckets)} fill="none" stroke="currentColor" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+              <line className="pulse-sweep" x1="0" x2="0" y1="8" y2="136" stroke="currentColor" strokeWidth="1" aria-hidden="true" />
+            </svg>
+          </div>
+          <div className="pulse-time-axis" aria-label="Trace time axis"><Stamp at={history.start} timezone={timezone} /><span aria-hidden="true">→</span><Stamp at={history.end} timezone={timezone} /></div>
+          <div className="figure-controls" hidden={!ready}>
+            <button className="button" type="button" disabled={reduced} aria-pressed={running} onClick={() => setRunning((on) => !on)}>{running ? "Pause sweep" : "Start sweep"}</button>
+            {reduced ? <span className="pulse-control-note">Reduced motion: still trace.</span> : null}
+          </div>
+        </> : <p>Rhythm strip unavailable. Last successful update: none available.</p>}
       </figure>
-
+      <div className="pulse-windows pulse-meta">
+        <p>{recent ? <>5-minute window: <Stamp at={recent.start} timezone={timezone} compact={formatDate(recent.start, timezone) === formatDate(recent.end, timezone)} /> – <Stamp at={recent.end} timezone={timezone} />. Updated <Stamp at={recent.readAt} timezone={timezone} compact={formatDate(recent.readAt, timezone) === formatDate(recent.end, timezone)} /> · {result.recent.status}.</> : "Recent pageviews unavailable. Last successful update: none available."}</p>
+        {history ? <p>Trace updated <Stamp at={history.readAt} timezone={timezone} /> · {result.history.status}.</p> : null}
+      </div>
       {expanded ? <>
         <div className="pulse-metrics">
-          <div><h3>Cardiac output</h3><p className="pulse-value">{history ? number(history.total) : "Unavailable"}</p><p>{result.definitions.output}</p></div>
-          <div><h3>Stress test</h3><p className="pulse-value">{history ? number(history.peak) : "Unavailable"}</p><p>{result.definitions.peak}</p><p>Peak among the 24 displayed consecutive 1-hour buckets.</p></div>
+          <div><h3>Cardiac output</h3><p className="pulse-value">{history ? `${number(history.total)} pageviews` : "Unavailable"}</p><p>Total pageviews in the displayed 24-hour window.</p></div>
+          <div><h3>Stress test</h3><p className="pulse-value">{history ? `${number(history.peak)} pageviews/hour` : "Unavailable"}</p><p>Peak among the 24 displayed hourly buckets. Traffic volume only.</p></div>
         </div>
-        <h3>Traffic history</h3>
-        <p>The trace and original-count table show the same 24-hour history. Each bucket spans exactly {HOUR_MS / 60_000} elapsed minutes, including clock changes.</p>
-        <h3>Circulation</h3>
-        <p>{result.definitions.sources}</p>
-        {history ? <>
-          {history.sources.length ? <ul className="pulse-sources">{history.sources.map((s) => <li key={s.label}><span>{s.label}</span><strong>{number(s.pageviews)} pageviews</strong></li>)}</ul> : <p>No source counts meet the publication threshold.</p>}
-          <p>Sources below 5 pageviews and unrecognized sources are grouped as “Other sources”. A grouped total below 5 is withheld. Individual referral URLs and campaign values are never published.{history.sourcesSuppressed ? " A small grouped total is withheld in this snapshot." : ""}</p>
-        </> : <p>Referral-source counts unavailable.</p>}
+        <div className="pulse-circulation">
+          <h3>Circulation</h3>
+          <p>Aggregate referral-source pageviews in the same 24-hour window.</p>
+          {history ? <>
+            {history.sources.length ? <ul className="pulse-sources">{history.sources.map((source) => <li key={source.label}><span>{source.label}</span><strong>{number(source.pageviews)} pageviews</strong></li>)}</ul> : <p>No source counts meet the publication threshold.</p>}
+            {history.sourcesSuppressed ? <p className="pulse-meta">Small source counts are withheld.</p> : null}
+          </> : <p>Referral-source counts unavailable.</p>}
+        </div>
       </> : null}
-      <p className="pulse-meta">Reporting timezone: {timezone}. Pageviews count page loads, not distinct people.</p>
-      <noscript><p>This is a still snapshot. The counts and details work without JavaScript; reload the page for a newer read.</p></noscript>
+      <details className="pulse-details">
+        <summary>Read the counts and method</summary>
+        <p>Source: Plausible. Reporting timezone: {timezone}. Pageviews count page loads, not distinct people.</p>
+        <p>{result.definitions.bpm}</p>
+        <p>{result.definitions.rhythm} Each glyph represents one full bucket, regardless of its count. Its horizontal coordinates are a fixed schematic design, not event times. Its amplitude is count ÷ displayed peak × the drawing height scale. The stylized P/QRS/T-like shape has no physiological or diagnostic meaning. Zero counts draw only a flat line.</p>
+        <p>Windows include their start and exclude their end. Every bucket is exactly {HOUR_MS / 60_000} elapsed minutes, including clock changes. The sweep highlights recorded data without changing values. Recent counts refresh about every {ages.recent} seconds; history and sources about every {ages.history / 60} minutes. Stale timestamps remain the original successful read times.</p>
+        {expanded ? <>
+          <p>{result.definitions.output}</p><p>{result.definitions.peak}</p><p>{result.definitions.sources}</p>
+          <p>Sources below 5 pageviews and unrecognized values are grouped as “Other sources”. A grouped total below 5 is withheld. Individual referral URLs and campaign values are never published.</p>
+        </> : null}
+        {history ? <table className="pulse-counts">
+          <caption>Original pageviews · {timezone} · 1-hour buckets</caption>
+          <thead><tr><th scope="col">Hour beginning</th><th scope="col">Pageviews</th></tr></thead>
+          <tbody>{history.buckets.map((bucket) => <tr key={bucket.start}><th scope="row"><Stamp at={bucket.start} timezone={timezone} /></th><td>{number(bucket.pageviews)}</td></tr>)}</tbody>
+        </table> : <p>Original counts unavailable; no zero counts can be inferred.</p>}
+      </details>
+      <noscript><p>This is a still snapshot. The disclosure works without JavaScript; reload for a newer read.</p></noscript>
     </section>
   );
 }

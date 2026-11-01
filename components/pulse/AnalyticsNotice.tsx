@@ -5,7 +5,7 @@ export function AnalyticsNotice({ collection, publication }: { collection: boole
   return <>
     <h2>Site measurement</h2>
     {collection ? <>
-      <p>This site uses Plausible for cookieless measurement of public pageviews. Your browser loads its script and sends pageview requests to Plausible. We remove query parameters and fragments from page URLs and reduce referral information to its originating site.</p>
+      <p>This site sends cookieless public pageview measurements directly from your browser to Plausible’s Events API. It does not load Plausible’s tracking script. We remove query parameters and fragments from page URLs and reduce external referral information to its originating site.</p>
       <p>Plausible processes request information, including IP address and browser information, to distinguish visits and visitors within a day using a daily identifier specific to this site and device. It cannot recognize the same visitor across days, devices or websites using that identifier. It keeps event and session records to calculate aggregate statistics; cookieless does not mean no data processing.</p>
       <p>We enable pageviews only. We do not enable outbound-link, download or form-submission capture, custom properties, persistent visitor identification, cross-site tracking, visitor histories, session replay or behavioral profiles. We do not send patient or member records. Admin and other private routes are excluded.</p>
     </> : <p>Collection of pageviews by Plausible is off in this deployment. Your browser does not load its script or send it pageview requests. This site sets no analytics cookies and adds no persistent visitor identifier.</p>}

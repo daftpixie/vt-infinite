@@ -1,53 +1,102 @@
-# The Signal operations
+# The Signal operator checklist
 
-Matthew controls secrets and production release. This PR is not authorization to merge, deploy, change hosting or apply migrations. Keep the current `SITE_MODE` unchanged.
+Matthew owns SQL application, secrets, hosted configuration and production release. This PR does not merge or activate the feature. Keep `SITE_MODE` unchanged and **both hosted flags false while staging**.
 
-## Current activation limit
+## Already confirmed
 
-**Collection is held closed.** The supplied v37 script sends engagement/scroll/time data outside its documented event filter. The offline probe in ADR 0011 reproduced it. This PR deliberately refuses a production build with `PLAUSIBLE_ENABLED=true`. Obtain a supported provider fix, run the offline transport probe, and review a follow-up clearing `PAGEVIEW_ONLY_SCRIPT_VERIFIED` and the release check before collection activation. Do not enable undocumented options, localhost capture, a proxy or blocking bypasses.
+Matthew confirms the five Plausible variables are present in Vercel, the configured site identifier and `America/New_York` reporting timezone have been checked, and both flags remain false. Do not recreate credentials or repeat those checks. Vercel values are not automatically available in the build environment.
 
-Public display is independent. With `PUBLIC_PULSE_ENABLED=true`, authorized pre-existing aggregate data can be displayed with collection off. With missing credentials/storage it shows unavailable; with an old valid snapshot it shows stale with its original time. No demo data is substituted.
+The final collector uses Plausible’s documented **Events API directly from the browser**, with sanitized public pageviews only. The supplied tracking script’s bypassed engagement path could measure activity in a private route after a History replace. Aggregate engagement is permitted by the product policy when verified safe; this implementation chooses a smaller pageview-only transport. It does not load, patch or proxy the vendor script and does not capture outbound links, downloads, forms, scroll or time engaged. The old vendor-change hold is removed; essential hosted runtime verification is still pending.
 
-## Plausible account checks
+## 1. Database — separate from Vercel variables
 
-1. Select the team owning the site. Confirm the **exact** site identifier; the anticipated domain from the handoff is not assumed or hardcoded. Confirm its Reporting Timezone matches the site's `SITE_TIME_ZONE` (`America/New_York`).
-2. Account settings → API Keys → New API Key → **Stats API**. Use the correct team, store the generated credential securely, and enter it as a Secret. The public script installation identifier is not that credential. Do not paste secrets into a PR, issue, terminal transcript or browser code.
-3. General → Tracking: outbound links, file downloads and form submissions must all be **disabled**. Account changes affect the served script without a source release. No custom events/properties, captured forms or identifying campaign values should be introduced. Check the engagement blocker with Plausible before clearing the code hold.
-4. Confirm Stats API entitlement. The trial includes Business features; continuing this display after the trial currently requires Business or another plan explicitly including Stats API. Confirm the default 600 requests/key/hour budget, accounting for any other key consumers. Trial expiry is an unavailable/stale state, never zero.
-5. Keep the vendor dashboard private. The custom module is the only authorized public analytics surface.
+In the existing VT Infinite project’s Supabase **SQL Editor**, run this read-only preflight:
 
-## Vercel dashboard configuration
+```sql
+select to_regclass('site.public_snapshots') as public_snapshots,
+       to_regclass('site.pulse_refresh_leases') as pulse_refresh_leases;
+```
 
-Existing project → Settings → Environment Variables. Add the exact names below for **Production**. No environment files or provider configuration values belong in Git.
+| Result | Owner action |
+| --- | --- |
+| Both tables exist | Verify permissions; existence alone is insufficient |
+| Snapshots exists, leases absent | Run 0002 |
+| Both absent | Run 0001, then 0002; finish restricted-role login/connection setup |
+| Leases exists without snapshots, or query errors | Resolve the inconsistent setup before unrelated changes |
 
-| Name | Value | Type |
+Copy and run the **entire** required SQL file from the reviewed PR version, in this order. These migrations are unchanged from reviewed head `50a81a7`:
+
+1. [0001_public_snapshots.sql](https://github.com/daftpixie/vt-infinite/blob/50a81a762332ee57171767339ae8c1aff094c95f/db/migrations/0001_public_snapshots.sql), only if the base setup is absent.
+2. [0002_pulse_refresh_leases.sql](https://github.com/daftpixie/vt-infinite/blob/50a81a762332ee57171767339ae8c1aff094c95f/db/migrations/0002_pulse_refresh_leases.sql), installing the lease table, RLS and restricted grants/policy. It replaces its named policy, not tables or data.
+
+For a new base setup, 0001 creates `site_reader` and `site_refresher` without LOGIN/passwords. Follow only the existing [role-login](database.md#3-give-the-two-roles-a-login-and-a-password) and [transaction-pooler connection-string](database.md#4-build-the-two-connection-strings) sections yourself. Correct existing roles do not need new passwords merely for 0002. Keep the `site` schema outside the Data API; retain the existing schema/API-role/default-privilege checks in the database guide. No additional upstream job/cron setup is part of The Signal.
+
+Rerun the table check, then:
+
+```sql
+select
+  has_table_privilege('site_reader', 'site.public_snapshots', 'select') as reader_snapshots,
+  has_table_privilege('site_reader', 'site.pulse_refresh_leases', 'select') as reader_leases,
+  has_table_privilege('site_refresher', 'site.pulse_refresh_leases', 'select') as refresher_select,
+  has_table_privilege('site_refresher', 'site.pulse_refresh_leases', 'insert') as refresher_insert,
+  has_table_privilege('site_refresher', 'site.pulse_refresh_leases', 'update') as refresher_update;
+```
+
+Expected in order: **true, false, true, true, true**. Both restricted roles need LOGIN for runtime connections. Neither API keys nor table existence establish that the connections/permissions work. Remote SQL and writes remain Matthew’s actions; the build agent applies migrations only to its disposable local test database.
+
+## 2. Runtime variable contract
+
+Keep existing correct values; do not replace secrets unnecessarily. Set no credentials in source, PR text or environment files.
+
+| Variable | Purpose | Vercel type |
 | --- | --- | --- |
-| `PLAUSIBLE_SCRIPT_SRC` | The exact public site-specific HTTPS URL supplied in the handoff; validated `plausible.io/js/pa-….js` path | Config |
-| `PLAUSIBLE_SITE_ID` | Exact identifier confirmed in Plausible | Config |
-| `PLAUSIBLE_API_KEY` | Separate team-scoped Stats API credential | Secret |
-| `PLAUSIBLE_ENABLED` | `false` in this PR; only `true` after the provider hold is resolved and reviewed | Config |
-| `PUBLIC_PULSE_ENABLED` | `false` while staging; `true` only when publishing the module | Config |
+| `PLAUSIBLE_SCRIPT_SRC` | Existing supplied public installation reference; not loaded by the Events API collector | Config |
+| `PLAUSIBLE_SITE_ID` | Already confirmed exact site selector; intentionally public as the collection event’s domain, never a credential | Config |
+| `PLAUSIBLE_API_KEY` | Existing secret Stats API credential; never sent to the browser | Secret |
+| `PLAUSIBLE_ENABLED` | Collection; keep `false` while staging | Config |
+| `PUBLIC_PULSE_ENABLED` | Aggregate publication; keep `false` while staging | Config |
+| `SNAPSHOT_STORE` | `postgres` for durable shared production snapshots | Config |
+| `SNAPSHOT_DATABASE_URL_READ` | Restricted `site_reader` transaction-pooler connection | Secret |
+| `SNAPSHOT_DATABASE_URL_REFRESH` | Restricted `site_refresher` transaction-pooler connection | Secret |
 
-Do not prefix the credential with `NEXT_PUBLIC_`. Vercel's current types are Config and Secret (Secret replaces the older Sensitive label). A Secret reaches the runtime but cannot be read back from the dashboard after saving; keep its secure original.
+Both connections must use the same project and the transaction pooler described in the guide. Supabase publishable/anon/service-role API keys are not connection strings. Do not prefix secret variables with `NEXT_PUBLIC_`. Vercel’s types are Config and Secret; Secret cannot be read back after saving.
 
-For Preview and Development, keep both flags `false` and omit production credentials. Collection additionally requires exact `VERCEL_ENV=production` and production Node mode; local development and automated tests never collect. A separately authorized read-only preview can later use its own Stats API credential and publication flag; collection remains off there.
+For Preview/Development keep both flags false and omit production credentials. Collection additionally requires exact `VERCEL_ENV=production`, production Node mode and no automated-test marker. It excludes localhost, automation, opt-out, DNT/GPC and private routes, and never retries or routes around blocking. A separately authorized read-only preview can use its own Stats credential with collection off. No environment value was changed by this build session.
 
-The data path reuses the existing durable snapshot setup: `SNAPSHOT_STORE=postgres`, `SNAPSHOT_DATABASE_URL_READ` for the restricted page reader and `SNAPSHOT_DATABASE_URL_REFRESH` for the restricted refresher. Matthew applies `db/migrations/0002_pulse_refresh_leases.sql` after 0001 through the existing database workflow. The build agent does not use a Supabase connector/CLI or apply it remotely. Without the lease table or grants, no provider refresh is attempted. File storage is for local tests only and cannot obtain production refresh leases.
+Applying SQL creates database objects. Adding Vercel variables configures the website; it creates no table. Vercel changes affect **new deployments**, so saving values alone does not activate them on an already-running deployment. Matthew controls any new approved deployment and retains the chosen site mode.
 
-## Review and activation
+## 3. Remaining read-only verification
 
-1. Review the PR, ADR, privacy notice variants, exact window definitions and screenshots. Confirm the full site's separate copy/release gates if that mode is selected. Preserve the current landing/full-site setting.
-2. Confirm database migration and restricted-role access in a safe environment. Review source suppression against recorded synthetic responses; confirm no raw source/campaign values can appear publicly.
-3. Confirm a successful authenticated Stats API response for the intended site and exact timezone. Do not report live connectivity based only on variable presence, a script fetch or the public module's unavailable state. Avoid verbose HTTP logging: never expose Authorization, API keys or upstream error bodies. `GET /api/pulse` accepts no caller-supplied parameters.
-4. Publish aggregates only after the desired `PUBLIC_PULSE_ENABLED` configuration and approved source are deployed by Matthew. Environment changes affect **new deployments**, not an already-running deployment. Vercel dashboard redeployment is Matthew's action; this guide does not instruct the build agent to deploy.
-5. Collection additionally requires the separate provider fix described above. To examine a newly supplied script without sending traffic: download its public URL outside the Git tree, then run `node tests/check-plausible-script.mjs /absolute/path/to/downloaded-script.js`. This substitutes fetch in an offline VM. Expected: 3 eligible pageviews, 0 private pageviews, no other event types. Expand/review this verification before clearing the hold; a passing mock is not proof of live delivery or future provider behavior.
-6. After Matthew activates a fixed, approved collection integration, make a **real** visit. Confirm one initial pageview and one per eligible path navigation, no event on a same-path navigation, module rendering or poll, no query/referral detail, and no private-route event. Check blur/hidden-tab/scroll requests for engagement; any such event means stop collection. Do not generate synthetic production traffic or defeat visitor blocking.
-7. Confirm the module after its cache interval: BPM's five-minute window, 24-hour history/source window, timezone, last successful timestamps and status are visible. A successful empty read is zero. Missing credentials, failure, rate limit and expired entitlement must retain a stale timestamp or say unavailable. Test pause/reduced motion, keyboard, 320 px/200% reflow and a screen reader; automated axe is not the complete WCAG review.
+This build environment has no authorized Stats API credential or restricted database connection bindings. Therefore live authenticated reads, latency and hosted table/role readiness remain unverified; Matthew’s site/timezone/configuration confirmations remain accepted.
 
-## Rollback and operational behavior
+Where existing authorized bindings are available, run:
 
-To stop publication, set `PUBLIC_PULSE_ENABLED=false` and have Matthew deploy that configuration. The server then renders no module, returns 404, reads no pulse cache and makes no Stats API requests. Existing visible browsers remove it at their next visible poll (within about 60 seconds); an already delivered no-JavaScript page is static until reloaded.
+```sh
+node scripts/signal-preflight.mjs
+```
 
-To stop collection, set `PLAUSIBLE_ENABLED=false` and deploy that configuration. Publication and collection are separate: stopping one does not stop the other. Already-open pages from a prior deployment can retain their loaded script until navigation/reload. For an incident, also use the provider's controls as appropriate; do not claim a deployment recalls already delivered code or data. Restoring Matthew's approved previous deployment is the alternative rollback; confirm its configuration too. Do not delete last-good snapshots as a substitute for the publication flag.
+This explicit operator probe makes one fixed read-only Stats API v2 `pageviews` query, reports only HTTP/result validity and elapsed milliseconds, and checks tables, expected role identity/LOGIN, required grants and RLS using read-only database transactions. It writes no remote rows or leases, installs nothing and changes no setting. Exit 0 means those checks passed; exit 2 means a missing or unresolved prerequisite. It does not prove Data API exposure/default privileges, live collection delivery or human accessibility; use the guide’s existing checks for those. It prints no key, URL/connection value, Authorization header, metric value or raw upstream error. Never paste credentials to enable it.
 
-When a provider read fails, the lease prevents a request storm. Recent reads are attempted at most every 60 seconds; historical/source reads at most every 5 minutes; a Retry-After response extends the wait (capped at 24 hours). A credential/plan rejection waits at least 1 hour. Source times stay unchanged. If configuration or the site/population changes, a distinct runtime namespace prevents serving another site's or population's snapshot. No individual events are stored by this feature; only the validated public aggregate projection is persisted.
+Normal shared API demand remains **360 requests/key/hour**: 60 recent reads plus 25 historical/source queries every 5 minutes, with concurrency 4 for the historical batch. The documented default limit is 600/key/hour; a manual probe and other consumers share that budget. Live latency cannot be inferred from mocked tests and must be recorded from an authenticated read. Confirm continuing Stats API entitlement at trial renewal; current plans include it in Business.
+
+In Plausible **site settings → General → Tracking**, keep optional outbound links, downloads and form submissions disabled. The selected collector installs none of those event producers; account settings still matter for any future script installation. Use the separate **Stats API** key from account settings → API Keys, rather than the public installation identifier. The trial includes Business features; an ongoing plan must include Stats API access.
+
+For offline transport evidence without sending synthetic traffic:
+
+```sh
+node tests/check-plausible-script.mjs
+```
+
+Expected: only `pageview`, field names `domain/name/referrer/url`, 7 expected navigation/restoration events, privacy contract pass. To inspect a separately downloaded public vendor script without executing network requests, add its local file path. The supplied v37 comparison fails the private replace/scroll/blur scenario; the shipped collector does not use it. No provider configuration belongs in Git.
+
+## 4. Review, activation and rollback
+
+Review the final PR, conditional notices and labeled synthetic screenshots. Native count/method disclosures must be closed initially in both variants; verify keyboard, 320 px/200% reflow, pause/reduced motion and a human screen-reader review. Automated tests/axe do not complete WCAG review. Essential hosted runtime verification must finish before marking the PR ready; passing local/CI checks alone does not clear it.
+
+After the approved source, SQL/connections and live read checks are ready, **Matthew** chooses collection/publication flags independently and deploys that configuration. Do not merge, weaken Deployment Protection or change access to test it. Optional outbound/download/form capture stays disabled. The public vendor dashboard is outside this feature.
+
+After Matthew activates collection, verify a real visit and eligible path navigation appear once; same-path query/fragment changes, scroll, blur, hidden tabs, private routes, module rendering and polling must add no event. Queries/fragments and referral paths/campaigns must be absent. Inspect direct requests without exposing their full payloads or credentials; no synthetic production traffic or blocking bypass. Then verify the aggregate module after its cache interval, with separate recent/history windows, original successful timestamps, source suppression and honest status.
+
+To roll back, Matthew sets the relevant flag false and deploys that configuration, or restores the approved prior deployment with its configuration. `PUBLIC_PULSE_ENABLED=false` removes server publication/cache reads/upstream refresh and returns 404; visible clients remove the module at their next poll, about 60 seconds. `PLAUSIBLE_ENABLED=false` stops collection in newly loaded pages; already-open pages can retain delivered code until reload/navigation. Disabling display does not itself stop collection, and vice versa. Do not delete last-good snapshots as rollback. No-JavaScript pages remain static until reloaded.
+
+Current documentation rechecked for this follow-up: [Events API](https://plausible.io/docs/events-api), [script options](https://plausible.io/docs/script-extensions), [Stats API and limits](https://plausible.io/docs/stats-api), [plans/trial](https://plausible.io/docs/subscription-plans), [Vercel Config/Secret](https://vercel.com/changelog/environment-variables-now-use-config-and-secret-types) and [environment changes/new deployments](https://vercel.com/docs/environment-variables/managing-environment-variables).

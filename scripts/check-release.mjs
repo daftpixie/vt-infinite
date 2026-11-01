@@ -48,8 +48,11 @@ if (process.env.NOW_PLAYING_FIXTURE && process.env.VERCEL) {
 }
 
 if (process.env.PLAUSIBLE_ENABLED === "true" && process.env.VERCEL_ENV === "production") {
-  console.error("release check: Plausible collection is held: the supplied script sends engagement outside transformRequest. A provider fix and pageview-only transport verification are required (ADR 0011). FAILED.");
-  failed = true;
+  const site = process.env.PLAUSIBLE_SITE_ID ?? "";
+  if (site.length > 253 || !/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i.test(site)) {
+    console.error("release check: PLAUSIBLE_SITE_ID must be a valid configured site domain for collection (ADR 0011). FAILED.");
+    failed = true;
+  }
 }
 
 if (!KNOWN_MODES.includes(mode)) {

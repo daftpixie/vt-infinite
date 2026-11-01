@@ -1,17 +1,15 @@
 import { spawnSync } from "node:child_process";
-import vm from "node:vm";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SitePulse } from "@/components/pulse/SitePulse";
 import { PrivacyNotice } from "@/components/landing/PrivacyNotice";
 import { AnalyticsNotice } from "@/components/pulse/AnalyticsNotice";
 import { decide } from "@/lib/access";
-import { collectionEnabled, collectionRequested, scriptSource, statsCredentials } from "@/lib/pulse/config";
-import { plausibleBootstrap } from "@/lib/pulse/collection";
+import { collectionConfigured, collectionEnabled, scriptSource, statsCredentials } from "@/lib/pulse/config";
 import { readHistory, readRecent, STATS_URL, StatsUnavailable, type FetchImpl } from "@/lib/pulse/client";
 import { createPulseService } from "@/lib/pulse/service";
 import { aggregatePaths, publicMeasurementPaths } from "@/lib/pulse/public-paths";
-import { HISTORY_FRESH_MS, RECENT_FRESH_MS, restalePulse, tracePoints } from "@/lib/pulse/model";
+import { HISTORY_FRESH_MS, RECENT_FRESH_MS, restalePulse, trafficWavePath } from "@/lib/pulse/model";
 import type { PulseStore } from "@/lib/pulse/store";
 import { plausibleCspSources, securityHeaders } from "@/lib/security-headers";
 import { privacyNoticeVersion } from "@/lib/privacy";
@@ -21,7 +19,7 @@ import { syntheticPulse } from "../pulse-synthetic";
 const credentials = { siteId: "synthetic.example", apiKey: "synthetic-stats-credential" };
 const enabled = { PUBLIC_PULSE_ENABLED: "true", PLAUSIBLE_SITE_ID: credentials.siteId, PLAUSIBLE_API_KEY: credentials.apiKey };
 const paths = ["/", "/privacy"];
-const production = { PLAUSIBLE_ENABLED: "true", VERCEL_ENV: "production", NODE_ENV: "production", PLAUSIBLE_SCRIPT_SRC: "https://plausible.io/js/pa-syntheticInstallOnly.js" } as const;
+const production = { PLAUSIBLE_ENABLED: "true", VERCEL_ENV: "production", NODE_ENV: "production", PLAUSIBLE_SITE_ID: "synthetic.example", PLAUSIBLE_SCRIPT_SRC: "https://plausible.io/js/pa-syntheticInstallOnly.js" } as const;
 const end = Date.UTC(2026, 10, 1, 9, 30); // A synthetic DST-transition fixture.
 
 function transport(value = 2) {
@@ -54,19 +52,22 @@ function memoryStore() {
 afterEach(() => vi.unstubAllEnvs());
 
 describe("publication, collection and credential boundaries", () => {
-  it("requires exact production collection configuration and keeps the provider hold closed", () => {
-    expect(collectionRequested(production)).toBe(true);
-    expect(collectionEnabled(production)).toBe(false);
-    for (const env of [{}, { ...production, PLAUSIBLE_ENABLED: "TRUE" }, { ...production, VERCEL_ENV: "preview" }, { ...production, NODE_ENV: "development" }, { ...production, NODE_ENV: "test" }, { ...production, CI: "true" }, { ...production, PLAYWRIGHT_TEST: "1" }]) expect(collectionRequested(env)).toBe(false);
+  it("requires exact production collection configuration and a valid Events API domain", () => {
+    expect(collectionConfigured(production)).toBe(true);
+    expect(collectionEnabled(production)).toBe(true);
+    expect(collectionEnabled({ ...production, PLAUSIBLE_SITE_ID: "https://synthetic.example/private" })).toBe(false);
+    for (const env of [{}, { ...production, PLAUSIBLE_ENABLED: "TRUE" }, { ...production, VERCEL_ENV: "preview" }, { ...production, NODE_ENV: "development" }, { ...production, NODE_ENV: "test" }, { ...production, VITEST: "true" }, { ...production, PLAYWRIGHT_TEST: "1" }]) expect(collectionEnabled(env)).toBe(false);
     expect(scriptSource(production)).toBe(production.PLAUSIBLE_SCRIPT_SRC);
     for (const src of ["https://plausible.io/js/script.js", "https://evil.example/js/pa-syntheticInstallOnly.js", `${production.PLAUSIBLE_SCRIPT_SRC}?x=1`, `${production.PLAUSIBLE_SCRIPT_SRC}#x`, "https://plausible.io.evil.example/js/pa-syntheticInstallOnly.js", "https://a:b@plausible.io/js/pa-syntheticInstallOnly.js"]) expect(scriptSource({ PLAUSIBLE_SCRIPT_SRC: src })).toBeNull();
     expect(statsCredentials({})).toBeNull();
   });
 
-  it("fails the production build clearly when collection is requested before the provider fix", () => {
+  it("permits a configured production collector and rejects missing collection configuration", () => {
     const r = spawnSync(process.execPath, ["scripts/check-release.mjs"], { encoding: "utf8", env: { ...process.env, SITE_MODE: "full", PLAN_ENABLED: "", NOW_PLAYING_ENABLED: "", ...production } });
-    expect(r.status).toBe(1);
-    expect(r.stderr).toContain("the supplied script sends engagement outside transformRequest");
+    expect(r.status).toBe(0);
+    const invalid = spawnSync(process.execPath, ["scripts/check-release.mjs"], { encoding: "utf8", env: { ...process.env, SITE_MODE: "full", PLAN_ENABLED: "", NOW_PLAYING_ENABLED: "", ...production, PLAUSIBLE_SITE_ID: "" } });
+    expect(invalid.status).toBe(1);
+    expect(invalid.stderr).toContain("PLAUSIBLE_SITE_ID must be a valid configured site domain");
   });
 
   it("flag off makes no store reads, no fetches and publishes no old snapshot", async () => {
@@ -101,25 +102,29 @@ describe("publication, collection and credential boundaries", () => {
     for (const path of ["/words", "/admin", "/api/pulse/x", "/api/plan/onerhythm"]) expect(decide(path, landing).action).toBe("deny");
   });
 
-  it("CSP adds only a validated script path and collection endpoint; the hold leaves policies unchanged", () => {
-    expect(plausibleCspSources(production.PLAUSIBLE_SCRIPT_SRC)).toEqual({ script: ` ${production.PLAUSIBLE_SCRIPT_SRC}`, connect: " https://plausible.io/api/event" });
-    expect(plausibleCspSources("https://evil.example/script.js")).toEqual({ script: "", connect: "" });
+  it("CSP permits only the collection endpoint, with no additional script origin", () => {
+    expect(plausibleCspSources(true)).toEqual({ connect: " https://plausible.io/api/event" });
+    expect(plausibleCspSources(false)).toEqual({ connect: "" });
     const headers = securityHeaders(false, production);
     const csp = headers.find((h) => h.key === "Content-Security-Policy")!.value;
-    expect(csp).not.toContain("plausible.io");
-    expect(csp).toContain("connect-src 'self'");
+    expect(csp).toContain("connect-src 'self' https://plausible.io/api/event");
+    expect(csp.split(";").find((part) => part.trim().startsWith("script-src"))).not.toContain("plausible.io");
     expect(csp).toContain("object-src 'none'");
     expect(csp).not.toMatch(/unsafe-eval|\*/);
+    // Vercel sets CI at build time. It must not bake a runtime-blocking CSP into an enabled production build.
+    expect(securityHeaders(false, { ...production, CI: "1" })).toEqual(headers);
+    expect(collectionEnabled({ ...production, CI: "1" })).toBe(true);
+    expect(securityHeaders(false, { ...production, PLAUSIBLE_ENABLED: "false" }).find((h) => h.key === "Content-Security-Policy")?.value).not.toContain("plausible.io");
   });
 });
 
 describe("fixed Stats API v2 aggregates", () => {
-  it("calculates five-minute BPM, adjacent exact hourly windows and DST-safe totals", async () => {
+  it.each([end, Date.UTC(2026, 2, 8, 9, 30)])("calculates exact elapsed-hour windows across clock changes at %s", async (windowEnd) => {
     const fetchImpl = transport(7);
-    const recent = await readRecent(credentials, paths, end, fetchImpl);
+    const recent = await readRecent(credentials, paths, windowEnd, fetchImpl);
     expect(recent.bpm).toBe(1.4);
     expect(Date.parse(recent.end) - Date.parse(recent.start)).toBe(300_000);
-    const history = await readHistory(credentials, paths, end, fetchImpl);
+    const history = await readHistory(credentials, paths, windowEnd, fetchImpl);
     expect(history.total).toBe(168);
     expect(history.peak).toBe(7);
     expect(history.buckets).toHaveLength(24);
@@ -223,26 +228,6 @@ describe("shared snapshots, coalescing and failures", () => {
   });
 });
 
-describe("bootstrap and automatic navigation contract (mocked transport only)", () => {
-  it("preserves queue/init, disables optional capture, strips identifiers and filters private paths", () => {
-    const win: Record<string, unknown> = {};
-    vm.runInNewContext(plausibleBootstrap(paths), { window: win, URL, location: { origin: "https://synthetic.example" } });
-    const plausible = win.plausible as ((...args: unknown[]) => void) & { q: unknown[]; o: { transformRequest: (p: unknown) => unknown; outboundLinks: boolean; fileDownloads: boolean; formSubmissions: boolean; autoCapturePageviews: boolean; captureOnLocalhost: boolean } };
-    plausible("queued-test");
-    expect(plausible.q).toHaveLength(1);
-    expect(plausible.o).toMatchObject({ outboundLinks: false, fileDownloads: false, formSubmissions: false, captureOnLocalhost: false, autoCapturePageviews: true });
-    const transform = plausible.o.transformRequest;
-    expect(transform({ n: "pageview", u: "https://synthetic.example/?utm_campaign=identifying#private", r: "https://ref.example/person?q=private", d: "synthetic.example", v: 37, p: { personal: "no" } })).toEqual({ n: "pageview", u: "https://synthetic.example/", r: "https://ref.example", d: "synthetic.example", v: 37 });
-    expect(transform({ n: "engagement", u: "https://synthetic.example/" })).toBeNull();
-    for (const path of ["/admin", "/api/pulse", "/unknown", "/governance/demo"]) expect(transform({ n: "pageview", u: `https://synthetic.example${path}` })).toBeNull();
-    const emitted: unknown[] = [];
-    let previous = "";
-    const automaticPage = (path: string) => { if (previous === path) return; previous = path; const p = transform({ n: "pageview", u: `https://synthetic.example${path}` }); if (p) emitted.push(p); };
-    automaticPage("/"); automaticPage("/"); automaticPage("/privacy"); automaticPage("/admin"); automaticPage("/");
-    expect(emitted).toHaveLength(3);
-  });
-});
-
 describe("static, accessible display and notices", () => {
   it.each(["compact", "expanded"] as const)("%s contains actual counts, windows, table, definitions and no autoplay", (variant) => {
     const r = syntheticPulse(end);
@@ -256,7 +241,10 @@ describe("static, accessible display and notices", () => {
     expect(html).toContain("<noscript>");
     expect(html).not.toContain("aria-live");
     expect(html.includes("<h3>Circulation</h3>")).toBe(variant === "expanded");
-    expect(tracePoints(r.history.data!.buckets).split(" ")).toHaveLength(24);
+    const waveform = trafficWavePath(r.history.data!.buckets);
+    expect(waveform.match(/ Q/g)?.length).toBe(r.history.data!.buckets.filter((b) => b.pageviews > 0).length * 2);
+    expect(html).not.toMatch(/<details[^>]* open/);
+    if (variant === "expanded") expect(html.indexOf("<h3>Cardiac output")).toBeLessThan(html.indexOf("<details"));
     const stale = restalePulse(r, end + HISTORY_FRESH_MS);
     expect([stale.recent.status, stale.history.status]).toEqual(["stale", "stale"]);
     expect(stale.history.data?.readAt).toBe(r.history.data?.readAt);
@@ -266,6 +254,7 @@ describe("static, accessible display and notices", () => {
     expect(privacyNoticeVersion({})).toBe("landing-signal-1");
     expect(privacyNoticeVersion({ NOW_PLAYING_ENABLED: "true" })).toBe("landing-signal-2");
     expect(privacyNoticeVersion({ PUBLIC_PULSE_ENABLED: "true" })).toBe("landing-signal-5");
+    expect(privacyNoticeVersion(production)).toBe("landing-signal-3");
     const html = renderToStaticMarkup(<PrivacyNotice version="landing-signal-5" />);
     expect(html).toContain("Collection of pageviews by Plausible is off");
     expect(html).toContain("The Signal publishes selected aggregate");

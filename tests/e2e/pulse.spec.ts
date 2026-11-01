@@ -18,6 +18,11 @@ for (const [name, origin] of [["compact", landing], ["expanded", full]] as const
       await expect(pulse).toBeVisible();
       await expect(pulse).toContainText("1.4 BPM");
       await expect(pulse).toContainText("Data status: stale");
+      await expect(pulse.locator("details")).not.toHaveAttribute("open");
+      await expect(pulse.getByRole("table")).toBeHidden();
+      const path = await pulse.locator("svg path").getAttribute("d");
+      expect(path).toContain(" Q");
+      await expect(pulse.locator("figcaption")).toContainText("1 motif per 1-hour bucket");
       await expect(pulse.locator("[data-sweeping]")).toHaveAttribute("data-sweeping", "false");
       const start = pulse.getByRole("button", { name: "Start sweep" });
       await start.focus();
@@ -97,10 +102,57 @@ test("client bundles contain no Stats API configuration or credentials", async (
   }
 });
 
-test("capture review screenshots from synthetic snapshots", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 1000 });
-  for (const [name, origin] of [["compact", landing], ["expanded", full]] as const) {
+for (const [name, origin] of [["compact", landing], ["expanded", full]] as const) {
+  test(`${name}: successful empty, failed polling and unavailable data stay distinct at 320 px/200%`, async ({ page }) => {
+    await page.clock.install();
+    let polls = 0;
+    const zero = syntheticPulse();
+    zero.recent.data!.pageviews = 0; zero.recent.data!.bpm = 0;
+    zero.history.data!.buckets.forEach((bucket) => { bucket.pageviews = 0; });
+    zero.history.data!.total = 0; zero.history.data!.peak = 0;
+    zero.history.data!.sources = []; zero.history.data!.sourcesSuppressed = false;
+    await page.route(`${origin}/api/pulse`, async (route) => {
+      polls++;
+      if (polls === 2) { await route.fulfill({ status: 503 }); return; }
+      const body = polls === 1 ? zero : { ...zero, status: "unavailable", recent: { status: "unavailable", data: null }, history: { status: "unavailable", data: null } };
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+    });
     await page.goto(origin);
-    await page.getByRole("region", { name: "The Signal" }).screenshot({ path: test.info().outputPath(`signal-${name}.png`) });
+    const pulse = page.getByRole("region", { name: "The Signal" });
+    await expect(pulse).toHaveAttribute("data-polling", "on");
+    await page.clock.fastForward(60_000);
+    await expect(pulse).toContainText("0 BPM");
+    await expect(pulse).toContainText("Data status: fresh");
+    expect(await pulse.locator("svg path").getAttribute("d")).not.toContain(" Q");
+    await page.clock.fastForward(60_000);
+    await expect(pulse).toContainText("Data status: stale");
+    await expect(pulse).toContainText("0 BPM");
+    await page.clock.fastForward(60_000);
+    await expect(pulse).toContainText("Data status: unavailable");
+    await expect(pulse.locator("svg")).toHaveCount(0);
+    await expect(pulse).not.toContainText("0 BPM");
+    await page.setViewportSize({ width: 320, height: 900 });
+    await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    const blocking = (await new AxeBuilder({ page }).include(".site-pulse").analyze()).violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+    expect(blocking).toEqual([]);
+  });
+}
+
+test("capture review screenshots in both themes from synthetic snapshots", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  for (const scheme of ["dark", "light"] as const) {
+    await page.emulateMedia({ colorScheme: scheme });
+    for (const [name, origin] of [["compact", landing], ["expanded", full]] as const) {
+      await page.goto(origin);
+      await page.evaluate(() => {
+        const pulse = document.querySelector(".site-pulse")!;
+        const wrapper = document.createElement("div"); wrapper.className = "pulse-review";
+        wrapper.style.maxWidth = pulse.classList.contains("site-pulse-compact") ? "var(--measure)" : "var(--container)";
+        const label = document.createElement("p"); label.textContent = "Local review · Synthetic test data · Collection off";
+        pulse.before(wrapper); wrapper.append(label, pulse);
+      });
+      await page.locator(".pulse-review").screenshot({ path: test.info().outputPath(`signal-${name}-${scheme}.png`) });
+    }
   }
 });

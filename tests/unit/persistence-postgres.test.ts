@@ -22,18 +22,19 @@ const canonical = (v: unknown) => canonicalize(v) as string;
 describe.skipIf(!url)("postgres store against a local Postgres", () => {
   let sql: postgres.Sql;
   const pulseKey = `pulse:v1:${"c".repeat(32)}:recent`;
-  const keys = ["test:object", "test:legacy", "test:roundtrip", "test:pulse"];
+  const roleKey = `pulse:v1:${"c".repeat(32)}:history`;
+  const keys = ["test:object", "test:legacy", "test:roundtrip", "test:pulse", "test:pulse-role"];
 
   beforeAll(async () => {
     sql = postgres(url as string, { prepare: false, max: 1, onnotice: () => {} });
     await sql.unsafe(readFileSync("db/migrations/0001_public_snapshots.sql", "utf8"));
     await sql.unsafe(readFileSync("db/migrations/0002_pulse_refresh_leases.sql", "utf8"));
-    await sql`delete from site.pulse_refresh_leases where key = ${pulseKey}`;
+    await sql`delete from site.pulse_refresh_leases where key in (${pulseKey}, ${roleKey})`;
     await sql`delete from site.public_snapshots where key = any(${keys})`;
   });
 
   afterAll(async () => {
-    await sql`delete from site.pulse_refresh_leases where key = ${pulseKey}`;
+    await sql`delete from site.pulse_refresh_leases where key in (${pulseKey}, ${roleKey})`;
     await sql`delete from site.public_snapshots where key = any(${keys})`;
     await sql.end();
   });
@@ -69,6 +70,24 @@ describe.skipIf(!url)("postgres store against a local Postgres", () => {
     try {
       await connection`set role site_reader`;
       await expect(connection`select * from site.pulse_refresh_leases`).rejects.toMatchObject({ code: "42501" });
+    } finally { await connection`reset role`; connection.release(); }
+  });
+
+  it("runs actual lease/projection writes as the refresher, and read-only projection access as the reader", async () => {
+    const connection = await sql.reserve();
+    const client = sqlClientFrom(connection as unknown as postgres.Sql);
+    const store = new PostgresSnapshotStore(client, () => {});
+    try {
+      await connection`set role site_refresher`;
+      const lease = leaseStore(client);
+      const now = Date.UTC(2026, 10, 1, 12);
+      expect(await lease.claim(roleKey, "synthetic-refresher", now, now + 300_000)).toBe(true);
+      const data = syntheticPulse().history.data!;
+      await store.put("test:pulse-role", { schemaVersion: 1, fetchedAt: data.readAt, data });
+      await connection`reset role`;
+      await connection`set role site_reader`;
+      expect((await store.get("test:pulse-role"))?.data).toEqual(data);
+      await expect(store.put("test:pulse-role", { schemaVersion: 1, fetchedAt: data.readAt, data })).rejects.toMatchObject({ code: "42501" });
     } finally { await connection`reset role`; connection.release(); }
   });
 

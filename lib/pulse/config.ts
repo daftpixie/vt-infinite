@@ -6,19 +6,22 @@ export function scriptSource(env: Env = process.env): string | null {
   return /^https:\/\/plausible\.io\/js\/pa-[A-Za-z0-9]{12,64}\.js$/.test(value) ? value : null;
 }
 
-export function collectionRequested(env: Env = process.env): boolean {
-  return env.PLAUSIBLE_ENABLED === "true" && env.VERCEL_ENV === "production" && env.NODE_ENV === "production" && !env.CI && !env.VITEST && !env.PLAYWRIGHT_TEST;
+/** Public Events API domain, intentionally sent with pageviews; never the Stats API credential. */
+export function measurementSiteId(env: Env = process.env): string | null {
+  const value = env.PLAUSIBLE_SITE_ID ?? "";
+  return value.length <= 253 && /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i.test(value) ? value : null;
 }
 
-/**
- * ADR 0011: the currently supplied v37 script sends engagement outside
- * transformRequest. Pageview-only collection cannot yet be guaranteed.
- * Remove this hold only with a provider fix and a transport-level test.
- */
-export const PAGEVIEW_ONLY_SCRIPT_VERIFIED: boolean = false;
+/** Build-time policy configuration, including Vercel builds where CI=1 is set by the platform. */
+export function collectionConfigured(env: Env = process.env): boolean {
+  return env.PLAUSIBLE_ENABLED === "true" && env.VERCEL_ENV === "production" && env.NODE_ENV === "production" && measurementSiteId(env) !== null;
+}
 
 export function collectionEnabled(env: Env = process.env): boolean {
-  return PAGEVIEW_ONLY_SCRIPT_VERIFIED && collectionRequested(env) && scriptSource(env) !== null;
+  // CI=1 is also Vercel's production-build marker. It must not strip the
+  // collector from prerendered public pages. Explicit test markers and the
+  // browser's automation/opt-out guard prevent test-time collection.
+  return collectionConfigured(env) && !env.VITEST && !env.PLAYWRIGHT_TEST;
 }
 
 export function publicPulseEnabled(env: Env = process.env): boolean {

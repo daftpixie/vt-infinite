@@ -9,7 +9,7 @@ export const REPORTING_TIME_ZONE = SITE_TIME_ZONE;
 
 export const DEFINITIONS = {
   bpm: "BPM — Beats per minute: pageviews in the preceding 5 minutes divided by 5. A five-minute average.",
-  rhythm: "Rhythm strip: observed pageviews over time, in consecutive 1-hour buckets. An EKG-inspired traffic trace.",
+  rhythm: "Rhythm strip: stylized EKG-inspired traffic trace, with one motif per observed 1-hour bucket.",
   peak: "Stress test: observed peak hourly pageviews over the preceding 24 hours. Traffic volume only; this is no server-capacity or load-test measurement.",
   output: "Cardiac output: total pageviews over the preceding 24 hours.",
   sources: "Circulation: aggregate referral-source pageview counts for the same 24-hour period. Attribution follows the source of the visit’s first pageview.",
@@ -51,8 +51,25 @@ export function overallStatus(recent: Reading<Recent>, history: Reading<History>
   return !recent.data && !history.data ? "unavailable" : recent.status === "fresh" && history.status === "fresh" ? "fresh" : "stale";
 }
 
-/** One point per observed bucket, equally spaced in elapsed time; amplitude uses the displayed maximum. No invented event times. */
-export function tracePoints(buckets: readonly Bucket[], width = 720, height = 120): string {
+/**
+ * One schematic P/QRS/T-like glyph per elapsed-hour bucket, never per visit.
+ * A = count / displayed peak × 49% of drawing height. Zero is
+ * flat. Horizontal glyph positions are fixed drawing coordinates, not event
+ * timestamps. The exact counts/time intervals remain in the native table.
+ */
+export function trafficWavePath(buckets: readonly Bucket[], width = 720, height = 144): string {
   const max = Math.max(1, ...buckets.map((b) => b.pageviews));
-  return buckets.map((b, i) => `${((i + 0.5) / buckets.length * width).toFixed(2)},${(height - 12 - b.pageviews / max * (height - 24)).toFixed(2)}`).join(" ");
+  const baseline = height * 0.65;
+  const span = width / Math.max(1, buckets.length);
+  const scale = Math.min(baseline, height - baseline) * 1.4;
+  const f = (n: number) => n.toFixed(2);
+  let d = `M0 ${f(baseline)}`;
+  for (const [i, bucket] of buckets.entries()) {
+    const x = i * span;
+    if (bucket.pageviews === 0) { d += ` L${f(x + span)} ${f(baseline)}`; continue; }
+    const a = bucket.pageviews / max * scale;
+    const p = (fraction: number, amplitude = 0) => `${f(x + fraction * span)} ${f(baseline - amplitude * a)}`;
+    d += ` L${p(0.12)} Q${p(0.2, 0.22)} ${p(0.28)} L${p(0.36)} L${p(0.42, -0.12)} L${p(0.5, 1)} L${p(0.58, -0.3)} L${p(0.64)} Q${p(0.76, 0.5)} ${p(0.9)} L${p(1)}`;
+  }
+  return d;
 }

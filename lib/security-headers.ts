@@ -1,10 +1,9 @@
-import { collectionEnabled, scriptSource } from "./pulse/config";
+import { collectionConfigured } from "./pulse/config";
 import type { Env } from "./flags";
 
-/** A precise public installation path and collection endpoint; no origin-wide script permission. */
-export function plausibleCspSources(src: string | null): { script: string; connect: string } {
-  if (!src || scriptSource({ PLAUSIBLE_SCRIPT_SRC: src }) !== src) return { script: "", connect: "" };
-  return { script: ` ${src}`, connect: " https://plausible.io/api/event" };
+/** Direct Events API only. No third-party script permission is required or added. */
+export function plausibleCspSources(enabled: boolean): { connect: string } {
+  return { connect: enabled ? " https://plausible.io/api/event" : "" };
 }
 
 /**
@@ -13,10 +12,10 @@ export function plausibleCspSources(src: string | null): { script: string; conne
  * nonce-based policy is tracked for the cutover stage.
  */
 export function securityHeaders(isDev: boolean, env: Env = process.env): Array<{ key: string; value: string }> {
-  const plausible = plausibleCspSources(collectionEnabled(env) ? scriptSource(env) : null);
+  const plausible = plausibleCspSources(collectionConfigured(env));
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}${plausible.script}`,
+    `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data:",
     "font-src 'self'",
