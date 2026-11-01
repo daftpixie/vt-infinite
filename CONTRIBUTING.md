@@ -32,7 +32,7 @@ The guards in `guards/rules.mjs` enforce these on every pull request; a legitima
 - Two of the initiatives are never named in the same claim; the `initiative-pairing` guard names them.
 - Wherever suicide is mentioned, the crisis-support block (`components/CrisisSupport.tsx`) appears with its wording unchanged.
 - The byline is "Matthew J Adams", with no period. Marrs Rover has two Rs. Any sentence about the person it is named for stays a placeholder until Matthew supplies approved text.
-- No analytics, tracking pixels, third-party scripts or cookies beyond what the PRD permits.
+- No analytics, tracking pixels, third-party scripts or cookies beyond what the PRD permits. Matthew's Signal follow-up permits bounded cookieless aggregate measurement (ADR 0011), including daily site-specific visitor/session distinction. Cookies, persistent identification, cross-site tracking, behavioral profiles, replay, identifying custom properties and patient/member data remain prohibited. The selected Events API collector sends only sanitized public pageviews; optional outbound/download/form capture stays off.
 
 ## Accessibility
 

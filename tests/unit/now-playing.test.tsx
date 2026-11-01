@@ -585,12 +585,12 @@ describe("the flag off (N1)", () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
-  it("the privacy notice stays landing-1", async () => {
+  it("the privacy notice stays landing-signal-1", async () => {
     vi.stubEnv("SITE_MODE", "landing");
     vi.stubEnv("NOW_PLAYING_ENABLED", "");
     const { default: PrivacyPage } = await import("@/app/privacy/page");
     const html = renderToStaticMarkup(await PrivacyPage());
-    expect(html).toContain("Version landing-1");
+    expect(html).toContain("Version landing-signal-1");
     expect(html).not.toContain("Spotify");
   });
 });

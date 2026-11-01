@@ -53,6 +53,7 @@ export const LANDING_FLAGGED: ReadonlyArray<{ path: string; flag: Flag }> = [
   { path: "/api/now-playing", flag: "nowPlaying" },
   { path: SPOTIFY_LOGOS.black, flag: "nowPlaying" },
   { path: SPOTIFY_LOGOS.white, flag: "nowPlaying" },
+  { path: "/api/pulse", flag: "publicPulse" },
 ];
 export const LANDING_FLAGGED_PATHS: readonly string[] = LANDING_FLAGGED.map((f) => f.path);
 

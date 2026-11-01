@@ -21,6 +21,7 @@ export const GATED_PREFIXES: ReadonlyArray<{ prefix: string; flag: Flag }> = [
   { prefix: "/api/governance/live", flag: "governanceLive" },
   { prefix: "/figures/mandelbrot", flag: "mandelbrot" },
   { prefix: "/api/now-playing", flag: "nowPlaying" },
+  { prefix: "/api/pulse", flag: "publicPulse" },
   { prefix: SPOTIFY_LOGOS.black.toLowerCase(), flag: "nowPlaying" },
   { prefix: SPOTIFY_LOGOS.white.toLowerCase(), flag: "nowPlaying" },
 ];

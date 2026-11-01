@@ -1,16 +1,25 @@
+import { collectionConfigured } from "./pulse/config";
+import type { Env } from "./flags";
+
+/** Direct Events API only. No third-party script permission is required or added. */
+export function plausibleCspSources(enabled: boolean): { connect: string } {
+  return { connect: enabled ? " https://plausible.io/api/event" : "" };
+}
+
 /**
  * Response headers for every route. The script policy allows inline
  * scripts because Next.js emits inline bootstrap scripts; moving to a
  * nonce-based policy is tracked for the cutover stage.
  */
-export function securityHeaders(isDev: boolean): Array<{ key: string; value: string }> {
+export function securityHeaders(isDev: boolean, env: Env = process.env): Array<{ key: string; value: string }> {
+  const plausible = plausibleCspSources(collectionConfigured(env));
   const csp = [
     "default-src 'self'",
     `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data:",
     "font-src 'self'",
-    "connect-src 'self'",
+    `connect-src 'self'${plausible.connect}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

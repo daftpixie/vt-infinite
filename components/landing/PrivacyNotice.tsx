@@ -1,6 +1,7 @@
 import { ExternalLink } from "@/components/ExternalLink";
+import { AnalyticsNotice } from "@/components/pulse/AnalyticsNotice";
 import { LANDING } from "@/lib/landing";
-import { type PrivacyNoticeVersion, VERCEL_PRIVACY_URL } from "@/lib/privacy";
+import { privacyFeatures, type PrivacyNoticeVersion, VERCEL_PRIVACY_URL } from "@/lib/privacy";
 
 /**
  * Privacy notice "landing-1", or "landing-2" while "now playing" is on:
@@ -10,14 +11,20 @@ import { type PrivacyNoticeVersion, VERCEL_PRIVACY_URL } from "@/lib/privacy";
  * Change the version when the site changes what it does.
  */
 export function PrivacyNotice({ version }: { version: PrivacyNoticeVersion }) {
-  const nowPlaying = version === "landing-2";
+  const { nowPlaying, collection, publication } = privacyFeatures(version);
+  const legacy = version === "landing-1" || version === "landing-2";
   return (
     <>
       <p>Version {version}</p>
 
       <h2>What this site collects</h2>
-      <p>This site does not collect anything about you. It has no sign-up form, no comments and no accounts.</p>
-      <p>It sets no cookies. It uses no analytics and no tracking. It loads nothing from other websites.</p>
+      {legacy ? <>
+        <p>This site does not collect anything about you. It has no sign-up form, no comments and no accounts.</p>
+        <p>It sets no cookies. It uses no analytics and no tracking. It loads nothing from other websites.</p>
+      </> : <>
+        <p>This site has no sign-up form, no comments and no accounts. Hosting and any enabled site measurement involve the processing described below.</p>
+        <AnalyticsNotice collection={collection} publication={publication} />
+      </>}
 
       <h2>Your theme choice</h2>
       <p>If you pick a theme at the bottom of the page, your browser saves that choice on your device. It is not sent to us.</p>

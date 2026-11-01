@@ -1,6 +1,8 @@
 import type { CSSProperties } from "react";
 import { ExternalLink } from "@/components/ExternalLink";
 import { NowPlaying } from "@/components/now-playing/NowPlaying";
+import { SitePulse } from "@/components/pulse/SitePulse";
+import type { PulseResult } from "@/lib/pulse/model";
 import type { NowPlayingResult } from "@/lib/now-playing/service";
 import { acrosticHeading, acrosticThreshold, LANDING, type AcrosticItem } from "@/lib/landing";
 import { BrandLockup } from "./BrandLockup";
@@ -30,10 +32,10 @@ function AcrosticColumn({ item }: { item: AcrosticItem }) {
 /**
  * The landing release's page at `/` (SITE_MODE=landing). Copy and links come
  * from content/landing.json. "Now playing" sits below the links and above
- * the sign-up line, only when NOW_PLAYING_ENABLED is on (ADR 0009); without
- * it the page is exactly as before.
+ * the sign-up line, only when NOW_PLAYING_ENABLED is on (ADR 0009). The
+ * independently gated compact Signal follows it (ADR 0011).
  */
-export function LandingPage({ nowPlaying }: { nowPlaying?: NowPlayingResult } = {}) {
+export function LandingPage({ nowPlaying, pulse }: { nowPlaying?: NowPlayingResult; pulse?: PulseResult | null } = {}) {
   const heading = acrosticHeading(LANDING.acrostic);
   return (
     <div className="wrap landing">
@@ -67,6 +69,8 @@ export function LandingPage({ nowPlaying }: { nowPlaying?: NowPlayingResult } = 
       </ul>
 
       {nowPlaying ? <NowPlaying initial={nowPlaying} /> : null}
+
+      {pulse ? <SitePulse initial={pulse} variant="compact" /> : null}
 
       <p className="landing-signup" data-signup="closed">
         {LANDING.signupClosed}

@@ -19,6 +19,8 @@ const NOPROXY_PORT = PORT + 3;
  */
 const NOW_PLAYING_PORT = PORT + 4;
 const NOW_PLAYING_FULL_PORT = PORT + 5;
+const PULSE_PORT = PORT + 6;
+const PULSE_FULL_PORT = PORT + 7;
 
 // Every feature flag, and the site mode, is explicitly unset for the server
 // under test, so the suite proves the default-off behavior rather than
@@ -35,6 +37,10 @@ const serverEnv: Record<string, string> = {
   ALLOW_CONTENT_FIXTURES: "true",
   SNAPSHOT_DIR: "tests/fixtures/snapshots",
   UPSTREAM_REFRESH: "off",
+  PLAYWRIGHT_TEST: "1",
+  PLAUSIBLE_ENABLED: "false",
+  PLAUSIBLE_API_KEY: "",
+  PLAUSIBLE_SCRIPT_SRC: "",
 };
 
 /** Synthetic values only: the fixture transport answers instead of Spotify, and refuses to run on Vercel. */
@@ -49,6 +55,7 @@ const nowPlayingEnv: Record<string, string> = {
 
 export default defineConfig({
   testDir: "tests/e2e",
+  globalSetup: "./tests/pulse-setup.ts",
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
@@ -68,6 +75,16 @@ export default defineConfig({
     },
   ],
   webServer: [
+    {
+      command: `npx next start -p ${PULSE_PORT} -H 127.0.0.1`,
+      url: `http://127.0.0.1:${PULSE_PORT}/`, reuseExistingServer: false, timeout: 120_000,
+      env: { ...serverEnv, SITE_MODE: "landing", PUBLIC_PULSE_ENABLED: "true", PLAUSIBLE_SITE_ID: "synthetic.example", SNAPSHOT_DIR: ".data/pulse-e2e" },
+    },
+    {
+      command: `npx next start -p ${PULSE_FULL_PORT} -H 127.0.0.1`,
+      url: `http://127.0.0.1:${PULSE_FULL_PORT}/`, reuseExistingServer: false, timeout: 120_000,
+      env: { ...serverEnv, PUBLIC_PULSE_ENABLED: "true", PLAUSIBLE_SITE_ID: "synthetic.example", SNAPSHOT_DIR: ".data/pulse-e2e" },
+    },
     {
       command: `npx next start -p ${PORT} -H 127.0.0.1`,
       url: `http://127.0.0.1:${PORT}/`,

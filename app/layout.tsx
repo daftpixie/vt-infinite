@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { PlausibleCollection } from "@/components/pulse/PlausibleCollection";
+import { collectionEnabled, measurementSiteId } from "@/lib/pulse/config";
+import { publicMeasurementPaths } from "@/lib/pulse/public-paths";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
@@ -25,6 +28,8 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  const domain = collectionEnabled() ? measurementSiteId() : null;
+  const collector = domain ? <PlausibleCollection domain={domain} paths={publicMeasurementPaths()} /> : null;
   // The landing release has no header or primary navigation: every other page answers 404 there.
   if (isLanding()) {
     return (
@@ -42,6 +47,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             {children}
           </main>
           <LandingFooter />
+          {collector}
         </body>
       </html>
     );
@@ -65,6 +71,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
         <SiteFooter />
+        {collector}
       </body>
     </html>
   );

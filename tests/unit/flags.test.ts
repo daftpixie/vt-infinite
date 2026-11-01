@@ -13,6 +13,7 @@ describe("feature flags", () => {
         "MANDELBROT_ENABLED",
         "MARRS_ROVER_REAL_DATA_ENABLED",
         "NOW_PLAYING_ENABLED",
+        "PUBLIC_PULSE_ENABLED",
         "PLAN_ENABLED",
         "PLAYLIST_ENABLED",
       ].sort(),

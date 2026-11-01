@@ -103,6 +103,7 @@ describe("landing mode access (proxy decision)", () => {
       { path: "/api/now-playing", flag: "nowPlaying" },
       { path: "/brand/third-party/spotify/Full_Logo_Black_RGB.svg", flag: "nowPlaying" },
       { path: "/brand/third-party/spotify/Full_Logo_White_RGB.svg", flag: "nowPlaying" },
+      { path: "/api/pulse", flag: "publicPulse" },
     ]);
     const on = { ...LANDING_ENV, NOW_PLAYING_ENABLED: "true" };
     for (const p of ["/brand/third-party", "/brand/third-party/spotify", "/brand/third-party/spotify/", "/brand/third-party/spotify/Full_Logo_Green_RGB.svg", "/brand/third-party/spotify/x.svg"]) {

@@ -10,7 +10,7 @@ import { ALBUM_URL, ARTIST_URL, TRACK_URL } from "./now-playing-synthetic";
  * the build runs this file first (scripts/check-release.mjs, `prebuild`) and
  * fails unless:
  *
- * - /privacy serves notice "landing-2", with its Spotify sentences, and
+ * - /privacy serves notice "landing-signal-2", with its Spotify sentences, and
  * - no placeholder renders in the component, in any state.
  *
  * CI runs with the flag off and checks that the gate sees what it must.
@@ -57,9 +57,9 @@ afterEach(() => {
 });
 
 describe("now-playing release gate (N10)", () => {
-  it("serves landing-2, with its Spotify sentences, whenever the flag is on", async () => {
+  it("serves landing-signal-2, with its Spotify sentences, whenever the flag is on", async () => {
     const html = await privacyHtml();
-    expect(html).toContain("Version landing-2");
+    expect(html).toContain("Version landing-signal-2");
     expect(html).toContain("The home page shows what Matthew is playing on Spotify. This site asks Spotify for it. Your browser does not contact Spotify.");
     expect(html).toContain("Track links go to Spotify.");
   });

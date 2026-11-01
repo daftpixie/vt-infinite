@@ -5,11 +5,13 @@ import { LorenzFigure } from "@/components/figures/LorenzFigure";
 import { Placeholder } from "@/components/Placeholder";
 import { HomePlan } from "@/components/HomePlan";
 import { LandingPage } from "@/components/landing/LandingPage";
+import { SitePulse } from "@/components/pulse/SitePulse";
 import { Unreleased } from "@/components/Unreleased";
 import { StreamStatus, WordsList } from "@/components/words";
 import { publishedEssays } from "@/lib/content/essays";
 import { isLanding } from "@/lib/mode";
 import { landingNowPlaying } from "@/lib/now-playing/page";
+import { readPulse } from "@/lib/pulse/service";
 import { readPlan } from "@/lib/plan/service";
 import { FOOTER_LINES, SITE_NAME, STANDFIRST } from "@/lib/site";
 import { landingShareMetadata } from "@/lib/social";
@@ -31,11 +33,14 @@ export function generateMetadata(): Metadata {
 
 export default async function HomePage() {
   await connection();
-  // The landing release (SITE_MODE=landing) shows only its own page. It reads nothing upstream unless
-  // NOW_PLAYING_ENABLED is "true", and then only the shared "now playing" projection (ADR 0009).
-  if (isLanding()) return <LandingPage nowPlaying={await landingNowPlaying()} />;
+  // The landing release reads only its separately enabled now-playing and pulse projections.
+  // Both default off; neither integration exposes unrelated full-site routes.
+  if (isLanding()) {
+    const [nowPlaying, pulse] = await Promise.all([landingNowPlaying(), readPulse()]);
+    return <LandingPage nowPlaying={nowPlaying} pulse={pulse} />;
+  }
   // Home and the plan page share one snapshot (PRD §05); off or withdrawn, only the placeholder shows.
-  const [streams, plan] = await Promise.all([readAllPublications(), readPlan()]);
+  const [streams, plan, pulse] = await Promise.all([readAllPublications(), readPlan(), readPulse()]);
   const latest = latestForHome(buildWordsEntries(publishedEssays(), streams));
 
   return (
@@ -55,6 +60,8 @@ export default async function HomePage() {
         <h2>Directions of work</h2>
         <Placeholder id="directionsOfWork" />
         <HomePlan state={plan} />
+
+        {pulse ? <SitePulse initial={pulse} variant="expanded" /> : null}
 
         <h2>Marrs Rover</h2>
         <p>

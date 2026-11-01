@@ -1,0 +1,2 @@
+export type ProbeDatabase = { readOnly: (query: string) => Promise<Array<Record<string, unknown>>>; close: () => Promise<void> };
+export function signalPreflight(options?: { env?: Readonly<Record<string, string | undefined>>; fetchImpl?: typeof fetch; database?: (url: string) => ProbeDatabase }): Promise<{ ready: boolean; storageConfigured: boolean; stats: Record<string, unknown>; database: Record<string, Record<string, unknown>> }>;
